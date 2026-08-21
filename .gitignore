@@ -39,3 +39,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code (agent skills, local launch/permission config — machine-local)
+.claude/
+
+# local scratch backups
+backups/
+*.bak
+
+# Working notes and the raw scrape lib/products.ts was transcribed from.
+# Kept on disk, deliberately out of the repo: none of it ships.
+PLAN.md
+create-a-new-section-functional-kite.md
+/data/
+
+# Media in public/ that nothing references (~22 MB). Kept locally in case a
+# section wants them later; if one gets used, un-ignore it here or it will be
+# missing from the deploy.
+/public/0_Fly_Silky_3840X2160.mp4
+/public/hero.jpg
+/public/about-1.png
+/public/about-2.png
+/public/logo-space.png
+/public/scratched-metal-background.jpg
+/public/white-staircase-with-shadows-wall.jpg
+/public/pexels-antonio-sokic-1901950-3839430.jpg
+/public/pexels-masoodaslami-29585706.jpg

@@ -1,26 +1,272 @@
 @import "tailwindcss";
 
+/* MEVO Malaysia - brushed aluminium design system.
+   Light theme locked. Tokens are variables so a dark mode can be added later. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f4f5f6;
+  --surface: #ffffff;
+  --surface-2: #edeff1;
+  --line: #dde1e4;
+  --ink: #101215;
+  --ink-2: #5b6167;
+  --ink-3: #8b9298;
+
+  --metal: linear-gradient(135deg, #ffffff 0%, #c9ced3 45%, #7e858c 72%, #eff1f3 100%);
+  --metal-edge: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(126 133 140 / 0.35));
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* Liquid glass. This is a web glassmorphism approximation, NOT Apple Liquid Glass,
+   which has no official web package. Built from backdrop-filter, layered borders
+   and highlight overlays. */
+.glass {
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.1)),
+    rgb(255 255 255 / 0.45);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(126 133 140 / 0.18),
+    0 8px 32px rgb(16 18 21 / 0.1),
+    0 1px 2px rgb(16 18 21 / 0.06);
+}
+
+/* Glass without the cast shadow, for elements that sit in a stack rather than
+   floating above the page. The inset highlights stay: they are what give the
+   material its edge, and dropping them would leave a flat translucent box.
+   Declared after .glass so it wins on source order, not specificity. */
+.glass-flat {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(126 133 140 / 0.18);
+}
+
+/* Dark variant of the same material, for panels sitting on photography.
+   Heavier blur than the light glass: it has more image to dissolve.
+
+   Effective tint is ~0.50. That is set by the worst case, not the average:
+   the brightest patch behind the panel measures luminance 202, where 0.50
+   still holds white text at 5.1:1. Below ~0.46 that patch fails AA. The 44px
+   blur buys additional real margin, since it averages such a patch into its
+   surroundings before the text sits on it. */
+.glass-dark {
+  background:
+    linear-gradient(135deg, rgb(16 18 21 / 0.26), rgb(16 18 21 / 0.46)),
+    rgb(16 18 21 / 0.22);
+  -webkit-backdrop-filter: blur(44px) saturate(140%);
+  backdrop-filter: blur(44px) saturate(140%);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.20),
+    0 20px 56px rgb(0 0 0 / 0.38);
+}
+
+/* Refracted rim, drawn as a masked gradient border. */
+.glass-rim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.1) 40%, rgb(126 133 140 / 0.3));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.metal-text {
+  background: var(--metal);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.metal-rule {
+  background: linear-gradient(90deg, rgb(126 133 140 / 0.55), rgb(126 133 140 / 0.05));
+}
+
+/* Shared photographic grade so hero and the project grid read as one set. */
+.graded {
+  filter: saturate(0.18) contrast(1.07) brightness(1.02);
+}
+
+/* Brushed-metal grain. Fixed and pointer-events-none so it never repaints on scroll. */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.035;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-dark {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass {
+    background: rgb(255 255 255 / 0.96);
+  }
+  .glass-dark {
+    background: rgb(16 18 21 / 0.93);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Curtain reveal. Each section rides up over the pinned one before it; this is
+   the lip that sells it as a panel lifting over rather than a hard cut. Copied
+   from the sheet that already rises over the hero in app/page.tsx.
+
+   No overflow-hidden here on purpose: it would trap the sticky frames these
+   sections pin with. Where a full-bleed child squares off the radius, the
+   shadow carries the effect on its own, exactly as it does over the hero. */
+.sheet {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -16px 40px -28px rgb(16 18 21 / 0.14);
+}
+
+/* Horizontal project scroller: a real, visible scrollbar rather than a hidden one. */
+.hscroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(126 133 140 / 0.5) rgb(126 133 140 / 0.13);
+}
+.hscroll::-webkit-scrollbar {
+  height: 6px;
+}
+.hscroll::-webkit-scrollbar-track {
+  background: rgb(126 133 140 / 0.13);
+  border-radius: 999px;
+}
+.hscroll::-webkit-scrollbar-thumb {
+  background: rgb(126 133 140 / 0.5);
+  border-radius: 999px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .hscroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(126 133 140 / 0.72);
+  }
+}
+
+/* Frames carry the shared photographic grade; only the frame in focus is sharp. */
+.frame-img {
+  filter: saturate(0.18) contrast(1.07) brightness(1.02) blur(3px);
+  transition: filter 320ms var(--ease-out);
+}
+.frame-img[data-active="true"] {
+  filter: saturate(0.18) contrast(1.07) brightness(1.02) blur(0);
+}
+
+/* Lighter grade for feature photography: keeps some colour where the image is
+   the subject, rather than the near-monochrome wash used elsewhere. */
+.graded-soft {
+  filter: saturate(0.6) contrast(1.05);
+}
+
+/* Services: the pinned stack of full-bleed service panels.
+   Gated on one media query rather than on Tailwind variants, so the pin, the
+   stack box and the GSAP timeline all switch on under exactly the same
+   condition. Below md, or with reduced motion, none of this applies: the
+   panels are in flow and the section reads top to bottom, one after another.
+
+   The runway is one screen of pin, one panel of travel per handover, and a
+   tail: a panel is a screen less the band above it, so 100 + 4 x ~86 + ~45.
+   The tail is held by the sticky frame after the timeline has finished, so the
+   last panel is not dismissed the instant it lands. */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .svc-runway {
+    height: 490dvh;
+  }
+  .svc-frame {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  /* Every panel leaves the flow and fills the frame, so a panel rising into it
+     covers the one before instead of pushing it down the page. Stacking order
+     is DOM order: none of these carry a z value, so the later panel paints over
+     the earlier one on its own.
+
+     The panels start below the frame's top rather than at it. That band of
+     section ground is what the fixed header island sits over, and holding it on
+     the frame rather than inside each panel is the whole point: a panel carries
+     no dead space above its content, so the first thing that rises into view is
+     its top edge and then the photograph, not a screenful of black. */
+  .svc-card {
+    position: absolute;
+    inset: 7rem 0 0 0;
+  }
+  .svc-grid {
+    padding-top: 0;
+  }
+  /* In flow the figure is a 4:5 block; in the frame it fills whatever its
+     padded box leaves it, which is why the height is passed down rather than
+     set on the figure alone. */
+  .svc-figure-frame,
+  .svc-figure {
+    height: 100%;
+  }
+  .svc-figure {
+    aspect-ratio: auto;
+  }
+  .svc-progress {
+    display: block;
+  }
+  /* The curtain that rides up over this stack. Declared inside the same query
+     that creates the pin, not as a `md:` utility: Tailwind emits responsive
+     variants after `motion-reduce:` ones, so a `md:-mt-*` would outlive the
+     very pin it depends on and eat 40dvh of the last panel. */
+  .svc-curtain {
+    margin-top: -40dvh;
+  }
+}
+
+/* The band grows with the breakpoint, in step with the photograph's own inset,
+   so the content lands where it did before this was moved off the panels. */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .svc-card {
+    top: 8rem;
+  }
 }
