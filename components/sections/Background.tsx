@@ -15,7 +15,7 @@ const SWAP_LEN = 0.16;
 /**
  * Industry Leadership & Background, as a two-step pinned section.
  *
- * The section is a 250vh runway with a `sticky` frame inside, so it holds
+ * The section is a 370vh runway with a `sticky` frame inside, so it holds
  * still while the runway scrolls past: the section scrolls internally before
  * the page moves on. One photograph and one paragraph per step; scrolling
  * crossfades the background and swaps the paragraph in the glass panel.
@@ -95,7 +95,7 @@ export function Background() {
   return (
     <section
       ref={rootRef}
-      className="relative h-[250dvh] motion-reduce:h-auto"
+      className="relative h-[370dvh] motion-reduce:h-auto"
     >
       <div className="sticky top-0 h-[100dvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]">
         <div data-bg-scale className="absolute inset-0">
@@ -145,7 +145,7 @@ export function Background() {
                   <p
                     key={i}
                     data-para={i}
-                    className="col-start-1 row-start-1 text-base leading-relaxed text-bg md:text-lg motion-reduce:row-start-auto motion-reduce:mb-4"
+                    className="col-start-1 row-start-1 text-base leading-relaxed text-bg motion-reduce:row-start-auto motion-reduce:mb-4"
                     style={i > 0 ? { opacity: 0 } : undefined}
                   >
                     {paragraph}

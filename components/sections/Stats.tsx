@@ -4,47 +4,90 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { STATS, STATS_IMAGE } from "@/lib/content";
+import { STATS, STATS_INTRO, STATS_IMAGE } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Left indent per figure, as a share of the text column. Staggering them is
- *  what makes the group read as a descending diagonal rather than a list.
- *  The block boxes fill the column, but the ink stops well short of it. */
-const INDENT = ["56%", "24%", "42%", "20%"];
+/** Seconds between one figure arriving and the next. */
+const STEP = 0.16;
 
-/** How far each leader reaches into the photograph, as a share of its width.
- *  Varying it keeps the four ends from lining up into a second vertical edge. */
-const REACH = [0.1, 0.02, 0.03, 0.1];
+/** Seconds each horizontal rule takes to trace, upper then lower. Deliberately
+    unequal: two lines of the same length drawn at the same speed read as one
+    gesture, and the plan is meant to read as two. */
+const HORIZONTAL_SPEED = [0.7, 1.3];
 
-/** Seconds between one figure starting and the next. */
-const STEP = 0.5;
+/* Type scale, straight off the design: 56 / 36 / 16 at 1920, each written as
+   the vw it was drawn at and capped so it stops growing past that width. The
+   figure and label floors sit below what 1024 - the narrowest width that gets
+   the plan - works out to, so inside the plan they stay proportional to
+   everything else placed off that width.
 
-/** How long the photograph has the stage before the first leader draws. */
-const PHOTO_LEAD = 0.45;
+   Body copy is the exception: 16px flat, standfirst and boxes alike, matching
+   every other section. Copy this small stops being copy if it scales with the
+   drawing. */
+const FIGURE = "text-[2rem] leading-[1.05] tracking-[-0.01em] lg:text-[clamp(1.75rem,2.92vw,3.5rem)]";
+const LABEL = "text-[1.25rem] leading-[1.15] tracking-[-0.01em] lg:text-[clamp(1.125rem,1.875vw,2.25rem)]";
+const BODY = "text-base leading-[1.45] lg:leading-[1.4]";
+
+/** Inset from a box's own rule to its content: 34px of the 1920 drawing. */
+const CELL = "lg:pt-[max(1rem,2.2dvh)] lg:pr-[1.77vw] lg:pb-[max(1.25rem,3dvh)] lg:pl-[1.77vw]";
+
+/** Supporting line under a figure: 350px of the drawing, held to that same
+    fraction of the width so it keeps its distance from the photograph, which
+    is placed off the width too. The 13rem floor is what 16px copy needs to
+    stay copy on a small laptop; the photograph slides right there to leave
+    room for it. */
+const CELL_BODY = "mt-10 max-w-[46ch] lg:mt-0 lg:max-w-[min(max(18.2vw,13rem),350px)]";
+
+/* A rule of the plan: zero on one axis with a border on that edge, so it is a
+   hairline that snaps to the device pixel grid the way a box border does - a
+   1px background box rounds up to two at 125% scaling and reads thicker than
+   everything around it.
+
+   Each rule is a grid item pinned to a grid line, so it follows the row or
+   column it belongs to rather than being measured a second time, and it draws
+   from the end it is anchored at: the horizontals from the right, the
+   verticals from the top. */
+const RULE = "pointer-events-none hidden border-ink lg:block";
+const RULE_H = `${RULE} lg:col-span-3 lg:col-start-1 lg:h-0 lg:w-full lg:origin-right lg:self-start lg:border-t`;
+const RULE_V = `${RULE} lg:h-full lg:w-0 lg:origin-top lg:justify-self-start lg:border-l`;
 
 /**
- * Stat band: four staggered figures on the left, the product shot on the
- * right, each figure joined to a point on the photograph by a leader line.
+ * Stat band, drawn as the ruled plan from the Figma layout.
  *
- * On first scroll into view the figures arrive one at a time. Each leader
- * draws outward from the photograph to the figure's position, and the figure
- * then rises into place behind it, so the line reads as pointing something out
- * rather than as decoration that happens to be there.
+ * The composition is one 1920x1080 frame - the same 16:9 the pinned band is
+ * held on - so it is built in the units it was drawn in: horizontal offsets in
+ * vw, vertical offsets in dvh, both taken as fractions of that frame. At a
+ * 16:9 viewport it lands on the design; away from it the parts stretch with
+ * their own axis instead of the whole thing scaling off-screen.
  *
- * The leaders are measured, not drawn to fixed coordinates: each is a single
- * horizontal run from inside the photograph out to its label, sharing the
- * label's baseline, so the geometry survives a reflow. Points are ordered
- * image-first because the dash reveal follows the path's direction, and the
- * draw has to begin at the photograph.
+ * Four hairlines carry the structure, each one continuous rather than a border
+ * per box: two horizontals running the full width, the long vertical at 54%
+ * running the full height, and the one at 27.6% dropping from the first
+ * horizontal to the floor. Holding them as their own grid items is also what
+ * keeps them on the page while a box is still hidden, since a box arrives by
+ * `autoAlpha` and would otherwise take its own borders with it.
  *
- * The block is centred by balancing two margins that are not symmetrical in
- * the markup: the space on the left comes from the figure indents, the space
- * on the right from the grid's own margin. Changing one without the other
- * tips the composition to that side.
+ * The two rows of boxes are `1fr` under one `min-h`, so all three boxes are the
+ * same height whatever the viewport does.
  *
- * Below md the layout stacks and the leaders are hidden: they would have to
- * cross the whole column to reach an image that is no longer beside them.
+ * The photograph is a cut-out on transparency and sits above the rules, running
+ * off the right edge; the frame clips it. The lower half of the band carries a
+ * gradient up out of #d9d9d9, which is what stops the white boxes reading as
+ * empty paper.
+ *
+ * On first scroll into view the plan draws itself - horizontals tracing right
+ * to left at two different speeds, verticals top to bottom - the photograph
+ * wipes up behind it, and then the boxes arrive one at a time, each figure
+ * counting as it lands. The
+ * count runs off the same timeline rather than from a counter of its own, so a
+ * number can never finish counting while its box is still hidden. The suffix is
+ * a separate element from the digits on purpose: the count rewrites its
+ * element's text every frame, so a suffix inside it would be erased on the
+ * first tick.
+ *
+ * Below lg the plan is dropped for a single column - the rules come off, each
+ * block carries one top border, and the photograph falls to the end.
  */
 export function Stats() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -54,212 +97,239 @@ export function Stats() {
     if (!root) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let observer: ResizeObserver | undefined;
 
     const ctx = gsap.context(() => {
-      const lines = STATS.map((_, i) =>
-        root.querySelector<SVGPolylineElement>(`[data-connector='${i}']`),
-      );
-      const figures = STATS.map((_, i) =>
-        root.querySelector<HTMLElement>(`[data-figure='${i}']`),
-      );
+      const intro = gsap.utils.toArray<HTMLElement>("[data-intro]", root);
+      const figures = STATS.map(
+        (_, i) => root.querySelector<HTMLElement>(`[data-figure='${i}']`),
+      ).filter((figure): figure is HTMLElement => figure !== null);
       const photo = root.querySelector<HTMLElement>("[data-photo]");
-
-      const draw = () => {
-        const rootRect = root.getBoundingClientRect();
-        const stacked = window.matchMedia("(max-width: 767px)").matches;
-
-        STATS.forEach((_, i) => {
-          const line = lines[i];
-          const label = root.querySelector<HTMLElement>(`[data-label='${i}']`);
-          const image = root.querySelector<HTMLElement>("[data-photo]");
-          if (!line || !label || !image) return;
-
-          if (stacked) {
-            line.setAttribute("points", "");
-            return;
-          }
-
-          const l = label.getBoundingClientRect();
-          const img = image.getBoundingClientRect();
-
-          // Subtract whatever offset the reveal currently has on this figure.
-          // Measuring the animated position instead would put every leader
-          // 24px low before the reveal runs, and drop the last one outside the
-          // SVG entirely, where it is clipped and simply never appears.
-          const figure = figures[i];
-          const offsetY = figure ? Number(gsap.getProperty(figure, "y")) || 0 : 0;
-
-          // A single horizontal run: the line sits on the label's resting
-          // baseline and travels straight into the photograph.
-          const y = l.bottom - rootRect.top + 7 - offsetY;
-          const fromX = img.left - rootRect.left + img.width * REACH[i];
-          const toX = l.left - rootRect.left;
-
-          // Image first: the dash reveal runs along the path's direction, so
-          // the path has to start where the draw should start.
-          line.setAttribute("points", `${fromX},${y} ${toX},${y}`);
-
-          // A reflow changes the path length, so the dash has to be reset to
-          // match, without un-drawing a line that has already finished.
-          const length = line.getTotalLength();
-          gsap.set(line, {
-            strokeDasharray: length,
-            strokeDashoffset: line.dataset.drawn === "1" ? 0 : length,
-          });
-        });
-      };
+      const horizontals = gsap.utils.toArray<HTMLElement>("[data-rule='h']", root);
+      const verticals = gsap.utils.toArray<HTMLElement>("[data-rule='v']", root);
 
       if (reduced) {
-        lines.forEach((line) => {
-          if (line) line.dataset.drawn = "1";
-        });
-        gsap.set(figures, { autoAlpha: 1, y: 0 });
-        draw();
-      } else {
-        draw();
-        gsap.set(figures, { y: 24 });
-        gsap.set(photo, { autoAlpha: 0, scale: 1.06, clipPath: "inset(100% 0% 0% 0%)" });
-
-        const timeline = gsap.timeline({
-          scrollTrigger: { trigger: root, start: "top 68%", once: true },
-        });
-
-        // The photograph lands first: the leaders read as reaching out from
-        // something already there.
-        timeline.to(
-          photo,
-          {
-            autoAlpha: 1,
-            scale: 1,
-            clipPath: "inset(0% 0% 0% 0%)",
-            duration: 0.9,
-            ease: "power3.out",
-          },
-          0,
-        );
-
-        STATS.forEach((stat, i) => {
-          const at = PHOTO_LEAD + i * STEP;
-          const line = lines[i];
-          const figure = figures[i];
-          const number = root.querySelector<HTMLElement>(`[data-num='${i}']`);
-
-          if (line) {
-            timeline.to(
-              line,
-              {
-                strokeDashoffset: 0,
-                duration: 0.55,
-                ease: "power2.inOut",
-                onComplete: () => {
-                  line.dataset.drawn = "1";
-                },
-              },
-              at,
-            );
-          }
-
-          if (figure) {
-            timeline.to(
-              figure,
-              { autoAlpha: 1, y: 0, duration: 0.45, ease: "power3.out" },
-              at + 0.32,
-            );
-          }
-
-          if (number) {
-            // Counted here rather than by an in-view counter of its own, so
-            // the number cannot finish counting while its figure is hidden.
-            const playhead = { value: 0 };
-            timeline.to(
-              playhead,
-              {
-                value: stat.value,
-                duration: 0.7,
-                ease: "power2.out",
-                onUpdate: () => {
-                  number.textContent = Math.round(playhead.value) + stat.suffix;
-                },
-              },
-              at + 0.32,
-            );
-          }
-        });
+        gsap.set([...intro, ...figures], { autoAlpha: 1, y: 0 });
+        gsap.set([...horizontals, ...verticals], { scaleX: 1, scaleY: 1 });
+        gsap.set(photo, { autoAlpha: 1, scale: 1, clipPath: "inset(0%)" });
+        return;
       }
 
-      observer = new ResizeObserver(draw);
-      observer.observe(root);
+      gsap.set(intro, { autoAlpha: 0, y: 20 });
+      gsap.set(figures, { autoAlpha: 0, y: 24 });
+      gsap.set(horizontals, { scaleX: 0 });
+      gsap.set(verticals, { scaleY: 0 });
+      gsap.set(photo, {
+        autoAlpha: 0,
+        scale: 1.06,
+        clipPath: "inset(100% 0% 0% 0%)",
+      });
+
+      const timeline = gsap.timeline({
+        scrollTrigger: { trigger: root, start: "top 68%", once: true },
+      });
+
+      // The plan draws itself first and the boxes land into it: one hand
+      // moving right to left, then top to bottom. The two horizontals travel
+      // at different speeds and are never in step - the upper one is quick and
+      // arrives first, the lower one takes almost twice as long over a line of
+      // the same length, which is what keeps the pair from reading as one
+      // stamped shape.
+      horizontals.forEach((rule, i) => {
+        timeline.to(
+          rule,
+          {
+            scaleX: 1,
+            duration: HORIZONTAL_SPEED[i] ?? 0.9,
+            ease: i === 0 ? "power2.out" : "power1.inOut",
+          },
+          i * 0.12,
+        );
+      });
+      timeline.to(
+        verticals,
+        { scaleY: 1, duration: 0.9, ease: "power2.inOut", stagger: 0.1 },
+        0.12,
+      );
+
+      // The photograph lands with the plan, so the figures arrive into a
+      // composition that is already standing rather than onto empty paper.
+      timeline.to(
+        photo,
+        {
+          autoAlpha: 1,
+          scale: 1,
+          clipPath: "inset(0%)",
+          duration: 0.9,
+          ease: "power3.out",
+        },
+        0,
+      );
+
+      timeline.to(
+        intro,
+        { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power3.out" },
+        0.05,
+      );
+
+      STATS.forEach((stat, i) => {
+        const figure = figures[i];
+        const number = root.querySelector<HTMLElement>(`[data-num='${i}']`);
+        // Into the plan as it is drawn: the upper rule has landed and the
+        // slower lower one is still travelling.
+        const at = 0.6 + i * STEP;
+
+        if (figure) {
+          timeline.to(
+            figure,
+            { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" },
+            at,
+          );
+        }
+
+        if (number) {
+          const playhead = { value: 0 };
+          timeline.to(
+            playhead,
+            {
+              value: stat.value,
+              duration: 0.7,
+              ease: "power2.out",
+              onUpdate: () => {
+                number.textContent = String(Math.round(playhead.value));
+              },
+            },
+            at,
+          );
+        }
+      });
     }, root);
 
-    return () => {
-      observer?.disconnect();
-      ctx.revert();
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
-    <section className="sheet relative mb-[4em] -mt-[50dvh] bg-bg py-24 md:py-32 motion-reduce:mt-0">
-      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
-        <div
-          ref={rootRef}
-          className="relative grid gap-12 md:mr-[12%] md:grid-cols-[1fr_minmax(0,36%)] md:gap-4"
-        >
-          <dl className="flex flex-col justify-center gap-10 md:gap-14 md:py-4">
-            {STATS.map((stat, i) => (
-              <div
-                key={stat.label}
-                data-figure={i}
-                style={{ marginLeft: INDENT[i], opacity: 0 }}
-              >
-                <dt className="sr-only">{stat.label}</dt>
-                <dd>
-                  <span
-                    data-num={i}
-                    className="block font-mono text-[clamp(2.2rem,4vw,3.5rem)] leading-none font-medium tracking-tight text-ink"
-                  >
-                    {stat.value}
-                    {stat.suffix}
-                  </span>
-                  <span
-                    data-label={i}
-                    className="mt-2 inline-block text-base leading-snug text-ink md:text-lg"
-                  >
-                    {stat.label}
-                  </span>
-                </dd>
-              </div>
-            ))}
-          </dl>
+    <section className="band-runway sheet relative mb-[4em] -mt-[110dvh] min-h-[110dvh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0">
+      {/* Pinned, so the curtain that follows has something still to ride over.
+          A pinned frame is one screen, and globals.css holds this band to it.
+          `min-h` is for everywhere else: a curtain has to be at least as tall
+          as its own pull-up. */}
+      <div className="band-frame">
+        {/* The bleed of the photograph is clipped here rather than on the
+            section: `.sheet` cannot take overflow without trapping the sticky
+            frame it is riding on. */}
+        <div ref={rootRef} className="relative w-full overflow-hidden">
+          {/* Lower half of the band lifts out of grey. Literal, not a token:
+              it is a one-off wash from the design, not a surface colour. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[55.5dvh] bg-gradient-to-t from-[#d9d9d9] to-surface lg:block"
+          />
 
-          <div data-photo className="relative aspect-[0.58] w-full">
+          {/* Every item is placed by hand rather than flowed: the rules are
+              items too, and auto-placement would hand one a box's slot. */}
+          <div className="relative grid grid-cols-1 lg:min-h-[100dvh] lg:grid-cols-[27.6%_26.5%_1fr] lg:grid-rows-[minmax(43.2dvh,auto)_repeat(2,minmax(28.4dvh,1fr))]">
+            {/* The intro runs to the long vertical rule. Its top inset clears
+                the header island, so it has a floor in rem as well as the
+                7.7dvh it was drawn at. */}
+            <div className="px-6 pt-28 pb-12 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-0 lg:pt-[max(7.7dvh,6rem)] lg:pb-0 lg:pl-[4.22vw]">
+              <h2 data-intro className={`${FIGURE} font-normal text-ink`}>
+                {STATS_INTRO.heading.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </h2>
+
+              <p
+                data-intro
+                className={`${BODY} mt-5 max-w-[52ch] text-ink lg:mt-[2dvh] lg:max-w-[min(44vw,844px)]`}
+              >
+                {STATS_INTRO.body}
+              </p>
+            </div>
+
+            {/* The plan. The short vertical starts at the first horizontal
+                rather than at the top of the frame: carried up, it would strike
+                through the heading. */}
+            <span aria-hidden data-rule="h" className={`${RULE_H} lg:row-start-2`} />
+            <span aria-hidden data-rule="h" className={`${RULE_H} lg:row-start-3`} />
+            <span
+              aria-hidden
+              data-rule="v"
+              className={`${RULE_V} lg:col-start-2 lg:row-span-2 lg:row-start-2`}
+            />
+            <span
+              aria-hidden
+              data-rule="v"
+              className={`${RULE_V} lg:col-start-3 lg:row-span-3 lg:row-start-1`}
+            />
+
+            <StatCell stat={STATS[0]} index={0} className="lg:col-start-2 lg:row-start-2" />
+            <StatCell stat={STATS[1]} index={1} className="lg:col-start-3 lg:row-start-2" />
+            <StatCell stat={STATS[2]} index={2} className="lg:col-start-2 lg:row-start-3" />
+          </div>
+
+          {/* Above the rules and off the right edge, as drawn: sized off the
+              width so it keeps the proportion it was exported at, and hung
+              from the bottom rather than the top so it always runs past the
+              frame's lower edge. Anchored the other way it stops short on a
+              viewport wider than 16:9 and shows the flat edge the cut-out was
+              never meant to show. */}
+          <div
+            data-photo
+            className="pointer-events-none relative mt-2 w-full select-none lg:absolute lg:top-auto lg:-bottom-[1.3dvh] lg:left-[70%] lg:mt-0 lg:w-[55.3%] xl:left-[67.5%]"
+          >
             <Image
               src={STATS_IMAGE.src}
               alt={STATS_IMAGE.alt}
-              fill
-              sizes="(max-width: 768px) 92vw, 36vw"
+              width={2999}
+              height={2488}
+              sizes="(max-width: 1024px) 100vw, 56vw"
               quality={80}
-              className="object-cover"
+              className="h-auto w-full"
             />
           </div>
-
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute inset-0 hidden h-full w-full overflow-visible md:block"
-          >
-            {STATS.map((stat, i) => (
-              <polyline
-                key={stat.label}
-                data-connector={i}
-                points=""
-                fill="none"
-                stroke="rgb(16 18 21 / 0.55)"
-                strokeWidth="1"
-              />
-            ))}
-          </svg>
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * One figure in the plan: number and label at the top of its box, supporting
+ * line dropped to the bottom, which is what holds the two rows in register.
+ *
+ * The box draws no rules of its own inside the plan - those are the continuous
+ * lines laid over the grid. The top border it carries is for the stacked
+ * layout below lg, where there is no plan to belong to.
+ */
+function StatCell({
+  stat,
+  index,
+  className,
+}: {
+  stat: (typeof STATS)[number];
+  index: number;
+  className: string;
+}) {
+  return (
+    <div
+      data-figure={index}
+      className={`relative flex flex-col justify-between border-t border-ink px-6 py-10 lg:border-t-0 lg:px-0 lg:py-0 ${CELL} ${className}`}
+    >
+      <div>
+        <p className={`${FIGURE} flex items-baseline font-normal text-ink`}>
+          <span data-num={index} className="tabular-nums">
+            {stat.value}
+          </span>
+          {stat.suffix ? <span>{stat.suffix}</span> : null}
+        </p>
+        <p className={`${LABEL} mt-1 font-normal text-ink lg:mt-[0.35vw]`}>
+          {stat.label}
+        </p>
+      </div>
+
+      <p className={`${BODY} ${CELL_BODY} text-ink`}>{stat.body}</p>
+    </div>
   );
 }

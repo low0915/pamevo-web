@@ -118,7 +118,7 @@ export function Services() {
   }, []);
 
   return (
-    <section ref={rootRef} className="sheet relative mb-[4em] bg-ink">
+    <section ref={rootRef} className="svc-curtain sheet relative mb-[4em] bg-ink">
       {/* The heading is carried by each panel's label, so the section keeps one
           for structure without repeating it on screen five times. */}
       <h2 className="sr-only">{SERVICES.heading}</h2>
@@ -165,7 +165,7 @@ export function Services() {
                       {service.title}
                     </h3>
 
-                    <p className="mt-7 max-w-[52ch] border-y border-[rgb(244_245_246/0.18)] py-7 text-base leading-relaxed text-[rgb(244_245_246/0.72)] md:text-lg">
+                    <p className="mt-7 max-w-[52ch] border-y border-[rgb(244_245_246/0.18)] py-7 text-base leading-relaxed text-[rgb(244_245_246/0.72)]">
                       {service.body}
                     </p>
                   </div>

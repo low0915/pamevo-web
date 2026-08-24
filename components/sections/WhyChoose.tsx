@@ -23,7 +23,7 @@ const DRIFT_TRAVEL = 22;
 /**
  * Why Choose MEVO Malaysia: one photograph, three panel parts, internal scroll.
  *
- * A 340vh runway with a sticky frame, so the section advances through its own
+ * A 460vh runway with a sticky frame, so the section advances through its own
  * parts before the page moves on. The background never changes, it only drifts.
  * That drift is in percent rather than pixels so it can never exceed the scale
  * bleed and expose an edge at any viewport height. See DRIFT_SCALE.
@@ -140,7 +140,7 @@ export function WhyChoose() {
       // section's paragraph swap finishes, and lands it flush as the frame
       // releases. bg-bg because the runway outside the frame is transparent and
       // would otherwise show the section beneath.
-      className="sheet relative -mt-[60dvh] h-[340dvh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
+      className="sheet relative -mt-[110dvh] h-[460dvh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
     >
       <div
         data-frame
@@ -226,7 +226,7 @@ export function WhyChoose() {
                 </ul>
 
                 {"note" in part && part.note ? (
-                  <p className="mt-4 pl-4 text-sm leading-relaxed text-ink-2 italic">
+                  <p className="mt-4 pl-4 text-base leading-relaxed text-ink-2 italic">
                     {part.note}
                   </p>
                 ) : null}
@@ -237,7 +237,7 @@ export function WhyChoose() {
           {/* Constant across all parts, sitting directly under them.
               ink-2 rather than ink-3: on the panel's ~237 ground ink-3 is
               2.9:1, ink-2 is 5.3:1. */}
-          <p className="mt-8 text-sm leading-relaxed text-ink-2">
+          <p className="mt-8 text-base leading-relaxed text-ink-2">
             {WHY_CHOOSE.tagline.map((line) => (
               <span key={line} className="block">
                 {line}

@@ -189,13 +189,18 @@ body {
   }
 }
 
-/* Frames carry the shared photographic grade; only the frame in focus is sharp. */
-.frame-img {
-  filter: saturate(0.18) contrast(1.07) brightness(1.02) blur(3px);
-  transition: filter 320ms var(--ease-out);
-}
-.frame-img[data-active="true"] {
-  filter: saturate(0.18) contrast(1.07) brightness(1.02) blur(0);
+/* Projects: the looping strip.
+
+   The curve itself is in the component - every card's drop is computed from
+   where it currently sits in the frame, not from its index, so the cards travel
+   along the valley as the strip is dragged. What is left here is the hover: the
+   photograph eases from the site's near-monochrome grade to the softer one used
+   for feature photography, and only where there is a real pointer to hover
+   with. */
+@media (hover: hover) and (pointer: fine) {
+  .photo-card:hover .graded {
+    filter: saturate(0.6) contrast(1.05);
+  }
 }
 
 /* Lighter grade for feature photography: keeps some colour where the image is
@@ -210,13 +215,19 @@ body {
    condition. Below md, or with reduced motion, none of this applies: the
    panels are in flow and the section reads top to bottom, one after another.
 
-   The runway is one screen of pin, one panel of travel per handover, and a
-   tail: a panel is a screen less the band above it, so 100 + 4 x ~86 + ~45.
-   The tail is held by the sticky frame after the timeline has finished, so the
-   last panel is not dismissed the instant it lands. */
+   The runway is sized by the same rule the hero uses for its own sheet: a
+   pinned section must outlast its timeline by two screens plus the gap below
+   it, or the curtain arrives before the section is done or leaves before it is
+   covered. The timeline here is `4 x (100dvh - band)`, so the runway is
+   `400dvh - 4 x band` plus 200dvh, 20dvh of buffer and the 4em bottom margin.
+   The buffer is split: half of it sits ahead of the curtain and half behind,
+   so neither condition lands exactly on its limit.
+   The band is in px because it clears the fixed header island, which is why
+   this needs calc where the other sections do not. */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .svc-runway {
-    height: 490dvh;
+    /* 400dvh - 448 (timeline) + 220dvh + 64 (two screens, buffer, gap). */
+    height: calc(620dvh - 384px);
   }
   .svc-frame {
     position: sticky;
@@ -257,9 +268,38 @@ body {
   /* The curtain that rides up over this stack. Declared inside the same query
      that creates the pin, not as a `md:` utility: Tailwind emits responsive
      variants after `motion-reduce:` ones, so a `md:-mt-*` would outlive the
-     very pin it depends on and eat 40dvh of the last panel. */
+     very pin it depends on and eat into the last panel.
+
+     One full screen plus the 4em gap below the stack, and 10dvh over that so
+     the cover completes before the pin lets go rather than exactly with it.
+     Anything less than a screen and the pin releases first, so both are moving
+     during the handover and the overlap never completes. */
   .svc-curtain {
-    margin-top: -40dvh;
+    margin-top: calc(-110dvh - 4em);
+  }
+  /* The stat band, pinned so the curtain above has something still to ride
+     over. Its runway is 240dvh: 30dvh of hold, one screen for the curtain to
+     travel, and the 110dvh the curtain is pulled up by, with 10dvh of slack. */
+  .band-runway {
+    height: 240dvh;
+  }
+  /* No padding: the band is one full-bleed 16:9 composition whose rules run to
+     the frame's own edges, and it measures its own insets off that frame. */
+  .band-frame {
+    position: sticky;
+    top: 0;
+    display: flex;
+    height: 100dvh;
+    flex-direction: column;
+    justify-content: center;
+  }
+  /* A curtain has to be at least as tall as its own pull-up. This one is sized
+     by its content, so on a tall viewport it stops covering the distance it was
+     pulled over, and the section after it starts inside the stack's runway --
+     two pinned frames in the same scroll range. The pinned sheets get this for
+     free from their runways; this one has to be told. */
+  .svc-curtain-floor {
+    min-height: 110dvh;
   }
 }
 
@@ -268,5 +308,10 @@ body {
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   .svc-card {
     top: 8rem;
+  }
+  /* The band is 16px deeper here, so the timeline is 64px shorter and the
+     runway follows it down. */
+  .svc-runway {
+    height: calc(620dvh - 448px);
   }
 }

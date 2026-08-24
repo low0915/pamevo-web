@@ -224,7 +224,7 @@ export function Hero() {
 
             {/* Constant: on screen from the first frame, never animated, and
                 held in place by the fixed-height word slot above it. */}
-            <p className="mt-8 text-base leading-relaxed text-ink md:text-lg md:whitespace-nowrap">
+            <p className="mt-8 text-base leading-relaxed text-ink md:whitespace-nowrap">
               {HERO.subheading}
             </p>
           </div>

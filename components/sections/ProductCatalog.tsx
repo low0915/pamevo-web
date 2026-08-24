@@ -310,7 +310,7 @@ export function ProductCatalog() {
                                       {item.zh ? (
                                         <span
                                           lang="zh-Hans"
-                                          className="mt-1 block text-sm text-ink-2"
+                                          className="mt-1 block text-base text-ink-2"
                                         >
                                           {item.zh}
                                         </span>

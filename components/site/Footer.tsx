@@ -60,7 +60,7 @@ export function Footer() {
             <p className="mt-5 text-base leading-relaxed text-ink-2">
               {FOOTER.company}
             </p>
-            <p className="mt-3 max-w-[38ch] text-sm leading-relaxed text-ink-3">
+            <p className="mt-3 max-w-[38ch] text-base leading-relaxed text-ink-3">
               {FOOTER.address}
             </p>
           </div>

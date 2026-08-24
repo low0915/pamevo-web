@@ -29,7 +29,7 @@ export function ProductsIntro() {
         </Reveal>
 
         <Reveal delay={0.14}>
-          <p className="mt-4 max-w-[65ch] text-base leading-relaxed text-ink-2 md:text-lg">
+          <p className="mt-4 max-w-[65ch] text-base leading-relaxed text-ink-2">
             {PRODUCTS_PAGE.subheading}
           </p>
         </Reveal>

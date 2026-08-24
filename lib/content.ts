@@ -30,12 +30,14 @@ export const LOGO_ALT = "P.A. Projects and MEVO";
  * with the rest of the copy because it is still copy, and because a title that
  * drifts from the page it names is worse than one written in the wrong file.
  *
- * Titles stay under ~60 characters and descriptions under ~160, where Google
- * truncates each. Both home strings lead with what people actually search for
- * — aluminium windows and doors, in Malaysia — rather than with the brand,
- * which has no search volume of its own yet. The numbers in the descriptions
- * are WHY_CHOOSE's own claims, kept identical so the snippet and the page
- * cannot contradict each other.
+ * Titles stay under ~60 characters, where Google truncates them, and lead
+ * with what people actually search for — aluminium windows and doors, in
+ * Malaysia — rather than with the brand, which has no search volume yet.
+ *
+ * home.description is the client's own sentence and runs well past the ~160
+ * characters a result snippet shows. It is carried whole rather than cut:
+ * Google rewrites snippets per query regardless, and the full claim is the
+ * one the client wants quoted. products.description is written to fit.
  */
 export const SEO = {
   /** Pages supply their own half; this appends the brand. See app/layout.tsx. */
@@ -43,7 +45,7 @@ export const SEO = {
   home: {
     title: "Aluminium Windows & Doors Malaysia | MEVO Malaysia",
     description:
-      "High-performance aluminium windows and doors in Malaysia: 43dB sound reduction, Level 8 thermal insulation and up to 15 years warranty. Showroom in Shah Alam.",
+      "MEVO Malaysia isn’t just another window brand — it’s the result of pairing one of China’s Top 10 Aluminium Window & Door Systems with Malaysia’s aluminium manufacturing leader, P.A. Projects, a member of the publicly listed P.A. Resources Group.",
   },
   products: {
     title: "Aluminium Window & Door Systems",
@@ -145,17 +147,46 @@ export const WHY_CHOOSE = {
   ],
 };
 
-/** Product shot that overlaps the stat band. */
+/** Product shot that overlaps the stat band. Exported from the Figma layout,
+    a cut-out on transparency so the rules behind it stay visible. */
 export const STATS_IMAGE = {
-  src: "/pexels-francesca-cinel-114872900-9729590.jpg",
-  alt: "Hands holding the cross-section of an aluminium window profile",
+  src: "/stats-extrusion.png",
+  alt: "Cross-sections of extruded aluminium window and door profiles, stacked",
 };
 
+/** Heading and standfirst for the stat band. Supplied by the client rather
+    than taken from the live site, which runs the figures with no copy.
+
+    The heading is two lines because the layout draws it that way: the break
+    after the comma is a design decision, not something to leave to wrapping. */
+export const STATS_INTRO = {
+  heading: ["Engineering Innovation,", "Proven Across Every Building Type"],
+  body: "P.A. Group has been extruding aluminium since 2004, and our partnership with MEVO brought the window and door systems to match. That combination covers over 10,000 completed projects in Malaysia, ranging from single residential units to full building facades, backed by a service team that stays involved after handover.",
+};
+
+/** The three figures the band carries, in reading order: the layout gives the
+    first two the upper row and the third the row below, with the fourth cell
+    left to the photograph. A fourth figure - 98% customer retention - is not
+    shown here; there is no cell for it. */
 export const STATS = [
-  { value: 20, suffix: "", label: "Years of Experience" },
-  { value: 10, suffix: "k+", label: "Successful Projects" },
-  { value: 99, suffix: "%", label: "Satisfied Clients" },
-  { value: 98, suffix: "%", label: "Customer Retention Rate" },
+  {
+    value: 20,
+    suffix: "",
+    label: "Years of Experience",
+    body: "Extruding aluminium since 2004, listed on Bursa Malaysia's Main Market since 2006.",
+  },
+  {
+    value: 99,
+    suffix: "%",
+    label: "Satisfied Clients",
+    body: "Measured on delivered performance, not promises: sound, heat, water and wind tested.",
+  },
+  {
+    value: 10,
+    suffix: "k+",
+    label: "Successful Projects",
+    body: "Residential units, commercial buildings and high-rise facades completed across Malaysia.",
+  },
 ];
 
 export const CTA = "To Get More Details";
