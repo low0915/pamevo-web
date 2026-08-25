@@ -12,6 +12,16 @@ gsap.registerPlugin(ScrollTrigger);
 const PARTS = WHY_CHOOSE.parts.length;
 const SWAP_LEN = 0.12;
 
+/** The scrubbed sequence, in viewport heights. The runway is 460dvh; this is
+ *  the part of it the timeline is mapped across, and the part the autoplay
+ *  carries. */
+const SEQUENCE = 2.4;
+
+/** How much of that the autoplay plays per second, once the frame has snapped
+ *  to the top. The same pace as the sections above, so the page keeps one
+ *  reading speed throughout its opening. */
+const SPEED = 0.20;
+
 /**
  * Background drift. The scale must always out-run the travel or the frame
  * exposes an edge: scale(S) bleeds (S-1)/2 of the frame at each edge, so 1.5
@@ -80,7 +90,7 @@ export function WhyChoose() {
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: () => "+=" + window.innerHeight * 2.4,
+          end: () => "+=" + window.innerHeight * SEQUENCE,
           scrub: 1,
           invalidateOnRefresh: true,
           onRefresh: drawLeader,
@@ -135,6 +145,8 @@ export function WhyChoose() {
   return (
     <section
       ref={rootRef}
+      data-autoplay={SEQUENCE}
+      data-autoplay-speed={SPEED}
       // Rises over Background's pinned frame. -60dvh puts the first sight of it
       // at 90dvh into Background's 150dvh of travel, which is just after that
       // section's paragraph swap finishes, and lands it flush as the frame

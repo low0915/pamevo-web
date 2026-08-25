@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import {
   siWhatsapp,
   siFacebook,
@@ -5,7 +7,7 @@ import {
   siTiktok,
   siXiaohongshu,
 } from "simple-icons";
-import { FOOTER } from "@/lib/content";
+import { FOOTER, LOGO_ALT } from "@/lib/content";
 import { Z } from "@/lib/z";
 import { MetalRule } from "@/components/ui/MetalRule";
 
@@ -27,9 +29,16 @@ export function Footer() {
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-4">
-            <p className="metal-text text-3xl font-medium tracking-tighter">
-              {FOOTER.brand}
-            </p>
+            {/* The lockup stands in for the wordmark here, at the same
+                weight the metal-text title carried. Sized by height so the
+                co-branded proportions hold at any column width. */}
+            <Image
+              src="/logo.png"
+              alt={LOGO_ALT}
+              width={2220}
+              height={174}
+              className="h-5 w-auto max-w-full md:h-6"
+            />
             <p className="mt-5 max-w-[42ch] text-base leading-relaxed text-ink-2">
               {FOOTER.blurb}
             </p>
@@ -41,12 +50,12 @@ export function Footer() {
             </h2>
             <ul className="mt-5 grid gap-2 text-base text-ink-2">
               <li>
-                <a href="#" aria-disabled="true" className="hover:text-ink">
+                <a href={FOOTER.phoneHref} className="hover:text-ink">
                   {FOOTER.phone}
                 </a>
               </li>
               <li>
-                <a href="#" aria-disabled="true" className="hover:text-ink">
+                <a href={FOOTER.emailHref} className="hover:text-ink">
                   {FOOTER.email}
                 </a>
               </li>
@@ -70,13 +79,14 @@ export function Footer() {
               {FOOTER.connectHeading}
             </h2>
             <ul className="mt-5 flex flex-wrap gap-2">
-              {FOOTER.socials.map((name) => {
+              {FOOTER.socials.map(({ name, url }) => {
                 const mark = MARKS[name as keyof typeof MARKS];
                 return (
                   <li key={name}>
                     <a
-                      href="#"
-                      aria-disabled="true"
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
                       aria-label={name}
                       className="grid size-9 place-items-center rounded-full border border-line text-ink-2 transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink"
                     >
@@ -101,9 +111,28 @@ export function Footer() {
 
         <div className="mt-6 flex flex-col gap-3 text-sm text-ink-3 sm:flex-row sm:items-center sm:justify-between">
           <p>{FOOTER.copyright}</p>
-          <a href="#" aria-disabled="true" className="hover:text-ink">
-            {FOOTER.terms}
-          </a>
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link href="/privacy" className="hover:text-ink">
+              {FOOTER.privacy}
+            </Link>
+
+            {/* Bound by the cookie plugin, which sweeps the document for this
+                attribute once, when it starts. That works because the footer
+                lives in the root layout and never unmounts — the same button
+                inside a page would go quiet after a client navigation. */}
+            <button
+              type="button"
+              data-cc="show-preferencesModal"
+              className="transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink"
+            >
+              {FOOTER.cookiePreferences}
+            </button>
+
+            <a href="#" aria-disabled="true" className="hover:text-ink">
+              {FOOTER.terms}
+            </a>
+          </div>
         </div>
       </div>
     </footer>

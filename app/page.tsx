@@ -4,7 +4,6 @@ import { WhyChoose } from "@/components/sections/WhyChoose";
 import { Stats } from "@/components/sections/Stats";
 import { Services } from "@/components/sections/Services";
 import { Projects } from "@/components/sections/Projects";
-import { Testimonials } from "@/components/sections/Testimonials";
 import { Z } from "@/lib/z";
 
 export default function Home() {
@@ -29,7 +28,6 @@ export default function Home() {
         <Stats />
         <Services />
         <Projects />
-        <Testimonials />
       </div>
     </main>
   );

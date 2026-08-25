@@ -12,6 +12,16 @@ gsap.registerPlugin(ScrollTrigger);
 const SWAP_AT = 0.42;
 const SWAP_LEN = 0.16;
 
+/** The scrubbed sequence, in viewport heights. The runway is 370dvh; this is
+ *  the part of it the timeline is mapped across, and the part the autoplay
+ *  carries. */
+const SEQUENCE = 1.5;
+
+/** How much of that the autoplay plays per second, once the frame has snapped
+ *  to the top. Its sequence is the shorter of the two, so the same pace as the
+ *  hero still spends less time here. */
+const SPEED = 0.25;
+
 /**
  * Industry Leadership & Background, as a two-step pinned section.
  *
@@ -56,11 +66,21 @@ export function Background() {
         scrollTrigger: {
           trigger: section,
           start: "top top",
-          end: () => "+=" + window.innerHeight * 1.5,
+          end: () => "+=" + window.innerHeight * SEQUENCE,
           scrub: 1,
           invalidateOnRefresh: true,
         },
       });
+
+      // The rule under the panel measures the section: it is the timeline's
+      // own progress, so it fills at whatever pace the scroll — or the
+      // autoplay — is moving at.
+      timeline.fromTo(
+        "[data-progress]",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 1 },
+        0,
+      );
 
       // A slow push in across the whole section, always above 1 so the frame
       // can never expose an edge.
@@ -95,6 +115,8 @@ export function Background() {
   return (
     <section
       ref={rootRef}
+      data-autoplay={SEQUENCE}
+      data-autoplay-speed={SPEED}
       className="relative h-[370dvh] motion-reduce:h-auto"
     >
       <div className="sticky top-0 h-[100dvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]">
@@ -151,6 +173,23 @@ export function Background() {
                     {paragraph}
                   </p>
                 ))}
+              </div>
+
+              {/* How far through the section the reader is, laid along the
+                  panel's own bottom edge. It rides inside the panel, which
+                  clips it, so it takes that corner radius without carrying a
+                  shape of its own; absolute, so the panel's padding does not
+                  inset it. A readout, not a control: nothing here is
+                  draggable. Hidden with reduced motion, where the section is
+                  in flow and has no progress to report. */}
+              <div
+                aria-hidden
+                className="absolute inset-x-0 bottom-0 h-0.5 overflow-hidden bg-[rgb(244_245_246/0.18)] motion-reduce:hidden"
+              >
+                <span
+                  data-progress
+                  className="block h-full w-full origin-left scale-x-0 bg-[rgb(244_245_246/0.85)]"
+                />
               </div>
             </div>
           </div>

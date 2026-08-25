@@ -19,6 +19,15 @@ const TRAVEL = 120;
 /** Source frame rate. Seeks are quantised to whole frames. */
 const VIDEO_FPS = 24;
 
+/** The sequence, in viewport heights: the runway is 500dvh, but it is over
+ *  after this much of it, where the sheet below starts its overlap. The
+ *  timeline ends here and so does the autoplay that carries it. */
+const SEQUENCE = 2;
+
+/** How much of that the autoplay plays per second, on landing: two viewports
+ *  at this pace is about eight seconds, or a word every two. */
+const SPEED = 0.25;
+
 /**
  * Scroll-scrubbed hero.
  *
@@ -83,7 +92,7 @@ export function Hero() {
           // Two viewports of runway, in pixels. The sheet below begins its
           // overlap at exactly this point, so the sequence is complete before
           // anything starts covering it. Re-measured on refresh.
-          end: () => "+=" + window.innerHeight * 2,
+          end: () => "+=" + window.innerHeight * SEQUENCE,
           scrub: 1,
           invalidateOnRefresh: true,
         },
@@ -160,7 +169,12 @@ export function Hero() {
   }, []);
 
   return (
-    <section ref={rootRef} className="relative h-[500dvh]">
+    <section
+      ref={rootRef}
+      data-autoplay={SEQUENCE}
+      data-autoplay-speed={SPEED}
+      className="relative h-[500dvh]"
+    >
       <div className="sticky top-0 h-[100dvh] w-full overflow-hidden">
         <video
           ref={videoRef}

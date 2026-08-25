@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { PROJECTS } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
+import { Lightbox } from "@/components/ui/Lightbox";
 
 /** Copies of the set laid end to end. Three is enough that the run is always
  *  wider than the viewport plus a card, which is what lets every card wrap
@@ -22,6 +24,17 @@ const MIN_SPEED = 0.05;
 
 /** One arrow key throw. Decays to roughly one card at the friction above. */
 const KEY_THROW = 18;
+
+/** How much of a card hangs past each edge of the frame at rest. The run is
+ *  parked a third of a card to the left of flush, so the outermost photographs
+ *  are cut by the frame rather than sitting inside it: the strip reads as a
+ *  run that carries on past both edges, which is what it is. */
+const EDGE_PEEK = 0.34;
+
+/** How far the pointer may travel and still count as a tap rather than a drag.
+ *  Measured as total travel, not net, so a drag that returns to where it began
+ *  does not open a photograph on the way back. */
+const TAP_SLOP = 6;
 
 /** How deep the valley runs at a given width: about 3.5% of it, floored so the
  *  curve is still legible on a phone and capped so it does not turn into a
@@ -56,6 +69,8 @@ export function Projects() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLLIElement | null)[]>([]);
   const offsetRef = useRef(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const closeLightbox = useCallback(() => setOpenIndex(null), []);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -74,6 +89,7 @@ export function Projects() {
     let frame = 0;
     let dragging = false;
     let lastX = 0;
+    let travelled = 0;
     let placed = false;
 
     const draw = () => {
@@ -100,10 +116,10 @@ export function Projects() {
       step = cardWidth * (1 + GAP_RATIO);
       run = cards.length * step;
       depth = valleyDepth(width);
-      // First measure only: park the run so the first photograph sits flush
-      // with the left edge and the last one waits just outside it.
+      // First measure only: park the run so the first photograph is cut by
+      // the left edge, with the rest of the run trailing off past the right.
       if (!placed) {
-        offsetRef.current = step;
+        offsetRef.current = step * (1 - EDGE_PEEK);
         placed = true;
       }
       // The frame is one card tall plus the depth the middle sinks by.
@@ -128,6 +144,7 @@ export function Projects() {
     const onPointerDown = (event: PointerEvent) => {
       if (event.button !== 0 && event.pointerType === "mouse") return;
       dragging = true;
+      travelled = 0;
       speed = 0;
       cancelAnimationFrame(frame);
       lastX = event.clientX;
@@ -138,6 +155,7 @@ export function Projects() {
       if (!dragging) return;
       const dx = event.clientX - lastX;
       lastX = event.clientX;
+      travelled += Math.abs(dx);
       offsetRef.current += dx;
       // The last frame's travel is the speed the glide starts from.
       speed = dx;
@@ -150,6 +168,21 @@ export function Projects() {
       if (viewport.hasPointerCapture(event.pointerId)) {
         viewport.releasePointerCapture(event.pointerId);
       }
+
+      // A tap opens the photograph under the pointer. The card is found by
+      // hit-testing rather than by a handler on the card itself: the pointer
+      // is captured by the frame for the length of the gesture, so the click
+      // that follows is retargeted to the frame and never reaches the card.
+      if (travelled <= TAP_SLOP && event.type === "pointerup") {
+        const hit = document
+          .elementFromPoint(event.clientX, event.clientY)
+          ?.closest<HTMLElement>("[data-photo]");
+        if (hit) {
+          setOpenIndex(Number(hit.dataset.photo));
+          return;
+        }
+      }
+
       if (Math.abs(speed) > MIN_SPEED) throwStrip(speed);
     };
 
@@ -207,16 +240,22 @@ export function Projects() {
             {PROJECTS.heading}
           </h2>
         </Reveal>
+
+        <Reveal delay={0.06}>
+          <p className="mx-auto mt-6 text-center text-base leading-relaxed text-ink-2 md:whitespace-nowrap">
+            {PROJECTS.blurb}
+          </p>
+        </Reveal>
       </div>
 
-      <Reveal delay={0.08} className="mt-12 md:mt-16 lg:mt-20">
+      <Reveal delay={0.12} className="mt-6 md:mt-8">
         <div
           ref={viewportRef}
           role="group"
           aria-roledescription="carousel"
           aria-label={PROJECTS.heading}
           tabIndex={0}
-          className="relative w-full cursor-grab touch-pan-y overflow-hidden select-none [--card:64vw] focus-visible:outline-none active:cursor-grabbing sm:[--card:40vw] lg:[--card:clamp(190px,15.2vw,300px)]"
+          className="relative w-full cursor-grab touch-pan-y overflow-hidden select-none [--card:88vw] focus-visible:outline-none active:cursor-grabbing sm:[--card:58vw] lg:[--card:clamp(280px,23vw,460px)]"
         >
           <ul role="list" className="contents">
             {cards.map((image, i) => (
@@ -228,25 +267,52 @@ export function Projects() {
                 aria-hidden={i >= set.length}
                 className="absolute top-0 left-0 w-[var(--card)] will-change-transform"
               >
+                <button
+                  type="button"
+                  data-photo={i % set.length}
+                  // Keyboard only: a pointer tap is handled by the frame, which
+                  // owns the gesture and has already told a drag from a click.
+                  onClick={() => setOpenIndex(i % set.length)}
+                  tabIndex={i >= set.length ? -1 : 0}
+                  aria-label={`Open ${image.label}`}
+                  className="block w-full cursor-zoom-in text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+                >
                 <figure className="photo-card relative aspect-[3/4] overflow-hidden rounded-[18px] border border-[rgb(126_133_140/0.25)] bg-surface-2">
                   <Image
                     src={image.src}
                     alt={i < set.length ? image.alt : ""}
                     fill
                     draggable={false}
-                    sizes="(max-width: 640px) 64vw, (max-width: 1024px) 40vw, 17vw"
+                    sizes="(max-width: 640px) 88vw, (max-width: 1024px) 58vw, 25vw"
                     className="graded pointer-events-none object-cover transition-[filter] duration-500 ease-[var(--ease-out)]"
                   />
 
-                  <figcaption className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-[rgb(16_18_21/0.82)] px-2.5 py-1 font-mono text-[11px] tracking-tight text-bg backdrop-blur-[2px]">
+                  <figcaption className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-[rgb(16_18_21/0.82)] px-2.5 py-1 font-mono text-xs tracking-tight text-bg backdrop-blur-[2px]">
                     {image.label}
                   </figcaption>
                 </figure>
+                </button>
               </li>
             ))}
           </ul>
         </div>
       </Reveal>
+
+      <Reveal delay={0.16} className="mt-12 md:mt-16">
+        <div className="mx-auto flex w-full max-w-[1440px] justify-center px-4 md:px-8 lg:px-12">
+          <Link
+            href={PROJECTS.cta.href}
+            className="inline-flex items-center rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
+          >
+            {PROJECTS.cta.label}
+          </Link>
+        </div>
+      </Reveal>
+
+      <Lightbox
+        image={openIndex === null ? null : set[openIndex]}
+        onClose={closeLightbox}
+      />
     </section>
   );
 }

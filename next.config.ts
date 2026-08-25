@@ -13,8 +13,21 @@ const CSP = [
   "default-src 'self'",
   // Next inlines the hydration payload (`self.__next_f.push(...)`) directly in
   // the HTML. Removing 'unsafe-inline' means nonces, and nonces mean rendering
-  // every request dynamically — a bad trade for a brochure site with no user
-  // input and no injection sinks.
+  // every request dynamically.
+  //
+  // The site does now take user input, at /contact. That input is never
+  // rendered back to any page — it is validated in app/api/contact/route.ts and
+  // sent as the plain-text body of an email — so there is still no injection
+  // sink here for 'unsafe-inline' to widen. If a submission ever becomes
+  // visible on the site, this trade needs revisiting.
+  //
+  // The cookie plugin needs nothing here: it is bundled first-party and calls
+  // nowhere. A tracker would — when one is added, allowlist its host here and
+  // on connect-src and img-src (GA4: https://www.googletagmanager.com,
+  // https://*.google-analytics.com). Note that allowlisting is not the gate.
+  // The gate is `<script type="text/plain" data-category="...">` plus the
+  // plugin's opt-in mode; CSP only decides whether the script may load once
+  // consent has already let it off the leash.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   // 15 `style={{}}` props render as style attributes, which style-src-attr
   // rejects without this.

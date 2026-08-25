@@ -165,9 +165,8 @@ export function ProductCatalog() {
               clipping box, no internal scroll, so the list is as long as it is
               and the photograph beside it holds still.
 
-              .glass over the flat page ground, the same way the Testimonials
-              panel is built. Each row carries its own rim now that there is no
-              shell to carry one for the set. */}
+              .glass over the flat page ground. Each row carries its own rim
+              now that there is no shell to carry one for the set. */}
           {/* items-start so an expanded card does not stretch the sibling
               beside it to match. */}
           <ul

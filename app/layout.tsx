@@ -5,6 +5,7 @@ import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { Grain } from "@/components/ui/Grain";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
+import { CookieConsent } from "@/components/site/CookieConsent";
 import { SEO } from "@/lib/content";
 
 const geistSans = Geist({
@@ -35,11 +36,26 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        {/* Set during parse, not at hydration: the browser restores a reload's
+            scroll position on the load event, which is far too early for a
+            React effect to have turned restoration off. The page is scrubbed,
+            so a restored position is a reader dropped into the middle of a
+            sequence they never saw begin. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: 'history.scrollRestoration = "manual";',
+          }}
+        />
         <SmoothScroll />
         <Header />
         {children}
         <Footer />
         <Grain />
+        {/* Last, and in the root layout rather than a page: the plugin sweeps
+            the document once for gated scripts and for the footer's
+            preferences button, so anything it must find has to be mounted by
+            the time this runs, and has to stay mounted. */}
+        <CookieConsent />
       </body>
     </html>
   );

@@ -15,6 +15,7 @@ import { CaretDown, List } from "@phosphor-icons/react/dist/ssr";
 import { siWhatsapp } from "simple-icons";
 import { NAV, LOCALES, LOGO_ALT, WHATSAPP } from "@/lib/content";
 import { Z } from "@/lib/z";
+import { replayHero } from "@/lib/autoplay";
 import { MobileNav } from "./MobileNav";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -83,7 +84,10 @@ export function Header() {
           style={staticStyle}
           className="glass glass-rim relative flex h-16 w-full items-center gap-4 overflow-hidden px-4 sm:px-5"
         >
-          <Link href="/" aria-label="MEVO Malaysia, home">
+          {/* Home is where the hero plays, so the mark is also the way back to
+              the top of it — including from the home page itself, where the
+              link alone would not move anything. */}
+          <Link href="/" aria-label="MEVO Malaysia, home" onClick={replayHero}>
             <motion.span
               className="block origin-left"
               style={reduce ? undefined : { transform: logoTransform }}

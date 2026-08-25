@@ -1,4 +1,16 @@
 @import "tailwindcss";
+/* The cookie plugin's stylesheet, put in a cascade layer of its own. Layered
+   rules lose to unlayered ones whatever their specificity, so `.glass` and
+   `.glass-rim` below can simply be applied to its panels
+   (components/site/CookieConsent.tsx does that in onModalReady) instead of the
+   material being written out a second time at #cc-main specificity. The
+   prefers-reduced-transparency fallback further down then covers the notice
+   too, because it names `.glass`.
+
+   It lives here rather than in the component: layout.tsx imports this file
+   first, so a stylesheet imported anywhere else would load after these
+   overrides and win. */
+@import "vanilla-cookieconsent/dist/cookieconsent.css" layer(cookieconsent);
 
 /* MEVO Malaysia - brushed aluminium design system.
    Light theme locked. Tokens are variables so a dark mode can be added later. */
@@ -313,5 +325,208 @@ body {
      runway follows it down. */
   .svc-runway {
     height: calc(620dvh - 448px);
+  }
+}
+
+/* Cookie notice.
+
+   The plugin's own stylesheet is layered (see the @import at the top), so
+   everything here wins without !important. Two halves: its variables mapped
+   onto this system's tokens, then the handful of rules where its markup has to
+   be argued with rather than configured. The panels themselves carry .glass and
+   .glass-rim, applied in components/site/CookieConsent.tsx, so the material,
+   the shadow, the rim and the reduced-transparency fallback are all the ones
+   the header island already uses. */
+#cc-main {
+  --cc-font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* MobileNav's radius and panel duration: this is the same kind of surface. */
+  --cc-modal-border-radius: 16px;
+  --cc-modal-transition-duration: 0.22s;
+  --cc-modal-margin: 1rem;
+  --cc-btn-border-radius: 999px;
+  --cc-pm-toggle-border-radius: 999px;
+
+  /* .glass paints the panel; this still feeds the toggle knobs and the
+     scrollbar, which read the ground rather than sit on it. */
+  --cc-bg: var(--surface);
+  --cc-primary-color: var(--ink);
+  --cc-secondary-color: var(--ink-2);
+  --cc-link-color: var(--ink);
+
+  --cc-btn-primary-bg: var(--ink);
+  --cc-btn-primary-color: var(--bg);
+  --cc-btn-primary-border-color: var(--ink);
+  --cc-btn-primary-hover-bg: #000000;
+  --cc-btn-primary-hover-color: var(--bg);
+  --cc-btn-primary-hover-border-color: #000000;
+
+  /* The header's own button treatment: white at half strength over the glass,
+     with the brighter rim on hover. */
+  --cc-btn-secondary-bg: rgb(255 255 255 / 0.5);
+  --cc-btn-secondary-color: var(--ink);
+  --cc-btn-secondary-border-color: rgb(255 255 255 / 0.7);
+  --cc-btn-secondary-hover-bg: rgb(255 255 255 / 0.72);
+  --cc-btn-secondary-hover-color: var(--ink);
+  --cc-btn-secondary-hover-border-color: rgb(255 255 255 / 0.9);
+
+  --cc-separator-border-color: rgb(126 133 140 / 0.18);
+  --cc-section-category-border: rgb(255 255 255 / 0.6);
+
+  --cc-toggle-on-bg: var(--ink);
+  --cc-toggle-off-bg: var(--ink-3);
+  --cc-toggle-on-knob-bg: #ffffff;
+  --cc-toggle-off-knob-bg: #ffffff;
+  --cc-toggle-readonly-bg: rgb(126 133 140 / 0.3);
+  --cc-toggle-readonly-knob-bg: #ffffff;
+  --cc-toggle-readonly-knob-icon-color: rgb(126 133 140 / 0.3);
+  --cc-toggle-enabled-icon-color: var(--bg);
+  --cc-toggle-disabled-icon-color: var(--bg);
+
+  --cc-cookie-category-block-bg: rgb(255 255 255 / 0.42);
+  --cc-cookie-category-block-border: rgb(255 255 255 / 0.6);
+  --cc-cookie-category-block-hover-bg: rgb(255 255 255 / 0.6);
+  --cc-cookie-category-block-hover-border: rgb(255 255 255 / 0.8);
+  --cc-cookie-category-expanded-block-bg: transparent;
+  --cc-cookie-category-expanded-block-hover-bg: rgb(255 255 255 / 0.5);
+
+  /* MobileNav's scrim, exactly. */
+  --cc-overlay-bg: rgb(244 245 246 / 0.6);
+  --cc-footer-bg: rgb(255 255 255 / 0.35);
+  --cc-footer-color: var(--ink-3);
+  --cc-footer-border-color: rgb(126 133 140 / 0.18);
+  --cc-webkit-scrollbar-bg: rgb(126 133 140 / 0.13);
+  --cc-webkit-scrollbar-hover-bg: rgb(126 133 140 / 0.5);
+}
+
+@media (min-width: 1024px) {
+  #cc-main {
+    --cc-modal-margin: 1.5rem;
+  }
+}
+
+/* Buttons here press like every other button on the site. The plugin
+   transitions colour only, so the shorthand has to be restated rather than
+   extended. */
+#cc-main .cm__btn,
+#cc-main .pm__btn,
+#cc-main .cm__btn--close,
+#cc-main .pm__close-btn {
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+#cc-main .cm__btn:active,
+#cc-main .pm__btn:active,
+#cc-main .cm__btn--close:active,
+#cc-main .pm__close-btn:active {
+  transform: scale(0.97);
+}
+
+/* Same reason: the plugin hardcodes `ease` inside a shorthand, and this site
+   moves on one curve. */
+#cc-main.cc--anim .cm,
+#cc-main.cc--anim .pm,
+#cc-main.cc--anim .pm-overlay {
+  transition:
+    opacity var(--cc-modal-transition-duration) var(--ease-out),
+    transform var(--cc-modal-transition-duration) var(--ease-out),
+    visibility var(--cc-modal-transition-duration) var(--ease-out);
+}
+
+/* The plugin's reset sets headings at 600 alongside b and strong; headings on
+   this site are 500 and tracked in. */
+#cc-main .cm__title,
+#cc-main .pm__title {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Its inline code sits in the necessary-category description, naming the one
+   cookie the site sets. */
+#cc-main code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92em;
+}
+
+/* The close control. The plugin draws it as a 42px square welded into the top
+   right corner, which on a 16px-radius panel reads as a chip broken off it.
+   This is the same circular button the mobile nav closes with, inset from the
+   corner. */
+#cc-main .cm__btn--close {
+  top: 0.875rem;
+  right: 0.875rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.5);
+  overflow: visible;
+}
+
+#cc-main .cm__btn--close:hover {
+  background: rgb(255 255 255 / 0.72);
+  border-color: rgb(255 255 255 / 0.9);
+}
+
+#cc-main .cm__btn--close svg,
+#cc-main .cm__btn--close:hover svg {
+  stroke: var(--ink);
+  transform: scale(0.42);
+}
+
+/* Section blocks read their radius from the *button* variable, which here is a
+   999px pill — right for a button, and a capsule around a paragraph otherwise.
+   The panel's own radius, halved, is what these want. */
+#cc-main .pm__section,
+#cc-main .pm__section--toggle,
+#cc-main .pm__section-title {
+  border-radius: 8px;
+}
+
+#cc-main .pm__section--toggle .pm__section-desc-wrapper {
+  border-radius: 8px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Contact form state changes.
+
+   Two animations, both saying the same thing: the form heard you and something
+   changed. The label swap runs through a slight blur so the outgoing and
+   incoming words never read as two labels stacked on each other, and the panel
+   enters from 0.98 rather than from nothing, because it replaces a card that
+   was already there rather than arriving from somewhere else.
+
+   Transitions, not keyframes: a submit can be pressed again the moment it
+   fails, and a transition retargets from wherever it is while a keyframe would
+   start over. Under prefers-reduced-motion the global clamp higher up this file
+   takes the movement out and leaves the state change. */
+.contact-label {
+  display: inline-block;
+  transition:
+    filter 200ms var(--ease-out),
+    opacity 200ms var(--ease-out);
+}
+
+.contact-label[data-busy="true"] {
+  filter: blur(2px);
+  opacity: 0.75;
+}
+
+.contact-panel[data-entering] {
+  animation: contact-panel-in 240ms var(--ease-out) both;
+}
+
+@keyframes contact-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

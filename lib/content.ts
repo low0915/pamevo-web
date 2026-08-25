@@ -10,7 +10,7 @@ export type NavItem = { label: string; href?: string; children?: { label: string
 
 export const NAV: NavItem[] = [
   { label: "Our Products", href: "/our-products" },
-  { label: "Contact" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const LOCALES = ["EN", "ZH"] as const;
@@ -51,6 +51,16 @@ export const SEO = {
     title: "Aluminium Window & Door Systems",
     description:
       "Browse 20 MEVO window and door systems: casement, awning, sliding and panoramic windows, bifold and entry doors, sunrooms and aluminium-clad wood. Full specs.",
+  },
+  privacy: {
+    title: "Privacy & Cookies",
+    description:
+      "How MEVO Malaysia handles personal data, and the cookies this website stores.",
+  },
+  contact: {
+    title: "Contact",
+    description:
+      "Speak to MEVO Malaysia about aluminium windows and doors: send an enquiry, call 014 - 879 7371, or visit the Shah Alam showroom.",
   },
 };
 
@@ -192,6 +202,83 @@ export const STATS = [
 export const CTA = "To Get More Details";
 
 /**
+ * The /contact page.
+ *
+ * Only the page's own copy lives here. The number, address and email are read
+ * from FOOTER by the page itself, the same rule /privacy follows, so there is
+ * one place to change a phone number rather than four.
+ *
+ * The form asks for as little as it can get away with: a name, one way to
+ * reply, and what the enquiry is about. Every field beyond that is a reason
+ * not to send it. `hint` is why the two contact fields are not both required —
+ * it says so once, above the pair, rather than as an error after the fact.
+ *
+ * `errors` are written as instructions rather than diagnoses: "Tell us who to
+ * reply to", not "Invalid input". `failed` deliberately offers the phone and
+ * WhatsApp, because a failure here means the visitor cannot reach us the way
+ * they chose and the page owes them another route.
+ */
+export const CONTACT = {
+  banner: {
+    heading: "Let's talk about your project",
+    lede: "Windows and doors for a home, a development or a commercial facade. Tell us what you are building and we will come back with the systems that suit it.",
+  },
+  details: {
+    heading: CTA,
+    blurb:
+      "Reach the team directly, or send the form and we will reply within one working day.",
+    labels: {
+      phone: "Phone",
+      email: "Email",
+      address: "Showroom & office",
+      company: "Registered as",
+    },
+  },
+  form: {
+    heading: "Send an enquiry",
+    hint: "A phone number or an email — whichever you would rather we use.",
+    labels: {
+      name: "Name",
+      email: "Email",
+      phone: "Phone",
+      message: "What can we help with?",
+    },
+    placeholders: {
+      message: "The project, the rooms or elevations involved, and any timeline you are working to.",
+    },
+    optional: "optional",
+    submit: "Send enquiry",
+    submitting: "Sending",
+    retry: "Try again",
+    errors: {
+      name: "Tell us who this is from.",
+      contact: "Add a phone number or an email so we can reply.",
+      email: "That email address does not look right.",
+      phone: "That phone number does not look right.",
+      message: "Tell us a little about the project.",
+      failed:
+        "That did not send. Please call 014 - 879 7371 or message us on WhatsApp, and we will pick it up from there.",
+      rateLimited:
+        "That is several enquiries in a short time. Please call 014 - 879 7371 if it is urgent.",
+    },
+    sent: {
+      heading: "Enquiry sent",
+      body: "We have it, and we will reply within one working day. If it is urgent, call 014 - 879 7371.",
+      again: "Send another",
+    },
+    /** Read by a screen reader as the state changes; never shown. */
+    status: {
+      submitting: "Sending your enquiry.",
+      sent: "Enquiry sent.",
+      error: "Your enquiry could not be sent.",
+    },
+    /** The consent line under the button. The policy it names exists. */
+    consent: "By sending this you agree to our",
+    consentLink: "Privacy & Cookies Policy",
+  },
+};
+
+/**
  * Retained, not rendered. The eleven-point bento section that used this was
  * removed once the Why Choose panel took over that role. Kept so the copy is
  * not lost with it.
@@ -278,27 +365,22 @@ export const SERVICES = {
 
 export const PROJECTS = {
   heading: "Our Projects",
+  blurb:
+    "From homes to commercial spaces, explore aluminium windows and doors crafted for every unique project.",
+  /** Points at a page that does not exist yet; the link ships ahead of it. */
+  cta: { label: "Contact us", href: "/contact" },
   /** Six curated photographs. The live site shows six untitled tiles and adds no captions. */
   /** Labels are the live site's own tile names: PROJECT 1 through PROJECT 6. */
+  /** Intrinsic pixel sizes, carried so the lightbox frame can be the picture's
+      own shape rather than a box it sits letterboxed inside. */
   images: [
-    { src: "/projects/01.jpg", label: "Project 1", alt: "Geometric facade of a modern skyscraper" },
-    { src: "/projects/02.jpg", label: "Project 2", alt: "Glass building facade with a repeating geometric pattern" },
-    { src: "/projects/03.jpg", label: "Project 3", alt: "Modern building with a glazed facade and columns" },
-    { src: "/projects/04.jpg", label: "Project 4", alt: "Black framed windows in a minimalist interior" },
-    { src: "/projects/05.jpg", label: "Project 5", alt: "Angular facade of a tower with reflective glazing" },
-    { src: "/projects/06.jpg", label: "Project 6", alt: "Close view of a building elevation with many windows" },
+    { src: "/projects/01.jpg", label: "Project 1", alt: "Geometric facade of a modern skyscraper", width: 1200, height: 1800 },
+    { src: "/projects/02.jpg", label: "Project 2", alt: "Glass building facade with a repeating geometric pattern", width: 1600, height: 1067 },
+    { src: "/projects/03.jpg", label: "Project 3", alt: "Modern building with a glazed facade and columns", width: 1600, height: 1200 },
+    { src: "/projects/04.jpg", label: "Project 4", alt: "Black framed windows in a minimalist interior", width: 1200, height: 1800 },
+    { src: "/projects/05.jpg", label: "Project 5", alt: "Angular facade of a tower with reflective glazing", width: 1200, height: 1601 },
+    { src: "/projects/06.jpg", label: "Project 6", alt: "Close view of a building elevation with many windows", width: 1600, height: 1067 },
   ],
-};
-
-export const TESTIMONIALS = {
-  heading: "testimonial",
-  /** The live quotes are template content with placeholder names and invented roles,
-      so the section ships as a composed empty state instead. */
-  emptyState: {
-    line: "Client testimonials are being collected.",
-    detail:
-      "Completed project references will be published here as they are approved.",
-  },
 };
 
 export const FOOTER = {
@@ -307,21 +389,259 @@ export const FOOTER = {
     "We are dedicated to providing innovative solutions that empower businesses to excel in their respective industries.",
   reachHeading: "Reach Out to Us",
   phone: "014 - 879 7371",
+  /** The number as dialled: spaces and the leading zero are for reading, the
+      country code is for the handset. */
+  phoneHref: "tel:+60148797371",
   email: "info@paprojects.com.my",
+  emailHref: "mailto:info@paprojects.com.my",
   company: "PA PROJECTS MARKETING SDN BHD (847136-X)",
   address:
     "19, Jalan 15/23, Taman Perindustrian Tiong Nam, Seksyen 15, 40200 Shah Alam, Selangor Darul Ehsan, Malaysia. (Showroom & Office)",
   connectHeading: "Connect with Us",
-  socials: ["WhatsApp", "Facebook", "Instagram", "TikTok", "Xiaohongshu"],
+  /** Order is the order they are shown in. WhatsApp reuses the same link as
+      the header's chat button, so there is one number to change, not two. */
+  socials: [
+    { name: "WhatsApp", url: WHATSAPP.url },
+    { name: "Facebook", url: "https://www.facebook.com/MEVOMalaysia" },
+    { name: "Instagram", url: "https://www.instagram.com/mevomalaysia" },
+    { name: "TikTok", url: "https://www.tiktok.com/@mevomalaysia" },
+    {
+      name: "Xiaohongshu",
+      url: "https://www.xiaohongshu.com/user/profile/Mevo_Malaysia",
+    },
+  ],
   copyright: "\u00a9 2026 MEVO MALAYSIA",
+  privacy: "Privacy & Cookies",
+  cookiePreferences: "Cookie preferences",
   terms: "Terms and Conditions",
 };
 
 /**
- * The /our-products page. The slogan and subheading are the hero's own strings
- * rather than copies: the same two lines carry the brand on both pages, and one
- * source means they can never drift apart.
+ * Cookie consent.
+ *
+ * The banner line is the client's own, and reads as the site's stated position
+ * rather than as a description of the current build: no analytics or marketing
+ * cookie is installed yet, and the categories below hold nothing. What is
+ * enforced regardless is the mechanism — a script in either category stays
+ * inert until that category is allowed.
+ *
+ * When a tracker does land, list its cookies under `autoClear` and bump
+ * `REVISION` in components/site/CookieConsent.tsx, so everyone who has already
+ * answered is asked again against what the categories then carry.
+ *
+ * `footer` and a few descriptions carry inline HTML because the library renders
+ * these through innerHTML. Every string here is written by us; none is
+ * user-supplied.
  */
+export const CONSENT = {
+  banner: {
+    label: "Cookie notice",
+    title: "Cookies",
+    description:
+      "We use cookies to improve your experience, analyse site traffic, and personalise content. By continuing to use this site, you agree to our use of cookies.",
+    acceptAll: "Accept all",
+    acceptNecessary: "Necessary only",
+    showPreferences: "Manage",
+    closeIconLabel: "Accept necessary cookies only",
+    footer: '<a href="/privacy#cookies">Privacy &amp; cookies</a>',
+  },
+  preferences: {
+    title: "Cookie preferences",
+    acceptAll: "Accept all",
+    acceptNecessary: "Necessary only",
+    save: "Save preferences",
+    closeIconLabel: "Close cookie preferences",
+    serviceCounterLabel: "Service|Services",
+    intro: {
+      title: "How this site uses cookies",
+      description:
+        "MEVO Malaysia sets no analytics or advertising cookies. The categories below exist so that if any are ever added, they stay switched off until you say otherwise.",
+    },
+    necessary: {
+      title: "Strictly necessary",
+      description:
+        "Required for the site to work. Today that is one cookie, <code>cc_cookie</code>, which stores this choice for 182 days and nothing else. It cannot be switched off.",
+    },
+    analytics: {
+      title: "Analytics",
+      description:
+        "Used to understand which pages are read and how, so the site can be improved. Nothing in this category runs unless you allow it.",
+    },
+    marketing: {
+      title: "Marketing",
+      description:
+        "Used to measure how advertising and social campaigns perform. Nothing in this category runs unless you allow it.",
+    },
+    more: {
+      title: "More information",
+      description:
+        'The full disclosure is on the <a href="/privacy#cookies">privacy and cookies page</a>. Anything it does not answer: <a href="mailto:info@paprojects.com.my">info@paprojects.com.my</a>.',
+    },
+  },
+};
+
+/**
+ * The /privacy page. Client-supplied text, carried verbatim.
+ *
+ * A section's `body` is a run of blocks: a plain string is a paragraph, a
+ * `{ list }` is a bulleted set, and a `{ title, body }` is a labelled
+ * sub-section, which section 7 uses for the three kinds of cookie. The cookies
+ * section keeps `id: "cookies"` because the consent notice links straight at
+ * it.
+ *
+ * The contact details are read from FOOTER by the page rather than repeated
+ * here, so the number and address on this page cannot drift from the ones in
+ * the footer.
+ */
+export const PRIVACY = {
+  heading: "Privacy & Cookies",
+  updated: "Last updated: 25 August 2026",
+  intro: [
+    'MEVO Malaysia ("MEVO", "we", "us" or "our") respects your privacy and is committed to protecting your personal data. This Privacy & Cookies Policy explains how we collect, use, store and protect your information when you visit and interact with our website.',
+    "By using this website, you agree to the practices described in this policy.",
+  ],
+  sections: [
+    {
+      id: "information-we-collect",
+      heading: "1. Information We Collect",
+      body: [
+        "We may collect personal information that you voluntarily provide to us, including:",
+        {
+          list: [
+            "Name",
+            "Email address",
+            "Phone number",
+            "Company name",
+            "Project or enquiry details",
+            "Any other information submitted through our contact or enquiry forms",
+          ],
+        },
+        "We may also automatically collect certain technical information when you visit our website, such as your IP address, browser type, device information, pages visited and interactions with our website.",
+      ],
+    },
+    {
+      id: "how-we-use-your-information",
+      heading: "2. How We Use Your Information",
+      body: [
+        "We may use your information to:",
+        {
+          list: [
+            "Respond to your enquiries and quotation requests",
+            "Provide information about our products and services",
+            "Communicate with you regarding your project or request",
+            "Improve our website, products and services",
+            "Analyse website traffic and user behaviour",
+            "Maintain the security and functionality of our website",
+            "Comply with applicable legal and regulatory requirements",
+          ],
+        },
+        "We will only use your personal information for legitimate business purposes and in accordance with applicable data protection laws.",
+      ],
+    },
+    {
+      id: "sharing-your-information",
+      heading: "3. Sharing Your Information",
+      body: [
+        "We do not sell or rent your personal information to third parties.",
+        "We may share your information with trusted service providers or partners who assist us in operating our website and providing our services. These parties are required to handle your information responsibly and only for the purposes necessary to provide their services.",
+        "We may also disclose information where required by law or where necessary to protect our rights, property or safety.",
+      ],
+    },
+    {
+      id: "data-security",
+      heading: "4. Data Security",
+      body: [
+        "We take reasonable technical and organisational measures to protect your personal information from unauthorised access, misuse, loss, alteration or disclosure.",
+        "However, no method of transmitting or storing information online is completely secure. While we take appropriate steps to protect your information, we cannot guarantee absolute security.",
+      ],
+    },
+    {
+      id: "data-retention",
+      heading: "5. Data Retention",
+      body: [
+        "We retain your personal information only for as long as necessary to fulfil the purposes for which it was collected, including responding to enquiries, providing our services and meeting legal or business requirements.",
+        "When your information is no longer required, we will take reasonable steps to securely delete or anonymise it.",
+      ],
+    },
+    {
+      /** The consent notice links at this id. */
+      id: "cookies",
+      heading: "6. Cookies",
+      body: [
+        "Our website uses cookies and similar technologies to help provide, improve and personalise your browsing experience.",
+        "Cookies are small text files stored on your device when you visit a website. They allow a website to recognise your device and remember certain information about your visit.",
+      ],
+    },
+    {
+      id: "how-we-use-cookies",
+      heading: "7. How We Use Cookies",
+      body: [
+        "We may use cookies for the following purposes:",
+        {
+          title: "Essential Cookies",
+          body: "These cookies are necessary for the website to function properly and enable core features such as security, navigation and accessibility.",
+        },
+        {
+          title: "Analytics Cookies",
+          body: "These cookies help us understand how visitors use our website, such as which pages are visited and how visitors interact with the website. This information helps us improve the performance and user experience of our website.",
+        },
+        {
+          title: "Functional Cookies",
+          body: "These cookies may remember your preferences and settings to provide a more convenient and personalised browsing experience.",
+        },
+      ],
+    },
+    {
+      id: "managing-cookies",
+      heading: "8. Managing Cookies",
+      body: [
+        "You can manage, restrict or delete cookies through your browser settings. Please note that disabling certain cookies may affect the functionality and performance of our website.",
+        "Where required, we may also provide options for you to manage your cookie preferences directly through our website.",
+      ],
+    },
+    {
+      id: "third-party-services",
+      heading: "9. Third-Party Services",
+      body: [
+        "Our website may use third-party services, such as analytics, embedded content or other tools. These third parties may collect information in accordance with their own privacy policies.",
+        "We encourage you to review the privacy policies of relevant third-party providers for more information about how they handle your data.",
+      ],
+    },
+    {
+      id: "third-party-links",
+      heading: "10. Third-Party Links",
+      body: [
+        "Our website may contain links to third-party websites. MEVO is not responsible for the privacy practices or content of these external websites. We encourage you to review the privacy policies of any third-party websites you visit.",
+      ],
+    },
+    {
+      id: "your-rights",
+      heading: "11. Your Rights",
+      body: [
+        "Subject to applicable laws, you may have the right to request access to, correction of or deletion of your personal information held by us.",
+        "You may also withdraw your consent to certain uses of your personal information, subject to any legal or contractual requirements.",
+        "To make a request regarding your personal information, please contact us using the details below.",
+      ],
+    },
+    {
+      id: "changes-to-this-policy",
+      heading: "12. Changes to This Policy",
+      body: [
+        "We may update this Privacy & Cookies Policy from time to time to reflect changes to our practices, website or applicable laws.",
+        'Any updates will be posted on this page, and the "Last updated" date will be revised accordingly.',
+      ],
+    },
+  ],
+  /** Section 13. Held apart from the prose because it is a set of details, and
+      because the details themselves are the footer's. */
+  contact: {
+    heading: "13. Contact Us",
+    intro:
+      "If you have any questions about this Privacy & Cookies Policy or how we handle your personal information, please contact us at:",
+    name: "MEVO Malaysia",
+  },
+};
+
 export const PRODUCTS_PAGE = {
   heading: "Our Products",
   slogan: HERO.tagline,
