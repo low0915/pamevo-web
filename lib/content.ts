@@ -13,6 +13,23 @@ export const NAV: NavItem[] = [
   { label: "Contact", href: "/contact" },
 ];
 
+/**
+ * Labels only. `href` is carried over from NAV rather than repeated, so a route
+ * can never be right in one language and stale in the other.
+ *
+ * "联系我们" rather than a bare "联系": the English "Contact" stands alone as
+ * a noun, the Chinese verb does not, and it is the same phrase the projects
+ * strip already ends on. No NAV entry has `children` today - if one ever does,
+ * its sub-labels need translating here too, since this only rewrites the top
+ * level.
+ */
+const NAV_LABELS_ZH = ["我们的产品", "联系我们"];
+
+export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
+  ...item,
+  label: NAV_LABELS_ZH[i],
+}));
+
 export const LOCALES = ["EN", "ZH"] as const;
 
 /** Deep link to the sales WhatsApp. Same number as FOOTER.phone, written in the
@@ -83,6 +100,24 @@ export const HERO = {
     "P.A. Projects x MEVO Malaysia — specialists in aluminium windows and doors",
 };
 
+/**
+ * Chinese copy is supplied by the client section by section, and only some
+ * sections have it. Each ZH export is therefore a partial overlay on the
+ * English object beside it: what is here replaces the original, what is
+ * missing falls through untranslated. See `useCopy` in lib/locale.tsx.
+ *
+ * `heading` and `imageAlt` stay English on purpose - they are the sr-only h1
+ * and the alt text, and a half-translated accessibility layer is worse than a
+ * consistent one.
+ */
+export const HERO_ZH: Partial<typeof HERO> = {
+  tagline: "创新。性能。实惠。",
+  /** Split on the same three beats the English words are, so the scrubbed
+      hero timeline needs no change: three words in, three words out. */
+  taglineWords: ["创新。", "性能。", "实惠。"],
+  subheading: "通过高性能门窗系统重新定义现代生活",
+};
+
 export const BACKGROUND = {
   heading: "Industry Leadership & Background",
   /** One photograph per paragraph, swapped as the pinned section scrolls. */
@@ -99,6 +134,17 @@ export const BACKGROUND = {
   paragraphs: [
     "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over 30 years of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group. Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
     "In addition, P.A. Group has established an in-depth strategic partnership with MEVO Doors & Windows, a renowned Chinese window and door brand, which serves as our key overseas supplier for window and door products. Specialized in the R&D and manufacturing of energy-saving and low-carbon windows and doors, MEVO operates two major operational centres in East China and South China, providing strong support for the Group's global window and door business",
+  ],
+};
+
+/** The Chinese panel copy is the client's own, not a translation of the two
+    English paragraphs above: it makes the brand case rather than reciting the
+    corporate history. Same two steps, so the pinned swap is unchanged. */
+export const BACKGROUND_ZH: Partial<typeof BACKGROUND> = {
+  heading: "行业领导地位与背景",
+  paragraphs: [
+    "在 MEVO 马来西亚，我们坚信门窗不仅仅是建筑构件——它们塑造着人们的生活、工作以及体验环境的方式。",
+    "作为 MEVO 优质系统的独家总经销商和战略合作伙伴，我们提供集美观、舒适、耐用、节能和长期价值于一体的综合解决方案。结合先进的工程技术、现代建筑美学与可靠的性能，MEVO 通过专为现代生活方式设计的创新门窗和建筑解决方案，打造舒适、节能且时尚的居住空间。",
   ],
 };
 
@@ -157,6 +203,53 @@ export const WHY_CHOOSE = {
   ],
 };
 
+/** All three parts and the closing commitment. The performance grades keep
+    their English level names and SI units - "Level 8", "1.5W/m²K", "43dB" -
+    because those are the standard's own notation and are read as figures rather
+    than as words. The photograph and its alt text stay English; see the note on
+    HERO_ZH. */
+export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
+  parts: [
+    {
+      title: "为什么选择 MEVO Malaysia",
+      items: [
+        "本地首家制造商与销售商",
+        "值得信赖、可靠的售后服务",
+        "先试后买",
+        "长达 15 年保固",
+      ],
+    },
+    {
+      title: "我们的 10 大核心优势",
+      items: [
+        "静享生活体验（隔音效果高达 43dB）",
+        "清凉舒适生活（隔热性能达 Level 8，1.5W/m²K）",
+        "高效节能",
+        "卓越水密性能（Level 6，≥700 Pa）",
+        "UV 防护科技",
+        "卓越安全性能",
+        "创新现代设计",
+        "卓越品质，最高享有 15 年保固",
+        "价格亲民，提供 0% 利息 EPP 分期付款计划",
+        "专业 MEVO 安装团队与完善售后服务",
+      ],
+    },
+    {
+      title: "6 大工程性能亮点",
+      items: [
+        "抗风压性能 Level 9（≥5000 Pa = 500 kgf/m²）",
+        "气密性能 Level 8（空气渗漏减少 67% 至 96%）",
+        "水密性能 Level 6（≥700 Pa）",
+        "隔热性能 Level 8（1.5 W/m²K，CRF ≥75）",
+        "隔音性能 Level 5（降噪达 43dB）",
+        "卓越德国五金系统",
+      ],
+      note: "德国 Roto 五金系统、HOPPE 把手、TECTUS / TPEO 传动杆系统",
+    },
+  ],
+  tagline: ["我们的承诺很简单：", "创新与性能交融。尊贵生活，触手可及。"],
+};
+
 /** Product shot that overlaps the stat band. Exported from the Figma layout,
     a cut-out on transparency so the rules behind it stay visible. */
 export const STATS_IMAGE = {
@@ -198,6 +291,43 @@ export const STATS = [
     body: "Residential units, commercial buildings and high-rise facades completed across Malaysia.",
   },
 ];
+
+/** The heading keeps its two-line break: the comma is where the layout draws
+    the line, in either language. The standfirst is the same claim, not a
+    literal rendering - Chinese marketing copy carries "小至...大至" where the
+    English runs "ranging from...to". */
+export const STATS_INTRO_ZH: Partial<typeof STATS_INTRO> = {
+  heading: ["工程创新，", "经各类建筑项目验证"],
+  body: "P.A. Group 自 2004 年起从事铝型材挤压生产，与 MEVO 的合作则带来了与之匹配的门窗系统。这一组合已在马来西亚完成超过 10,000 个项目，小至单栋住宅，大至整幢建筑幕墙，并由一支在交付后仍持续跟进的服务团队提供支持。",
+};
+
+/** Label and supporting line only. `value` and `suffix` are carried over from
+    STATS rather than repeated: the figures are the same figures, and the
+    counter in Stats.tsx animates to them in either language. "10k+" is left as
+    it is - "1万+" would be the idiomatic form, but it would mean counting to 1,
+    and a figure that ticks 0 to 1 reads as broken rather than as a count. */
+const STATS_TEXT_ZH = [
+  {
+    label: "年行业经验",
+    body: "自 2004 年起从事铝型材挤压生产，2006 年于马来西亚交易所主板上市。",
+  },
+  {
+    label: "客户满意度",
+    body: "以交付的实际性能衡量，而非口头承诺：隔音、隔热、水密与抗风均经测试验证。",
+  },
+  {
+    label: "成功项目",
+    body: "已在马来西亚完成住宅单位、商业建筑与高层幕墙工程。",
+  },
+];
+
+/** A whole replacement array rather than a partial overlay: STATS is a bare
+    array, so there is no key for `useCopy` to merge on. Stats.tsx picks between
+    the two on the locale directly. */
+export const STATS_ZH: typeof STATS = STATS.map((stat, i) => ({
+  ...stat,
+  ...STATS_TEXT_ZH[i],
+}));
 
 export const CTA = "To Get More Details";
 
@@ -363,12 +493,48 @@ export const SERVICES = {
   ],
 };
 
+/** Title and body only, in the same order as SERVICES.items. The photographs
+    and their alt text are carried over from the English entries below rather
+    than repeated here, so the two lists can never drift apart. `heading` is
+    untranslated, so the panel labels stay "our Services [01]". */
+const SERVICES_ITEMS_ZH = [
+  {
+    title: "建筑咨询",
+    body: "我们为业主、建筑师、室内设计师和开发商提供专业的咨询服务，以了解您的设计需求、项目需求和性能预期。",
+  },
+  {
+    title: "定制设计与系统选型",
+    body: "每个项目都是独一无二的。我们的团队提供定制化的解决方案，以匹配建筑理念和生活方式的要求。",
+  },
+  {
+    title: "供应与项目解决方案",
+    body: "从小型住宅项目到大型开发项目，MEVO MALAYSIA 凭借专业的项目协调能力，为您提供可靠的供应解决方案。",
+  },
+  {
+    title: "安装与技术支持",
+    body: "我们的专业安装团队，MEVO 认证安装商，确保每个系统都按照设计预期执行。",
+  },
+  {
+    title: "售后服务",
+    body: "专属客户支持与维护指导，确保长期满意。",
+  },
+];
+
+export const SERVICES_ZH: Partial<typeof SERVICES> = {
+  items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_ZH[i] })),
+};
+
 export const PROJECTS = {
   heading: "Our Projects",
   blurb:
     "From homes to commercial spaces, explore aluminium windows and doors crafted for every unique project.",
   /** Points at a page that does not exist yet; the link ships ahead of it. */
   cta: { label: "Contact us", href: "/contact" },
+  /** Names each tile's lightbox trigger. Held here rather than written into the
+      markup because it is a sentence, and a sentence half in the component and
+      half in a data file cannot be translated. Same pattern as
+      PRODUCTS_PAGE.cta.aria. */
+  openLabel: (project: string) => `Open ${project}`,
   /** Six photographs, and the live site's own tile names for them: PROJECT 1
       through PROJECT 6, no captions.
 
@@ -395,6 +561,24 @@ export const PROJECTS = {
     { src: "/products/15.jpg", label: "Project 5", alt: "Pale seaside room with an ultra-slim four-panel sliding door framing a rocky shore", width: 2048, height: 1536 },
     { src: "/products/18.jpg", label: "Project 6", alt: "Modern white house entrance with a ribbed charcoal entry door, a slim sidelight and a lit wall sconce", width: 2560, height: 1920 },
   ],
+};
+
+/** Tile labels only. Each photograph's `src`, `alt` and intrinsic size are
+    carried over from PROJECTS: the alt text describes the picture and is held
+    in step with lib/products.ts by hand, so it stays in one place and in one
+    language rather than being copied into a second list that could drift.
+    `openLabel` reads "查看" - view - rather than a literal "open", which is
+    what a Chinese reader expects of a control that enlarges a photograph. */
+export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
+  heading: "我们的项目",
+  blurb:
+    "从住宅到商业空间，探索为每一个独特项目量身打造的铝合金门窗。",
+  cta: { ...PROJECTS.cta, label: "联系我们" },
+  openLabel: (project: string) => `查看${project}`,
+  images: PROJECTS.images.map((image, i) => ({
+    ...image,
+    label: `项目 ${i + 1}`,
+  })),
 };
 
 export const FOOTER = {
@@ -428,6 +612,15 @@ export const FOOTER = {
   privacy: "Privacy & Cookies",
   cookiePreferences: "Cookie preferences",
   terms: "Terms and Conditions",
+};
+
+/** Only the standfirst. Everything else in the footer is a proper noun, an
+    address or a number - the same in either language - and the legal links
+    point at English pages, so translating their labels would promise a
+    translation that is not there. */
+export const FOOTER_ZH: Partial<typeof FOOTER> = {
+  blurb:
+    "我们致力于提供创新的解决方案，赋能企业在其各自行业中脱颖而出。",
 };
 
 /**
@@ -654,6 +847,22 @@ export const PRIVACY = {
       "If you have any questions about this Privacy & Cookies Policy or how we handle your personal information, please contact us at:",
     name: "MEVO Malaysia",
   },
+  /**
+   * Typeface credits, and not decoration: the HarmonyOS Sans licence requires
+   * "a prominent notice in the software to state that HarmonyOS Sans Fonts are
+   * used". This is that notice. Geist is named beside it so the block reads as
+   * a colophon rather than as a legal patch, and it sits outside `sections`
+   * because it is a credit, not a fourteenth clause of the policy.
+   *
+   * If the Chinese font is ever swapped out, this goes with it.
+   */
+  colophon: {
+    heading: "Typefaces",
+    body: [
+      "Latin text on this site is set in Geist, © Vercel, Inc., used under the SIL Open Font License 1.1.",
+      "Chinese text is set in HarmonyOS Sans SC, © Huawei Device Co., Ltd., used under the HarmonyOS Sans Fonts License Agreement.",
+    ],
+  },
 };
 
 export const PRODUCTS_PAGE = {
@@ -667,4 +876,13 @@ export const PRODUCTS_PAGE = {
   viewsLabel: "Views",
   /** Names the list/grid switch for screen readers. */
   viewLabel: "Catalog layout",
+  /** Closes every expanded product. The same words the projects strip ends on,
+      so the one thing the site asks for is asked for in one way. `aria` names
+      the product in the label, because twenty buttons all reading "Contact us"
+      are twenty identical entries in a screen reader's list of links. */
+  cta: {
+    label: "Contact us",
+    href: "/contact",
+    aria: (product: string) => `Contact us about ${product}`,
+  },
 };

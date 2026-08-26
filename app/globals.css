@@ -38,8 +38,13 @@
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* HarmonyOS sits after Geist, never before it. Browsers fall back per
+     character, not per element: Latin resolves in Geist because Geist has it,
+     and only the characters Geist lacks - Han, and the CJK punctuation around
+     it - ever reach HarmonyOS. So nothing has to know which language it is
+     rendering. See app/layout.tsx. */
+  --font-sans: var(--font-geist-sans), var(--font-harmony-sc);
+  --font-mono: var(--font-geist-mono), var(--font-harmony-sc);
   --ease-out: var(--ease-out);
   --ease-in-out: var(--ease-in-out);
 }
@@ -47,7 +52,8 @@
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), var(--font-harmony-sc), system-ui,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -509,7 +515,8 @@ body {
    the shadow, the rim and the reduced-transparency fallback are all the ones
    the header island already uses. */
 #cc-main {
-  --cc-font-family: var(--font-geist-sans), system-ui, sans-serif;
+  --cc-font-family: var(--font-geist-sans), var(--font-harmony-sc), system-ui,
+    sans-serif;
   /* MobileNav's radius and panel duration: this is the same kind of surface. */
   --cc-modal-border-radius: 16px;
   --cc-modal-transition-duration: 0.22s;
@@ -618,7 +625,8 @@ body {
 /* Its inline code sits in the necessary-category description, naming the one
    cookie the site sets. */
 #cc-main code {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-family: var(--font-geist-mono), var(--font-harmony-sc), ui-monospace,
+    monospace;
   font-size: 0.92em;
 }
 

@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BACKGROUND } from "@/lib/content";
+import { BACKGROUND, BACKGROUND_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -41,6 +42,7 @@ const SPEED = 0.25;
  */
 export function Background() {
   const rootRef = useRef<HTMLElement>(null);
+  const background = useCopy(BACKGROUND, BACKGROUND_ZH);
 
   useEffect(() => {
     const section = rootRef.current;
@@ -121,7 +123,7 @@ export function Background() {
     >
       <div className="sticky top-0 h-[100dvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]">
         <div data-bg-scale className="absolute inset-0">
-          {BACKGROUND.images.map((image, i) => (
+          {background.images.map((image, i) => (
             <div key={image.src} data-bg={i} className="absolute inset-0">
               <Image
                 src={image.src}
@@ -160,7 +162,7 @@ export function Background() {
               heading off the top of an `overflow-hidden` frame. `pt-24` still
               guards that case - it is the fixed header island's own height. */}
           <h2 className="max-w-[16ch] text-6xl leading-[1.02] font-medium tracking-tighter text-white max-md:mt-auto md:text-7xl lg:text-[5rem] xl:text-[5.5rem]">
-            {BACKGROUND.heading}
+            {background.heading}
           </h2>
 
           {/* The right padding is the 24px rail plus its 36px gap that the
@@ -172,7 +174,7 @@ export function Background() {
               {/* Both paragraphs occupy one cell, so the panel keeps a fixed
                   height and does not resize as the text swaps. */}
               <div className="grid">
-                {BACKGROUND.paragraphs.map((paragraph, i) => (
+                {background.paragraphs.map((paragraph, i) => (
                   <p
                     key={i}
                     data-para={i}

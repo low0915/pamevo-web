@@ -47,6 +47,11 @@ next-env.d.ts
 backups/
 *.bak
 
+# Built from assets/fonts/ by scripts/build-cjk-subset.mjs on every dev and
+# build. Generated, so it is not committed - and it must not be, or a stale
+# subset could outlive the copy it was cut for.
+/app/fonts/*.woff2
+
 # Working notes and the raw scrape lib/products.ts was transcribed from.
 # Kept on disk, deliberately out of the repo: none of it ships.
 PLAN.md

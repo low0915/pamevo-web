@@ -134,6 +134,28 @@ export default function PrivacyPage() {
               </div>
             </section>
           </Reveal>
+
+          {/* Set quieter than the policy above it, and behind a rule: this is a
+              credit the font licences ask for, not a clause anyone came here to
+              read. See PRIVACY.colophon. */}
+          <Reveal delay={0.06}>
+            <section
+              id="typefaces"
+              className="mt-16 scroll-mt-28 border-t border-line pt-8 md:mt-20"
+            >
+              <h2 className="font-mono text-xs tracking-[0.18em] text-ink-3 uppercase">
+                {PRIVACY.colophon.heading}
+              </h2>
+              {PRIVACY.colophon.body.map((line) => (
+                <p
+                  key={line}
+                  className="mt-3 max-w-[92ch] text-sm leading-relaxed text-ink-3"
+                >
+                  {line}
+                </p>
+              ))}
+            </section>
+          </Reveal>
         </div>
       </section>
     </main>

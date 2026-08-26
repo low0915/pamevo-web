@@ -13,7 +13,8 @@ import {
 } from "motion/react";
 import { CaretDown, List } from "@phosphor-icons/react/dist/ssr";
 import { siWhatsapp } from "simple-icons";
-import { NAV, LOCALES, LOGO_ALT, WHATSAPP } from "@/lib/content";
+import { NAV, NAV_ZH, LOCALES, LOGO_ALT, WHATSAPP } from "@/lib/content";
+import { useLocale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 import { replayHero } from "@/lib/autoplay";
 import { MobileNav } from "./MobileNav";
@@ -38,6 +39,10 @@ export function Header() {
   const [openAbout, setOpenAbout] = useState(false);
   const reduce = useReducedMotion();
   const pathname = usePathname();
+  const { locale: active, setLocale } = useLocale();
+  /* A straight swap, not `useCopy`: NAV is a bare array, so there is no object
+     for a partial overlay to merge onto. */
+  const nav = active === "ZH" ? NAV_ZH : NAV;
   const { scrollY } = useScroll();
 
   const range = [0, 120];
@@ -105,10 +110,10 @@ export function Header() {
 
           <nav className="ml-auto hidden lg:block">
             <ul className="flex items-center">
-              {NAV.map((item) =>
+              {nav.map((item) =>
                 item.children ? (
                   <li
-                    key={item.label}
+                    key={item.href ?? item.label}
                     className="relative"
                     onMouseEnter={() => setOpenAbout(true)}
                     onMouseLeave={() => setOpenAbout(false)}
@@ -155,7 +160,7 @@ export function Header() {
                     </AnimatePresence>
                   </li>
                 ) : (
-                  <li key={item.label}>
+                  <li key={item.href ?? item.label}>
                     {item.href ? (
                       <Link
                         href={item.href}
@@ -176,13 +181,15 @@ export function Header() {
           </nav>
 
           <div className="ml-auto hidden items-center gap-0.5 rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.35)] p-0.5 lg:ml-4 lg:flex">
-            {LOCALES.map((locale, i) => (
+            {LOCALES.map((locale) => (
               <button
                 key={locale}
                 type="button"
-                aria-pressed={i === 0}
+                onClick={() => setLocale(locale)}
+                aria-pressed={locale === active}
+                lang={locale === "ZH" ? "zh-Hans" : "en"}
                 className={`rounded-full px-2 py-0.5 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
-                  i === 0 ? "bg-ink text-bg" : "text-ink-3"
+                  locale === active ? "bg-ink text-bg" : "text-ink-3"
                 }`}
               >
                 {locale}

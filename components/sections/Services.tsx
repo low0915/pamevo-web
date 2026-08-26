@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SERVICES } from "@/lib/content";
+import { SERVICES, SERVICES_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -52,6 +53,7 @@ const SETTLE_ALPHA = 0.5;
  */
 export function Services() {
   const rootRef = useRef<HTMLElement>(null);
+  const services = useCopy(SERVICES, SERVICES_ZH);
 
   useEffect(() => {
     const section = rootRef.current;
@@ -121,13 +123,16 @@ export function Services() {
     <section ref={rootRef} className="svc-curtain sheet relative mb-[4em] bg-ink">
       {/* The heading is carried by each panel's label, so the section keeps one
           for structure without repeating it on screen five times. */}
-      <h2 className="sr-only">{SERVICES.heading}</h2>
+      <h2 className="sr-only">{services.heading}</h2>
 
       <div className="svc-runway">
         <div className="svc-frame relative">
-          {SERVICES.items.map((service, i) => (
+          {/* Keyed by position rather than by title: the locale toggle
+              rewrites every title, and remounting the panels would drop the
+              inline transforms the stack is being scrubbed through. */}
+          {services.items.map((service, i) => (
             <article
-              key={service.title}
+              key={i}
               data-card
               className="svc-card bg-ink"
             >
@@ -163,7 +168,7 @@ export function Services() {
                       it, so the two columns start on the same line. */}
                   <div className="border-t border-white pt-5">
                     <span className="text-base text-white capitalize md:text-lg">
-                      {SERVICES.heading} [{String(i + 1).padStart(2, "0")}]
+                      {services.heading} [{String(i + 1).padStart(2, "0")}]
                     </span>
                   </div>
 

@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { WHY_CHOOSE } from "@/lib/content";
+import { WHY_CHOOSE, WHY_CHOOSE_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -50,6 +51,9 @@ const DRIFT_TRAVEL = 22;
  */
 export function WhyChoose() {
   const rootRef = useRef<HTMLElement>(null);
+  /* Only the closing commitment has Chinese copy; the three panel parts fall
+     through to the English originals. See WHY_CHOOSE_ZH. */
+  const whyChoose = useCopy(WHY_CHOOSE, WHY_CHOOSE_ZH);
 
   useEffect(() => {
     const section = rootRef.current;
@@ -183,7 +187,7 @@ export function WhyChoose() {
             data-marker
             data-annotation
             aria-hidden
-            className="absolute top-[49%] left-[41.0%] block size-[42px] border-5 border-[#033392] max-md:hidden"
+            className="absolute top-[46.4%] left-[44.8%] block size-[42px] border-5 border-[#033392] max-md:hidden"
             style={{ transform: `scale(${1 / DRIFT_SCALE})` }}
           />
         </div>
@@ -196,7 +200,7 @@ export function WhyChoose() {
           <line
             data-leader
             stroke="#033392"
-            strokeWidth="1"
+            strokeWidth="2"
             x1="0"
             y1="0"
             x2="0"
@@ -210,9 +214,9 @@ export function WhyChoose() {
         >
           {/* Scroll progress, one segment per part. */}
           <div aria-hidden className="mb-7 flex gap-3">
-            {WHY_CHOOSE.parts.map((part, segment) => (
+            {whyChoose.parts.map((_part, segment) => (
               <span
-                key={part.title + segment}
+                key={segment}
                 className="h-px flex-1 overflow-hidden bg-[rgb(16_18_21/0.18)]"
               >
                 <span
@@ -224,9 +228,12 @@ export function WhyChoose() {
           </div>
 
           <div className="grid">
-            {WHY_CHOOSE.parts.map((part, i) => (
+            {/* Keyed by position, not by title: the locale toggle rewrites
+                every title, and remounting these would throw away the inline
+                opacity the scrubbed timeline is holding them at. */}
+            {whyChoose.parts.map((part, i) => (
               <div
-                key={part.title + i}
+                key={i}
                 data-part={i}
                 className="col-start-1 row-start-1 motion-reduce:row-start-auto motion-reduce:mb-8"
                 style={i > 0 ? { opacity: 0 } : undefined}
@@ -254,7 +261,7 @@ export function WhyChoose() {
               ink-2 rather than ink-3: on the panel's ~237 ground ink-3 is
               2.9:1, ink-2 is 5.3:1. */}
           <p className="mt-8 text-base leading-relaxed text-ink-2">
-            {WHY_CHOOSE.tagline.map((line) => (
+            {whyChoose.tagline.map((line) => (
               <span key={line} className="block">
                 {line}
               </span>

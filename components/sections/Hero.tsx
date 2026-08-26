@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { HERO } from "@/lib/content";
+import { HERO, HERO_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -68,6 +69,7 @@ const SPEED = 0.25;
 export function Hero() {
   const rootRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hero = useCopy(HERO, HERO_ZH);
 
   useEffect(() => {
     const section = rootRef.current;
@@ -219,7 +221,7 @@ export function Hero() {
                 would take an h1 out of the accessibility tree along with it.
                 So the words sit in their own element the timeline never
                 touches, and the logo animates as the picture it is. */}
-            <h1 className="sr-only">{HERO.heading}</h1>
+            <h1 className="sr-only">{hero.heading}</h1>
             {/* Below `md` the lockup is centred, and the logo has to land in
                 the same slot the first word arrives in or the handover reads
                 as a jump. So on mobile this block mirrors the tagline block
@@ -254,7 +256,7 @@ export function Hero() {
               aria-hidden
               className="invisible mt-4 text-base leading-relaxed md:hidden"
             >
-              {HERO.subheading}
+              {hero.subheading}
             </p>
           </div>
         </div>
@@ -264,9 +266,13 @@ export function Hero() {
             {/* One grid cell holds all three, so they overlap exactly and the
                 block keeps a fixed height: the description below never shifts. */}
             <p className="grid text-center text-[min(3.75em,14.5vw)] leading-[0.92] font-medium tracking-tighter text-ink sm:text-[3.75em] md:text-left md:text-[5.5em] lg:text-[7.5em] xl:text-[12em]">
-              {HERO.taglineWords.map((word) => (
+              {/* Keyed by position, not by the word itself: the locale
+                  toggle rewrites all three, and keying on the text would
+                  remount the spans and throw away the inline transform the
+                  scrubbed timeline is holding them at. */}
+              {hero.taglineWords.map((word, i) => (
                 <span
-                  key={word}
+                  key={i}
                   data-word
                   className="col-start-1 row-start-1 block whitespace-nowrap"
                   style={{ opacity: 0, visibility: "hidden" }}
@@ -279,7 +285,7 @@ export function Hero() {
             {/* Constant: on screen from the first frame, never animated, and
                 held in place by the fixed-height word slot above it. */}
             <p className="mt-4 text-center text-base leading-relaxed text-ink md:text-left md:whitespace-nowrap">
-              {HERO.subheading}
+              {hero.subheading}
             </p>
           </div>
         </div>

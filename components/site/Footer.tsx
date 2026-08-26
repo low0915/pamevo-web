@@ -10,6 +10,7 @@ import {
 import { FOOTER, LOGO_ALT } from "@/lib/content";
 import { Z } from "@/lib/z";
 import { MetalRule } from "@/components/ui/MetalRule";
+import { FooterBlurb } from "./FooterBlurb";
 
 /** Brand marks come from Simple Icons rather than being drawn by hand. */
 const MARKS = {
@@ -39,9 +40,7 @@ export function Footer() {
               height={174}
               className="h-5 w-auto max-w-full md:h-6"
             />
-            <p className="mt-5 max-w-[42ch] text-base leading-relaxed text-ink-2">
-              {FOOTER.blurb}
-            </p>
+            <FooterBlurb className="mt-5 max-w-[42ch] text-base leading-relaxed text-ink-2" />
           </div>
 
           <div className="lg:col-span-3">

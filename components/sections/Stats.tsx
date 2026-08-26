@@ -4,7 +4,14 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { STATS, STATS_INTRO, STATS_IMAGE } from "@/lib/content";
+import {
+  STATS,
+  STATS_ZH,
+  STATS_INTRO,
+  STATS_INTRO_ZH,
+  STATS_IMAGE,
+} from "@/lib/content";
+import { useCopy, useLocale } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -92,6 +99,12 @@ const RULE_V = `${RULE} lg:h-full lg:w-0 lg:origin-top lg:justify-self-start lg:
 export function Stats() {
   const rootRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const intro = useCopy(STATS_INTRO, STATS_INTRO_ZH);
+  /* A straight swap rather than `useCopy`: STATS is a bare array, so there is
+     no object for the overlay to merge onto. The figures are identical in both,
+     so the count timeline below still reads them from STATS. */
+  const { locale } = useLocale();
+  const stats = locale === "ZH" ? STATS_ZH : STATS;
 
   // The phone curtain pins this band by its foot rather than its head, or
   // everything below its first screen would be stranded - see `.band-frame` in
@@ -254,8 +267,8 @@ export function Stats() {
                 7.7dvh it was drawn at. */}
             <div className="px-6 pt-28 pb-12 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-0 lg:pt-[max(7.7dvh,6rem)] lg:pb-0 lg:pl-[4.22vw]">
               <h2 data-intro className={`${FIGURE} font-normal text-ink`}>
-                {STATS_INTRO.heading.map((line) => (
-                  <span key={line} className="block">
+                {intro.heading.map((line, i) => (
+                  <span key={i} className="block">
                     {line}
                   </span>
                 ))}
@@ -265,7 +278,7 @@ export function Stats() {
                 data-intro
                 className={`${BODY} mt-5 max-w-[52ch] text-ink lg:mt-[2dvh] lg:max-w-[min(44vw,844px)]`}
               >
-                {STATS_INTRO.body}
+                {intro.body}
               </p>
             </div>
 
@@ -285,9 +298,9 @@ export function Stats() {
               className={`${RULE_V} lg:col-start-3 lg:row-span-3 lg:row-start-1`}
             />
 
-            <StatCell stat={STATS[0]} index={0} className="lg:col-start-2 lg:row-start-2" />
-            <StatCell stat={STATS[1]} index={1} className="lg:col-start-3 lg:row-start-2" />
-            <StatCell stat={STATS[2]} index={2} className="lg:col-start-2 lg:row-start-3" />
+            <StatCell stat={stats[0]} index={0} className="lg:col-start-2 lg:row-start-2" />
+            <StatCell stat={stats[1]} index={1} className="lg:col-start-3 lg:row-start-2" />
+            <StatCell stat={stats[2]} index={2} className="lg:col-start-2 lg:row-start-3" />
           </div>
 
           {/* Above the rules and off the right edge, as drawn: sized off the

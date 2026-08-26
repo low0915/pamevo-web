@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "@phosphor-icons/react/dist/ssr";
-import { NAV, LOCALES, LOGO_ALT } from "@/lib/content";
+import { NAV, NAV_ZH, LOCALES, LOGO_ALT } from "@/lib/content";
+import { useLocale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 import { holdAutoplay, releaseAutoplay } from "@/lib/autoplay";
 import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
@@ -48,6 +49,10 @@ export function MobileNav({
   onClose: () => void;
 }) {
   const reduce = useReducedMotion();
+  const { locale: active, setLocale } = useLocale();
+  /* See the note in Header: NAV is a bare array, so this is a swap rather than
+     an overlay. Both surfaces read the same two lists. */
+  const nav = active === "ZH" ? NAV_ZH : NAV;
 
   // The page is held still for as long as the menu is up. Three things, and
   // all three are needed: the body overflow refuses a reader's gesture, the
@@ -119,9 +124,12 @@ export function MobileNav({
               list sits on the optical middle of the sheet at any height. */}
           <nav className="flex flex-1 flex-col justify-center px-8 sm:px-9">
             <ul>
-              {NAV.map((item, i) => (
+              {/* Keyed by route, not by label: the locale toggle rewrites every
+                  label, and a remount would replay the entrance stagger under a
+                  reader who only changed language. */}
+              {nav.map((item, i) => (
                 <motion.li
-                  key={item.label}
+                  key={item.href ?? i}
                   className={`${RULE} border-t last:border-b`}
                   initial={
                     reduce ? false : { opacity: 0, transform: "translateY(12px)" }
@@ -169,13 +177,15 @@ export function MobileNav({
           </nav>
 
           <div className="flex shrink-0 gap-1 px-8 pt-6 pb-10 sm:px-9">
-            {LOCALES.map((locale, i) => (
+            {LOCALES.map((locale) => (
               <button
                 key={locale}
                 type="button"
-                aria-pressed={i === 0}
+                onClick={() => setLocale(locale)}
+                aria-pressed={locale === active}
+                lang={locale === "ZH" ? "zh-Hans" : "en"}
                 className={`rounded-full px-3 py-1 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
-                  i === 0 ? "bg-ink text-bg" : "text-ink-3"
+                  locale === active ? "bg-ink text-bg" : "text-ink-3"
                 }`}
               >
                 {locale}

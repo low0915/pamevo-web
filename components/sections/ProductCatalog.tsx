@@ -2,11 +2,13 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CaretDown, Rows, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 
 import { PRODUCTS, type Product } from "@/lib/products";
 import { PRODUCTS_PAGE } from "@/lib/content";
+import { Z } from "@/lib/z";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -129,8 +131,16 @@ export function ProductCatalog() {
 
         {/* items-start is what lets the figure be shorter than the column and
             so have somewhere to stick. A stretched grid item fills the row and
-            position: sticky has no travel. */}
-        <div className="grid gap-6 md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] xl:gap-8">
+            position: sticky has no travel.
+
+            Below `lg` this stops being a grid at all, and that is what lets the
+            photograph stick there too. A grid item is laid in its grid area,
+            and in one column that area is the item's own row - so a sticky
+            figure would be pinned inside a box exactly its own height and never
+            move. As a block child of a block container its containing block is
+            the whole column, which is the length of the catalogue. The gap goes
+            with the grid, so the figure carries the spacing itself. */}
+        <div className="grid gap-6 [--pin-gap:1.5rem] [--pin-h:34dvh] [--pin-top:6rem] max-lg:block md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] xl:gap-8">
           {/* LEFT: pinned beside the list. top-24 clears the header island,
               which owns the first 80px of the viewport, with a little air
               beyond it. The frame is square, capped so it can never outgrow the
@@ -141,7 +151,55 @@ export function ProductCatalog() {
               A keyed AnimatePresence would mount the incoming layer and only
               then start fetching, so an uncached shot fades to an empty box.
               Hovering a row mounts its layer ahead of the click. */}
-          <figure className="relative aspect-[4/3] w-full overflow-hidden rounded-[8px] border border-[rgb(126_133_140/0.25)] bg-surface-2 lg:sticky lg:top-32 lg:aspect-square lg:max-h-[calc(100dvh-11rem)]">
+          {/* Masks the strip above the pinned photograph, below `lg`. A row
+              scrolling up passes under the picture, which paints over it, and
+              then out the other side into the 24 of clearance above it - where
+              it has nothing to be in front of and reads as the list leaking
+              past its own frame. This covers that strip in the page's own
+              ground, so the list ends at the photograph's top edge.
+
+              Zero height, so it claims no room in the column, with the band
+              itself painted by an absolutely positioned child. It has to sit
+              in the same block container as the list to stick for the length
+              of it, and it cannot wrap the figure: that would make the wrapper
+              the grid item at `lg` and leave the figure sticking inside a box
+              its own height, which is no travel at all.
+
+              It runs past the foot of the picture by `--pin-gap` as well, so a
+              row does not surface hard against the picture's own bottom edge -
+              it comes out of a band of ground, the same gap that separates the
+              two when nothing is stuck yet.
+
+              First in the column and on the same `raised` step as the picture,
+              so the picture - later in the document - still paints over it
+              where the two meet before either has begun to stick. */}
+          <div
+            aria-hidden
+            style={{ zIndex: Z.raised }}
+            className="pointer-events-none sticky top-0 h-0 lg:hidden"
+          >
+            <div className="absolute inset-x-0 top-0 h-[calc(var(--pin-top)+var(--pin-h)+var(--pin-gap))] bg-bg" />
+          </div>
+
+          {/* Sticky at every width now, so on a phone the photograph holds the
+              top of the screen and only the catalogue under it travels. `top-24`
+              clears the header island at both, with a little air beyond it.
+
+              `--pin-h` is a flat third of the screen below `lg`, not a ratio
+              with a cap. The mask above has to know where the picture's foot
+              falls in order to leave a gap under it, and a 4:3 box puts that
+              somewhere different on every phone. A fixed band crops instead,
+              which `object-cover` inside absorbs, and it keeps the picture to
+              a third of the screen on a short phone as well as a tall one.
+
+              It also needs to out-paint the rows, which is new: they carry
+              `relative`, so they are positioned boxes later in the document and
+              would otherwise scroll over the top of it. `raised` is the scale's
+              own answer to that and still sits well under the header. */}
+          <figure
+            style={{ zIndex: Z.raised }}
+            className="sticky top-[var(--pin-top)] h-[var(--pin-h)] w-full overflow-hidden rounded-[8px] border border-[rgb(126_133_140/0.25)] bg-surface-2 max-lg:mb-[var(--pin-gap)] lg:top-32 lg:aspect-square lg:h-auto lg:max-h-[calc(100dvh-11rem)]"
+          >
             {LAYERS.filter((l) => mounted.has(l.key)).map((l) => (
               <div
                 key={l.key}
@@ -178,6 +236,21 @@ export function ProductCatalog() {
           >
               {PRODUCTS.map((p) => {
                 const isOpen = open === p.no;
+                // The button sits in the panel's bottom right corner, out of
+                // flow, level with whatever line ends the panel - so it costs
+                // no row of its own and leaves no empty band beside it. Out of
+                // flow means nothing reflows around it, so the block that ends
+                // the panel reserves the width instead: `views` when there is a
+                // thumbnail strip, the last specification when there is not.
+                //
+                // Only in list view. A grid card is about 170px wide on a
+                // phone, and 9rem of reserved gutter would leave the text
+                // almost nothing, so there the button keeps its own row - where
+                // it very nearly fills the card anyway.
+                const floats = view !== "grid";
+                const hasViews = p.images.length > 1;
+                const lastGroup = p.groups.length - 1;
+                const gutter = floats ? "pr-36" : "";
                 return (
                   <li
                     key={p.no}
@@ -285,8 +358,8 @@ export function ProductCatalog() {
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
                         >
-                          <div className="border-t border-[rgb(255_255_255/0.55)] px-5 pt-5 pb-6">
-                            {p.groups.map((g) => (
+                          <div className="relative border-t border-[rgb(255_255_255/0.55)] px-5 pt-5 pb-6">
+                            {p.groups.map((g, gi) => (
                               <div key={g.title} className="mt-4 first:mt-0">
                                 <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
                                   {g.title}
@@ -300,10 +373,16 @@ export function ProductCatalog() {
                                   ) : null}
                                 </p>
                                 <ul className="mt-2 space-y-2.5">
-                                  {g.items.map((item) => (
+                                  {g.items.map((item, ii) => (
                                     <li
                                       key={item.en}
-                                      className="text-base leading-relaxed text-ink"
+                                      className={`text-base leading-relaxed text-ink ${
+                                        !hasViews &&
+                                        gi === lastGroup &&
+                                        ii === g.items.length - 1
+                                          ? gutter
+                                          : ""
+                                      }`}
                                     >
                                       {item.en}
                                       {item.zh ? (
@@ -328,7 +407,7 @@ export function ProductCatalog() {
                                 <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
                                   {PRODUCTS_PAGE.viewsLabel}
                                 </p>
-                                <div className="mt-2 flex gap-2">
+                                <div className={`mt-2 flex flex-wrap gap-2 ${gutter}`}>
                                   {p.images.map((img, i) => {
                                     const key = `${p.slug}-${i}`;
                                     return (
@@ -354,6 +433,32 @@ export function ProductCatalog() {
                                 </div>
                               </div>
                             )}
+
+                            {/* The panel's closing move, and the only thing in
+                                it that is not a specification.
+
+                                A Link, not a button: it navigates, so it wants
+                                to be openable in a new tab and to be picked up
+                                as a link by anything reading the page.
+
+                                `bottom-6` is the panel's own `pb-6`, so the
+                                button's foot lands on the last line's foot
+                                rather than near it. */}
+                            <div
+                              className={
+                                floats
+                                  ? "absolute right-5 bottom-6"
+                                  : "mt-6 flex justify-end"
+                              }
+                            >
+                              <Link
+                                href={PRODUCTS_PAGE.cta.href}
+                                aria-label={PRODUCTS_PAGE.cta.aria(p.title)}
+                                className="inline-flex items-center rounded-full bg-ink px-5 py-2.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
+                              >
+                                {PRODUCTS_PAGE.cta.label}
+                              </Link>
+                            </div>
                           </div>
                         </motion.div>
                       )}

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PROJECTS } from "@/lib/content";
+import { PROJECTS, PROJECTS_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/ui/Lightbox";
 
@@ -70,6 +71,7 @@ function valleyDepth(width: number) {
  * a card, and a trackpad's horizontal swipe drives it too.
  */
 export function Projects() {
+  const projects = useCopy(PROJECTS, PROJECTS_ZH);
   const viewportRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLLIElement | null)[]>([]);
   const offsetRef = useRef(0);
@@ -241,7 +243,7 @@ export function Projects() {
     };
   }, []);
 
-  const set = PROJECTS.images;
+  const set = projects.images;
   const cards = Array.from({ length: COPIES }, () => set).flat();
 
   return (
@@ -258,13 +260,13 @@ export function Projects() {
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
         <Reveal>
           <h2 className="text-center text-4xl leading-[1.1] font-medium tracking-tighter text-ink md:text-5xl lg:text-6xl">
-            {PROJECTS.heading}
+            {projects.heading}
           </h2>
         </Reveal>
 
         <Reveal delay={0.06}>
           <p className="mx-auto mt-6 text-center text-base leading-relaxed text-ink-2 md:whitespace-nowrap">
-            {PROJECTS.blurb}
+            {projects.blurb}
           </p>
         </Reveal>
       </div>
@@ -274,7 +276,7 @@ export function Projects() {
           ref={viewportRef}
           role="group"
           aria-roledescription="carousel"
-          aria-label={PROJECTS.heading}
+          aria-label={projects.heading}
           tabIndex={0}
           className="relative w-full cursor-grab touch-pan-y overflow-hidden select-none [--card:64vw] focus-visible:outline-none active:cursor-grabbing sm:[--card:58vw] lg:[--card:clamp(280px,23vw,460px)]"
         >
@@ -295,7 +297,7 @@ export function Projects() {
                   // owns the gesture and has already told a drag from a click.
                   onClick={() => setOpenIndex(i % set.length)}
                   tabIndex={i >= set.length ? -1 : 0}
-                  aria-label={`Open ${image.label}`}
+                  aria-label={projects.openLabel(image.label)}
                   className="block w-full cursor-zoom-in text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
                 >
                 <figure className="photo-card relative aspect-[3/4] overflow-hidden rounded-[18px] border border-[rgb(126_133_140/0.25)] bg-surface-2">
@@ -322,10 +324,10 @@ export function Projects() {
       <Reveal delay={0.16} className="mt-12 md:mt-16">
         <div className="mx-auto flex w-full max-w-[1440px] justify-center px-4 md:px-8 lg:px-12">
           <Link
-            href={PROJECTS.cta.href}
+            href={projects.cta.href}
             className="inline-flex items-center rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
           >
-            {PROJECTS.cta.label}
+            {projects.cta.label}
           </Link>
         </div>
       </Reveal>
