@@ -52,9 +52,12 @@ const SPEED = 0.25;
  * 641px measures inside the available width; below that it wraps.
  *
  * The hero deliberately breaks the site's centred 1440 column and runs to the
- * viewport edge on a narrow gutter, so the lockup sits hard left at any width.
- * The video's currentTime is tweened across the same range, so the footage is
- * driven entirely by the wheel.
+ * viewport edge on a narrow gutter, so from `md` up the lockup sits hard left.
+ * Below `md` there is no width to sit hard left in - the tagline alone fills
+ * the line - so logo, tagline and description are centred instead, and the
+ * type is sized off the viewport so `Performance.` still holds its one line
+ * on a 320px phone. The video's currentTime is tweened across the same range,
+ * so the footage is driven entirely by the wheel.
  *
  * The scrim is heavy and light-coloured out of necessity. Sampled across the
  * clip, the region under this text swings from luminance 187 down to 56, and
@@ -187,9 +190,22 @@ export function Hero() {
           tabIndex={-1}
         />
 
+        {/* Two scrims, because the lockup sits in a different place on each.
+            The `md` one is weighted left, where the text is; the mobile one is
+            centred text running the full width, so it has to hold most of the
+            way across or the tail of `Performance.` lands on bare footage. */}
         <div
           aria-hidden
-          className="absolute inset-0"
+          className="absolute inset-0 md:hidden"
+          style={{
+            background:
+              "linear-gradient(to right, rgb(244 245 246 / 0.94) 0%, rgb(244 245 246 / 0.92) 60%, rgb(244 245 246 / 0.86) 100%)",
+          }}
+        />
+
+        <div
+          aria-hidden
+          className="absolute inset-0 hidden md:block"
           style={{
             background:
               "linear-gradient(to right, rgb(244 245 246 / 0.94) 0%, rgb(244 245 246 / 0.90) 42%, rgb(244 245 246 / 0.45) 68%, rgb(244 245 246 / 0) 92%)",
@@ -204,18 +220,42 @@ export function Hero() {
                 So the words sit in their own element the timeline never
                 touches, and the logo animates as the picture it is. */}
             <h1 className="sr-only">{HERO.heading}</h1>
-            <div data-hero-logo>
-              <Image
-                src="/logo.png"
-                /* Decorative: the h1 above states the same thing, and the
-                   brand should not be announced twice. */
-                alt=""
-                width={2220}
-                height={174}
-                priority
-                className="h-auto w-full max-w-[520px] md:max-w-[760px] lg:max-w-[980px]"
-              />
+            {/* Below `md` the lockup is centred, and the logo has to land in
+                the same slot the first word arrives in or the handover reads
+                as a jump. So on mobile this block mirrors the tagline block
+                exactly: an invisible line box at the tagline's own size and
+                leading, which the logo centres inside, followed by an
+                invisible copy of the description. Both blocks are then the
+                same height and centred in the same viewport, so the logo and
+                the words share one baseline. From `md` up the mirrors are
+                display:none and the layout is the original left-aligned,
+                viewport-centred one. */}
+            <div className="grid">
+              <p
+                aria-hidden
+                className="invisible col-start-1 row-start-1 text-[min(3.75em,14.5vw)] leading-[0.92] font-medium tracking-tighter md:hidden"
+              >
+                &nbsp;
+              </p>
+              <div data-hero-logo className="col-start-1 row-start-1 flex items-center md:block">
+                <Image
+                  src="/logo.png"
+                  /* Decorative: the h1 above states the same thing, and the
+                     brand should not be announced twice. */
+                  alt=""
+                  width={2220}
+                  height={174}
+                  priority
+                  className="mx-auto h-auto w-full max-w-[520px] md:mx-0 md:max-w-[760px] lg:max-w-[980px]"
+                />
+              </div>
             </div>
+            <p
+              aria-hidden
+              className="invisible mt-4 text-base leading-relaxed md:hidden"
+            >
+              {HERO.subheading}
+            </p>
           </div>
         </div>
 
@@ -223,7 +263,7 @@ export function Hero() {
           <div className="w-full px-6 md:px-8 lg:px-10">
             {/* One grid cell holds all three, so they overlap exactly and the
                 block keeps a fixed height: the description below never shifts. */}
-            <p className="grid text-[2.5em] leading-[0.92] font-medium tracking-tighter text-ink sm:text-[3.75em] md:text-[5.5em] lg:text-[7.5em] xl:text-[12em]">
+            <p className="grid text-center text-[min(3.75em,14.5vw)] leading-[0.92] font-medium tracking-tighter text-ink sm:text-[3.75em] md:text-left md:text-[5.5em] lg:text-[7.5em] xl:text-[12em]">
               {HERO.taglineWords.map((word) => (
                 <span
                   key={word}
@@ -238,7 +278,7 @@ export function Hero() {
 
             {/* Constant: on screen from the first frame, never animated, and
                 held in place by the fixed-height word slot above it. */}
-            <p className="mt-8 text-base leading-relaxed text-ink md:whitespace-nowrap">
+            <p className="mt-4 text-center text-base leading-relaxed text-ink md:text-left md:whitespace-nowrap">
               {HERO.subheading}
             </p>
           </div>

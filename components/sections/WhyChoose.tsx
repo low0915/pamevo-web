@@ -70,6 +70,10 @@ export function WhyChoose() {
         if (!frame || !marker || !panel || !leader) return;
         const f = frame.getBoundingClientRect();
         const m = marker.getBoundingClientRect();
+        // Below `md` the annotation is display:none, so it measures zero and
+        // there is nothing to point at. Bail rather than redraw the line into
+        // the corner on every frame of the scrub.
+        if (!m.width) return;
         const p = panel.getBoundingClientRect();
         leader.setAttribute("x1", String(m.left + m.width / 2 - f.left));
         leader.setAttribute("y1", String(m.top + m.height / 2 - f.top));
@@ -179,7 +183,7 @@ export function WhyChoose() {
             data-marker
             data-annotation
             aria-hidden
-            className="absolute top-[49%] left-[41.0%] block size-[42px] border-5 border-[rgb(226_29_29)]"
+            className="absolute top-[49%] left-[41.0%] block size-[42px] border-5 border-[#033392] max-md:hidden"
             style={{ transform: `scale(${1 / DRIFT_SCALE})` }}
           />
         </div>
@@ -187,11 +191,11 @@ export function WhyChoose() {
         <svg
           data-annotation
           aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full"
+          className="pointer-events-none absolute inset-0 h-full w-full max-md:hidden"
         >
           <line
             data-leader
-            stroke="rgb(226 29 29)"
+            stroke="#033392"
             strokeWidth="1"
             x1="0"
             y1="0"
@@ -202,7 +206,7 @@ export function WhyChoose() {
 
         <div
           data-panel
-          className="glass absolute top-1/2 right-[6%] left-6 flex max-h-[86dvh] -translate-y-1/2 flex-col rounded-[4px] p-6 md:left-auto md:w-[min(36%,470px)] md:p-8 motion-reduce:static motion-reduce:mx-6 motion-reduce:my-10 motion-reduce:max-h-none motion-reduce:translate-y-0"
+          className="glass absolute top-1/2 right-[6%] left-6 flex max-h-[86dvh] -translate-y-1/2 flex-col rounded-[4px] p-6 max-md:top-auto max-md:bottom-6 max-md:translate-y-0 md:left-auto md:w-[min(36%,470px)] md:p-8 motion-reduce:static motion-reduce:mx-6 motion-reduce:my-10 motion-reduce:max-h-none motion-reduce:translate-y-0"
         >
           {/* Scroll progress, one segment per part. */}
           <div aria-hidden className="mb-7 flex gap-3">

@@ -149,8 +149,17 @@ export function Background() {
         {/* Title sits at the top of the frame. The top padding is set by the
             fixed header island, which occupies the first 80px of the viewport:
             anything less and the heading runs underneath it. */}
-        <div className="relative flex h-full w-full flex-col px-6 pt-24 pb-10 md:px-8 md:pt-28 md:pb-14 lg:px-10 lg:pt-32 motion-reduce:h-auto">
-          <h2 className="max-w-[16ch] text-6xl leading-[1.02] font-medium tracking-tighter text-white md:text-7xl lg:text-[5rem] xl:text-[5.5rem]">
+        <div className="relative flex h-full w-full flex-col px-6 pt-24 pb-6 md:px-8 md:pt-28 md:pb-14 lg:px-10 lg:pt-32 motion-reduce:h-auto">
+          {/* Below `md` the heading and the panel sit together at the foot of
+              the frame, so the panel's bottom edge lands on the screen's own
+              bottom gutter rather than leaving a band of bare photograph under
+              it. `mt-auto` on the first child rather than `justify-end` on the
+              flex: an auto margin never resolves negative, so on a short phone
+              where the two of them already fill the frame it collapses to 0
+              and the block stays put, where `justify-end` would push the
+              heading off the top of an `overflow-hidden` frame. `pt-24` still
+              guards that case - it is the fixed header island's own height. */}
+          <h2 className="max-w-[16ch] text-6xl leading-[1.02] font-medium tracking-tighter text-white max-md:mt-auto md:text-7xl lg:text-[5rem] xl:text-[5.5rem]">
             {BACKGROUND.heading}
           </h2>
 

@@ -31,6 +31,10 @@ const KEY_THROW = 18;
  *  run that carries on past both edges, which is what it is. */
 const EDGE_PEEK = 0.34;
 
+/** The `md` breakpoint in px, matching Tailwind's own 48rem. Below it the run
+ *  is parked centred on the first card rather than running off both edges. */
+const MD = 768;
+
 /** How far the pointer may travel and still count as a tap rather than a drag.
  *  Measured as total travel, not net, so a drag that returns to where it began
  *  does not open a photograph on the way back. */
@@ -116,10 +120,18 @@ export function Projects() {
       step = cardWidth * (1 + GAP_RATIO);
       run = cards.length * step;
       depth = valleyDepth(width);
-      // First measure only: park the run so the first photograph is cut by
-      // the left edge, with the rest of the run trailing off past the right.
+      // First measure only. Below `md` the strip opens with the first
+      // photograph centred in the frame instead of cut by its left edge: a
+      // phone has no width for a run to read as a run, so it reads as one
+      // card with its neighbours just showing at either side. Card 0 is drawn
+      // at `(offset mod run) - step`, so centring it is one step past the
+      // middle. Wider, the run is parked a third of a card short of flush and
+      // runs off both edges, which is what it is.
       if (!placed) {
-        offsetRef.current = step * (1 - EDGE_PEEK);
+        offsetRef.current =
+          window.innerWidth < MD
+            ? step + (width - cardWidth) / 2
+            : step * (1 - EDGE_PEEK);
         placed = true;
       }
       // The frame is one card tall plus the depth the middle sinks by.
@@ -233,7 +245,16 @@ export function Projects() {
   const cards = Array.from({ length: COPIES }, () => set).flat();
 
   return (
-    <section className="sheet svc-curtain svc-curtain-floor relative mb-[4em] flex flex-col justify-center bg-bg py-24 md:py-36">
+    <section
+      // The phone curtain here is cut to 80dvh (globals.css) so this section
+      // is sized by its own content rather than by a floor it cannot fill.
+      // That is what makes the padding below mean anything: under a binding
+      // floor, `justify-center` hands back every pixel trimmed off `py` as
+      // slack, and the section measures the same whatever it is set to. The
+      // bottom margin goes too - nothing rides over this section, so the 4em
+      // was gap for its own sake, sitting directly on the footer's border.
+      className="sheet svc-curtain svc-curtain-floor relative mb-[4em] flex flex-col justify-center bg-bg py-24 max-md:mb-0 max-md:py-14 md:py-36"
+    >
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
         <Reveal>
           <h2 className="text-center text-4xl leading-[1.1] font-medium tracking-tighter text-ink md:text-5xl lg:text-6xl">
@@ -255,7 +276,7 @@ export function Projects() {
           aria-roledescription="carousel"
           aria-label={PROJECTS.heading}
           tabIndex={0}
-          className="relative w-full cursor-grab touch-pan-y overflow-hidden select-none [--card:88vw] focus-visible:outline-none active:cursor-grabbing sm:[--card:58vw] lg:[--card:clamp(280px,23vw,460px)]"
+          className="relative w-full cursor-grab touch-pan-y overflow-hidden select-none [--card:64vw] focus-visible:outline-none active:cursor-grabbing sm:[--card:58vw] lg:[--card:clamp(280px,23vw,460px)]"
         >
           <ul role="list" className="contents">
             {cards.map((image, i) => (
@@ -283,7 +304,7 @@ export function Projects() {
                     alt={i < set.length ? image.alt : ""}
                     fill
                     draggable={false}
-                    sizes="(max-width: 640px) 88vw, (max-width: 1024px) 58vw, 25vw"
+                    sizes="(max-width: 640px) 64vw, (max-width: 1024px) 58vw, 25vw"
                     className="graded pointer-events-none object-cover transition-[filter] duration-500 ease-[var(--ease-out)]"
                   />
 

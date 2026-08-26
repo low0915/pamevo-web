@@ -91,6 +91,27 @@ const RULE_V = `${RULE} lg:h-full lg:w-0 lg:origin-top lg:justify-self-start lg:
  */
 export function Stats() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+
+  // The phone curtain pins this band by its foot rather than its head, or
+  // everything below its first screen would be stranded - see `.band-frame` in
+  // globals.css. A foot pin is a negative `top` set to the band's own height,
+  // and CSS has no way to ask for that, so it is measured here and written
+  // back as a variable. Observed rather than measured once: the band reflows
+  // with the URL bar and with a rotation, and a stale height leaves the pin
+  // either short of the foot or past it.
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const measure = () =>
+      frame.style.setProperty("--band-h", `${Math.round(frame.offsetHeight)}px`);
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -213,7 +234,7 @@ export function Stats() {
           A pinned frame is one screen, and globals.css holds this band to it.
           `min-h` is for everywhere else: a curtain has to be at least as tall
           as its own pull-up. */}
-      <div className="band-frame">
+      <div ref={frameRef} className="band-frame">
         {/* The bleed of the photograph is clipped here rather than on the
             section: `.sheet` cannot take overflow without trapping the sticky
             frame it is riding on. */}

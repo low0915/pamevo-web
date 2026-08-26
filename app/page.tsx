@@ -20,7 +20,7 @@ export default function Home() {
         heading inside the Background section.
       */}
       <div
-        className="relative -mt-[200dvh] flow-root rounded-t-[16px] bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
+        className="relative -mt-[200dvh] flow-root bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
         style={{ zIndex: Z.raised }}
       >
         <Background />

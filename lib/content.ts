@@ -369,17 +369,31 @@ export const PROJECTS = {
     "From homes to commercial spaces, explore aluminium windows and doors crafted for every unique project.",
   /** Points at a page that does not exist yet; the link ships ahead of it. */
   cta: { label: "Contact us", href: "/contact" },
-  /** Six curated photographs. The live site shows six untitled tiles and adds no captions. */
-  /** Labels are the live site's own tile names: PROJECT 1 through PROJECT 6. */
-  /** Intrinsic pixel sizes, carried so the lightbox frame can be the picture's
-      own shape rather than a box it sits letterboxed inside. */
+  /** Six photographs, and the live site's own tile names for them: PROJECT 1
+      through PROJECT 6, no captions.
+
+      The pictures are the manufacturer's own installation photography out of
+      `public/products/`, the same shots the catalogue in lib/products.ts hangs
+      its product pages on - so these are rooms MEVO systems are actually
+      standing in rather than stock architecture. The alt text is copied from
+      that catalogue verbatim, and must stay in step with it: it describes the
+      photograph, so a swapped `src` is a wrong alt until it is rewritten.
+
+      Chosen for the crop as much as for the subject. The strip's cards are 3:4
+      and the photography is all landscape, so `object-cover` throws away the
+      sides of every one of them; these six sit between 1.33 and 1.43, where
+      the wider shots in the catalogue run past 1.9 and would lose half their
+      width to the frame.
+
+      Intrinsic pixel sizes are carried so the lightbox frame can be the
+      picture's own shape rather than a box it sits letterboxed inside. */
   images: [
-    { src: "/projects/01.jpg", label: "Project 1", alt: "Geometric facade of a modern skyscraper", width: 1200, height: 1800 },
-    { src: "/projects/02.jpg", label: "Project 2", alt: "Glass building facade with a repeating geometric pattern", width: 1600, height: 1067 },
-    { src: "/projects/03.jpg", label: "Project 3", alt: "Modern building with a glazed facade and columns", width: 1600, height: 1200 },
-    { src: "/projects/04.jpg", label: "Project 4", alt: "Black framed windows in a minimalist interior", width: 1200, height: 1800 },
-    { src: "/projects/05.jpg", label: "Project 5", alt: "Angular facade of a tower with reflective glazing", width: 1200, height: 1601 },
-    { src: "/projects/06.jpg", label: "Project 6", alt: "Close view of a building elevation with many windows", width: 1600, height: 1067 },
+    { src: "/products/01.jpg", label: "Project 1", alt: "Living room with a tall dark-framed casement window opening onto a misty pine forest", width: 2560, height: 1706 },
+    { src: "/products/03.jpg", label: "Project 2", alt: "Freestanding glass sunroom with a dark aluminium gable frame, standing on lit stone steps in an evening garden", width: 2560, height: 1792 },
+    { src: "/products/05-1.jpg", label: "Project 3", alt: "Minimal lounge with a full-height two-panel panoramic door opening onto a lake ringed by mountains", width: 2560, height: 1844 },
+    { src: "/products/07.jpg", label: "Project 4", alt: "Poolside living room with a combined door and window system, a screened side panel and a small opening casement", width: 2560, height: 1785 },
+    { src: "/products/15.jpg", label: "Project 5", alt: "Pale seaside room with an ultra-slim four-panel sliding door framing a rocky shore", width: 2048, height: 1536 },
+    { src: "/products/18.jpg", label: "Project 6", alt: "Modern white house entrance with a ribbed charcoal entry door, a slim sidelight and a lit wall sconce", width: 2560, height: 1920 },
   ],
 };
 

@@ -134,9 +134,16 @@ export function Services() {
               {/* This padding is for the panels in flow only. Pinned, the
                   space above the content belongs to the frame instead, and
                   globals.css zeroes this out. */}
-              <div className="svc-grid grid h-full grid-cols-1 pt-20 md:grid-cols-2">
-                <div className="svc-figure-frame p-6 md:p-8 lg:p-10">
-                  <div className="svc-figure relative aspect-[4/5] w-full">
+              {/* Below `md` this is a flex column, not a grid: the panel is
+                  held to exactly one screen there (globals.css), and something
+                  has to give when the screen is short. The copy is what must
+                  not, so the photograph is the flex item - it takes whatever
+                  is left after the copy has been laid out, at any phone size,
+                  rather than claiming a 4:5 block and pushing the copy off the
+                  bottom of a panel that clips. */}
+              <div className="svc-grid grid h-full grid-cols-1 pt-20 max-md:flex max-md:flex-col md:grid-cols-2">
+                <div className="svc-figure-frame p-6 max-md:min-h-0 max-md:flex-1 md:p-8 lg:p-10">
+                  <div className="svc-figure relative aspect-[4/5] w-full max-md:aspect-auto max-md:h-full">
                     <Image
                       src={service.image.src}
                       alt={service.image.alt}
@@ -151,7 +158,7 @@ export function Services() {
                 {/* The left padding is deliberately lighter than the right:
                     the photograph already carries its own inset, so matching
                     them would read as one wide trench between the columns. */}
-                <div className="flex flex-col justify-between gap-10 px-6 pt-6 pb-12 md:gap-14 md:pr-10 md:pl-4 md:pt-8 md:pb-14 lg:pr-14 lg:pl-6 lg:pt-10">
+                <div className="flex flex-col justify-between gap-10 px-6 pt-6 pb-12 max-md:shrink-0 max-md:gap-6 max-md:pt-4 max-md:pb-8 md:gap-14 md:pr-10 md:pl-4 md:pt-8 md:pb-14 lg:pr-14 lg:pl-6 lg:pt-10">
                   {/* The rule sits on the top edge of the photograph opposite
                       it, so the two columns start on the same line. */}
                   <div className="border-t border-white pt-5">

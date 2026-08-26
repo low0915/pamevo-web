@@ -10,6 +10,7 @@ import {
   AUTOPLAY_RELEASE_EVENT,
   HERO_REPLAY_EVENT,
 } from "@/lib/autoplay";
+import { SCROLL_LOCK_EVENT, SCROLL_UNLOCK_EVENT } from "@/lib/scroll-lock";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -118,6 +119,7 @@ type Played = { engaged: number; done: boolean };
 export function SmoothScroll() {
   const pathname = usePathname();
   const replayRef = useRef<(() => void) | null>(null);
+  const measureRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -237,6 +239,13 @@ export function SmoothScroll() {
       }
     };
 
+    // A dialog has the screen: refuse the wheel and the touch outright, and
+    // refuse the autoplay's own scrollTo with them, which a stopped Lenis does
+    // on its own. `overflow: hidden` on the body cannot do this - it declines a
+    // gesture, and every one of these arrives as a script instead.
+    const onLock = () => lenis.stop();
+    const onUnlock = () => lenis.start();
+
     // Back to the top, with every run armed to play again from there.
     const replay = () => {
       lenis.scrollTo(0, { immediate: true, force: true });
@@ -245,6 +254,7 @@ export function SmoothScroll() {
       measure();
     };
     replayRef.current = replay;
+    measureRef.current = measure;
 
     const raf = (time: number, deltaTime: number) => {
       autoplay(Math.min(deltaTime / 1000, MAX_FRAME));
@@ -265,9 +275,12 @@ export function SmoothScroll() {
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener(AUTOPLAY_HOLD_EVENT, onHold);
     window.addEventListener(AUTOPLAY_RELEASE_EVENT, onRelease);
+    window.addEventListener(SCROLL_LOCK_EVENT, onLock);
+    window.addEventListener(SCROLL_UNLOCK_EVENT, onUnlock);
 
     return () => {
       replayRef.current = null;
+      measureRef.current = null;
       lenis.off("scroll", onScroll);
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33);
@@ -281,14 +294,25 @@ export function SmoothScroll() {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener(AUTOPLAY_HOLD_EVENT, onHold);
       window.removeEventListener(AUTOPLAY_RELEASE_EVENT, onRelease);
+      window.removeEventListener(SCROLL_LOCK_EVENT, onLock);
+      window.removeEventListener(SCROLL_UNLOCK_EVENT, onUnlock);
       lenis.destroy();
     };
   }, []);
 
   // A load, or a navigation that arrives home. Declared after the effect above
   // so the replay it calls is already in hand on the first render.
+  //
+  // Every other navigation re-measures instead. The runs are read off the DOM
+  // once and the effect that reads them is mounted in the layout, so it outlives
+  // any client navigation: a page that declares no `[data-autoplay]` of its own
+  // would otherwise inherit the runs of the page before it and scroll itself
+  // with them. /our-products and /contact declare none, and both were being
+  // carried down the page by the home page's hero. Re-measuring hands them the
+  // empty list they should have had.
   useEffect(() => {
     if (pathname === "/") replayRef.current?.();
+    else measureRef.current?.();
   }, [pathname]);
 
   // The header logo, for a reader who is already home.

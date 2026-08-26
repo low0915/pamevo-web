@@ -56,6 +56,29 @@ body {
   color: var(--bg);
 }
 
+/* Body copy is 14px below `md`, 16px from there up.
+
+   Done by redefining the token rather than by adding a `md:text-base` to each
+   of the thirty-odd paragraphs that carry it: `text-base` compiles to
+   `font-size: var(--text-base)`, so moving the variable moves every one of
+   them at once, and any `md:text-base` on the page is unaffected because it
+   only applies above the width this query covers. Tailwind's own definition
+   sits in `@layer theme`, and layered rules lose to unlayered ones whatever
+   their specificity, so this wins without !important.
+
+   The line height is left as Tailwind's unitless 1.5, so it follows the size
+   down to 21px and the paragraph keeps its rhythm. `--text-sm` is deliberately
+   untouched: it is 14px too, so small print and body copy measure the same on
+   a phone.
+
+   The hero's tagline is sized in `em` off the body's own font-size, which is
+   the browser default and is not what this changes. */
+@media (width < 48rem) {
+  :root {
+    --text-base: 0.875rem;
+  }
+}
+
 /* Liquid glass. This is a web glassmorphism approximation, NOT Apple Liquid Glass,
    which has no official web package. Built from backdrop-filter, layered borders
    and highlight overlays. */
@@ -103,6 +126,38 @@ body {
     0 20px 56px rgb(0 0 0 / 0.38);
 }
 
+/* The same material taken full-screen, for the mobile menu. It carries no
+   border and no cast shadow, having no edges to draw and nothing to float
+   over - it is the surface, not a panel on one.
+
+   Effective tint runs 0.53 at the foot to 0.63 at the head. It is a sheet of
+   frosted glass, not a wash: not far off half the light behind it still comes
+   through, so the page reads as shape and colour underneath and the blur is
+   the thing doing the work.
+
+   Brightness is bought twice over, and on purpose. Tint alone would only pile
+   on white until the sheet stopped being glass, so most of the lift is in
+   `brightness()`, which raises what is behind the sheet rather than covering
+   it: the page keeps showing through, only lighter. It earns the most where
+   the menu is usually opened - the site's own near-white ground and the
+   photography - and, being a multiplier, it leaves the near-black panels
+   almost where they were, which is why the tint carries a little of it too.
+
+   That much transparency is only safe because of the blur, which is what the
+   40px buys. It averages whatever is behind the sheet into something flat
+   enough to read on, and the worst ground on this site is the near-black
+   service panels: through this material they resolve to about 142, where ink
+   holds 5.7:1 - past AA for body copy, and well past it for links set this
+   large. Deeper than `.glass`'s 24px because that one only ever floats over
+   the page's own near-white ground, while this covers anything at all. */
+.glass-sheet {
+  background:
+    linear-gradient(150deg, rgb(255 255 255 / 0.32), rgb(255 255 255 / 0.12)),
+    rgb(255 255 255 / 0.46);
+  -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(1.12);
+  backdrop-filter: blur(40px) saturate(180%) brightness(1.12);
+}
+
 /* Refracted rim, drawn as a masked gradient border. */
 .glass-rim::before {
   content: "";
@@ -143,7 +198,8 @@ body {
 
 @media (prefers-reduced-transparency: reduce) {
   .glass,
-  .glass-dark {
+  .glass-dark,
+  .glass-sheet {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
@@ -152,6 +208,11 @@ body {
   }
   .glass-dark {
     background: rgb(16 18 21 / 0.93);
+  }
+  /* Opaque, not merely less transparent: with no blur left to average the page
+     behind it, anything short of solid reads as a printing fault. */
+  .glass-sheet {
+    background: var(--bg);
   }
 }
 
@@ -170,12 +231,16 @@ body {
    the lip that sells it as a panel lifting over rather than a hard cut. Copied
    from the sheet that already rises over the hero in app/page.tsx.
 
+   Square, not rounded. The corners used to be 16px, but a rounded top only
+   reads as a panel where the section behind it is a different colour, and
+   several of these ride over ground of their own tone - there the radius read
+   as two nicks cut out of the edge rather than as a lifting panel. The shadow
+   is what sells the lift, and it does it on any ground, which is why it was
+   already carrying full-bleed children that squared their own corners off.
+
    No overflow-hidden here on purpose: it would trap the sticky frames these
-   sections pin with. Where a full-bleed child squares off the radius, the
-   shadow carries the effect on its own, exactly as it does over the hero. */
+   sections pin with. */
 .sheet {
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
   box-shadow: 0 -16px 40px -28px rgb(16 18 21 / 0.14);
 }
 
@@ -325,6 +390,112 @@ body {
      runway follows it down. */
   .svc-runway {
     height: calc(620dvh - 448px);
+  }
+}
+
+/* The same two curtains, below `md`.
+
+   Everything above is gated at 768 because it is built on pinned 100dvh
+   frames, and neither a service panel nor the stat band fits one screen on a
+   phone as it is written for the wide layout. So the reading is rebuilt from
+   sticky boxes instead of from a pin: a box holds still, and the section after
+   it scrolls up over it.
+
+   Which inset does the holding is the whole thing, and it is not
+   interchangeable. A `bottom` inset only ever pulls a box UP from below - it
+   is what pins a footer to the foot of the screen early and lets it go at the
+   end. A `top` inset pushes a box DOWN, holding it as the content it belongs
+   to scrolls out from under it, which is what a curtain needs underneath it.
+   A box is also clamped to its containing block, so a `bottom` inset on a
+   first child buys no movement at all.
+
+   A curtain needs a runway as well as something held: 110dvh of empty box for
+   the section after to pull itself up by. It is a pseudo-element rather than
+   padding on the same box, which is not stylistic either - a sticky box is
+   confined to its containing block, and that is the parent's *content* box.
+   Padding is outside it and buys no sticky range, so the held box would
+   release the instant it arrived and the curtain would ride up over the gap
+   where it had been. `::after` is in-flow content, so it extends the box the
+   sticky children are measured against.
+
+   Stacking order is DOM order, as it is on the pinned stack: `position:
+   sticky` makes every panel a positioned box, so a later one paints over an
+   earlier one with no z value, and they carry `bg-ink`, so it covers.
+
+   No-preference for the same reason the md block has it: with reduced motion
+   the page reads top to bottom, one section after another, and nothing holds.
+
+   Written `max-width` rather than `width <`, which is the only place on this
+   page that matters: a range query can be downlevelled to `not all and
+   (min-width:...)` on its own, but not once it is joined by `and`, so the
+   build emits Level 4 `(not (min-width: 48rem))` and Safari drops the whole
+   block before 16.4. That is a phone, and this is the phone layout. */
+@media (max-width: 47.999rem) and (prefers-reduced-motion: no-preference) {
+  .band-runway::after,
+  .svc-frame::after {
+    content: "";
+    display: block;
+  }
+
+  /* The two runways are not the same length, and that is the whole of it.
+
+     A section can never be shorter than its own pull-up: it would seat the
+     section after it over the panel still being held behind it. Services is
+     several screens of panels, so it can pull the full 110dvh and close over
+     the stat band completely. Projects is one screen of content on a phone,
+     and asking it for 110dvh means asking it to stand 110dvh tall - which it
+     does by growing a floor it has nothing to put in, leaving a band of empty
+     ground above the footer that no amount of trimming its padding can reach,
+     because under a binding floor every pixel taken off the padding goes
+     straight back into the slack. So its curtain is cut to 80dvh, which is
+     under what the section already measures on any phone: the floor stops
+     binding, the section is its own content again, and the curtain still
+     closes over four fifths of the screen before the page carries on. */
+  .band-runway::after {
+    height: 110dvh;
+  }
+
+  .svc-frame::after {
+    height: 80dvh;
+  }
+
+  /* The stat band holds its last screenful while Services rides over it. It
+     is pinned by its foot rather than its head, because the band is several
+     screens tall on a phone and pinning its head would strand everything
+     below the first screen: the page would simply stop scrolling with two
+     thirds of the band unread. A foot pin is a negative `top` whose distance
+     is the band's own height, which only the DOM knows - Stats.tsx measures it
+     into --band-h. The min() keeps a band shorter than the screen pinned flush
+     at the top instead of floating below it, and the fallback degrades to
+     exactly that if the measurement never lands. */
+  .band-frame {
+    position: sticky;
+    top: min(0px, calc(100dvh - var(--band-h, 100dvh)));
+  }
+
+  .svc-curtain {
+    margin-top: calc(-110dvh - 4em);
+  }
+
+  /* One panel per screen, each holding at the top while the next scrolls up
+     over it. The panels are sized to the screen rather than to their content
+     precisely so that `top` is safe here: a panel taller than the viewport
+     would hold with its own foot below the fold and the copy there would
+     never be reachable. The photograph absorbs the difference instead - see
+     the flex column in Services.tsx - so the copy always fits whatever the
+     phone leaves it. */
+  .svc-card {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Projects only, and later than `.svc-curtain` on purpose: same specificity,
+     so source order is what lets this one take the shorter pull. */
+  .svc-curtain-floor {
+    min-height: 80dvh;
+    margin-top: calc(-80dvh - 4em);
   }
 }
 
