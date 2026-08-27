@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { LEGACY_REDIRECTS } from "./lib/legacy-urls";
+
 /** React's dev overlay compiles with `eval` and Turbopack hot-reloads over a
     websocket. Neither exists in the production bundle, so both allowances are
     scoped to dev rather than shipped. */
@@ -47,6 +49,43 @@ const CSP = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  images: {
+    /**
+     * Required as of Next 16, and it defaults to `[75]` ALONE.
+     *
+     * This is not a tuning knob, it is a bug fix. The codebase already passes
+     * `quality` per image — 78 on the catalogue hero, 60 on the row thumbnails,
+     * 50 on the variant strip — and without this list every one of them was
+     * being silently coerced to the nearest allowed value, which is 75. The
+     * per-image tuning had been doing nothing at all.
+     *
+     * Every value here is one an Image in this repo actually asks for. Adding a
+     * new `quality` prop means adding it here too, or it snaps to a neighbour.
+     */
+    qualities: [50, 60, 70, 75, 78, 80],
+
+    /**
+     * AVIF first, WebP behind it. The default in this version is WebP alone.
+     * AVIF is roughly 20% smaller and roughly 50% slower to encode; on a
+     * catalogue of stills that are encoded once and then cached, that trade is
+     * obviously worth taking. Order matters — the first entry matching the
+     * request's Accept header wins.
+     */
+    formats: ["image/avif", "image/webp"],
+
+    /**
+     * 31 days, where the default is 4 hours.
+     *
+     * Nothing in public/ changes between deploys and the filenames are stable,
+     * so re-deriving them six times a day buys nothing. It costs something,
+     * too: several sources are multi-megabyte (stats-extrusion.png is 8.3 MB of
+     * photographic content in a PNG container), and the first request at each
+     * size pays for sharp to decode the original. Caching for a month means
+     * that is paid once rather than on a loop.
+     */
+    minimumCacheTTL: 2678400,
+  },
+
   async headers() {
     return [
       {
@@ -69,6 +108,11 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+
+  /** The WordPress URLs this build inherits. See lib/legacy-urls.ts. */
+  async redirects() {
+    return LEGACY_REDIRECTS;
   },
 };
 

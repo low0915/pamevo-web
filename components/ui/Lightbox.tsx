@@ -110,7 +110,9 @@ export function Lightbox({
               width={image.width}
               height={image.height}
               sizes="(max-width: 768px) 92vw, 80vw"
-              priority
+              /* Was `priority`, deprecated as of Next 16. A modal image is
+                 never above the fold at load; eager is what this always meant. */
+              loading="eager"
               // The one place a click does not dismiss. It sits on the picture
               // rather than on the figure so the caption and the space beside a
               // tall photograph still belong to the backdrop.

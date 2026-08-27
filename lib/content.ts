@@ -43,6 +43,40 @@ export const WHATSAPP = {
 export const LOGO_ALT = "P.A. Projects and MEVO";
 
 /**
+ * The site's own identity, for the metadata layer.
+ *
+ * `url` is hardcoded rather than read from an env var on purpose. An unset
+ * NEXT_PUBLIC_SITE_URL does not fail a build — it silently ships canonicals and
+ * og:urls pointing at localhost, which is the one SEO fault nobody notices
+ * until a month of indexing has already gone wrong.
+ */
+export const SITE = {
+  url: "https://paprojects.com.my",
+  name: "MEVO Malaysia",
+  legalName: "PA Projects Marketing Sdn Bhd",
+  /** SSM company number, as printed in the footer. */
+  regNo: "847136-X",
+  /** Malaysian English, which is what the copy is written in. */
+  locale: "en_MY",
+} as const;
+
+/**
+ * The showroom address in parts, for structured data.
+ *
+ * FOOTER.address prints the same address as one human-readable line. These are
+ * kept beside it rather than parsed out of it, because parsing a formatted
+ * address is a guess and the JSON-LD would drift the moment the line is
+ * re-punctuated.
+ */
+export const ADDRESS = {
+  streetAddress: "19, Jalan 15/23, Taman Perindustrian Tiong Nam, Seksyen 15",
+  postalCode: "40200",
+  addressLocality: "Shah Alam",
+  addressRegion: "Selangor",
+  addressCountry: "MY",
+} as const;
+
+/**
  * Head copy: the browser tab and the search result, not the page body. It sits
  * with the rest of the copy because it is still copy, and because a title that
  * drifts from the page it names is worse than one written in the wrong file.
@@ -51,30 +85,38 @@ export const LOGO_ALT = "P.A. Projects and MEVO";
  * with what people actually search for — aluminium windows and doors, in
  * Malaysia — rather than with the brand, which has no search volume yet.
  *
- * home.description is the client's own sentence and runs well past the ~160
- * characters a result snippet shows. It is carried whole rather than cut:
- * Google rewrites snippets per query regardless, and the full claim is the
- * one the client wants quoted. products.description is written to fit.
+ * Descriptions are written to fit the ~160 characters a result snippet shows.
+ * The client's longer framing of the brand — the Top 10 Chinese system paired
+ * with a Bursa-listed Malaysian extruder — is the Background section's job,
+ * where it has room to be read. A description cut off mid-word says less than
+ * a shorter one that finishes its sentence.
+ *
+ * `path` is the page's canonical, and the key the metadata builder in lib/seo.ts
+ * keys off. It lives here so a page's URL and its title are stated together.
  */
 export const SEO = {
   /** Pages supply their own half; this appends the brand. See app/layout.tsx. */
   titleTemplate: "%s | MEVO Malaysia",
   home: {
+    path: "/",
     title: "Aluminium Windows & Doors Malaysia | MEVO Malaysia",
     description:
-      "MEVO Malaysia isn’t just another window brand — it’s the result of pairing one of China’s Top 10 Aluminium Window & Door Systems with Malaysia’s aluminium manufacturing leader, P.A. Projects, a member of the publicly listed P.A. Resources Group.",
+      "High-performance aluminium windows, doors and sunrooms for Malaysian homes and developments. MEVO systems supplied, installed and serviced from Shah Alam.",
   },
   products: {
+    path: "/our-products",
     title: "Aluminium Window & Door Systems",
     description:
       "Browse 20 MEVO window and door systems: casement, awning, sliding and panoramic windows, bifold and entry doors, sunrooms and aluminium-clad wood. Full specs.",
   },
   privacy: {
+    path: "/privacy",
     title: "Privacy & Cookies",
     description:
       "How MEVO Malaysia handles personal data, and the cookies this website stores.",
   },
   contact: {
+    path: "/contact",
     title: "Contact",
     description:
       "Speak to MEVO Malaysia about aluminium windows and doors: send an enquiry, call 014 - 879 7371, or visit the Shah Alam showroom.",
@@ -131,9 +173,21 @@ export const BACKGROUND = {
       alt: "Contemporary facade seen from below against the sky",
     },
   ],
+  /**
+   * The client's copy said "over 30 years of proven expertise" one sentence
+   * after "Established in 2004", while STATS below counts 20 years and its
+   * standfirst dates the extrusion business to 2004 — three different ages for
+   * one company, all visible within a single scroll.
+   *
+   * Resolved toward the two claims that agree and are checkable: 2004, and the
+   * 2006 Bursa listing. "Over two decades" is true of both and contradicts
+   * neither. If the 30-year figure is real it almost certainly belongs to the
+   * founders rather than the company, and needs saying that way — flagged for
+   * the client rather than guessed at here.
+   */
   paragraphs: [
-    "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over 30 years of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group. Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
-    "In addition, P.A. Group has established an in-depth strategic partnership with MEVO Doors & Windows, a renowned Chinese window and door brand, which serves as our key overseas supplier for window and door products. Specialized in the R&D and manufacturing of energy-saving and low-carbon windows and doors, MEVO operates two major operational centres in East China and South China, providing strong support for the Group's global window and door business",
+    "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over two decades of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group. Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
+    "In addition, P.A. Group has established an in-depth strategic partnership with MEVO Doors & Windows, a renowned Chinese window and door brand, which serves as our key overseas supplier for window and door products. Specialised in the R&D and manufacturing of energy-saving and low-carbon windows and doors, MEVO operates two major operational centres in East China and South China, providing strong support for the Group's global window and door business.",
   ],
 };
 
@@ -162,7 +216,7 @@ export const WHY_CHOOSE = {
     {
       title: "Why Choose MEVO Malaysia",
       items: [
-        "First Local Manufacturer & Seller",
+        "First Local Manufacturer & Seller of MEVO Systems",
         "Trusted & Reliable After-Sales Services",
         "Try before You Buy",
         "Up to 15 Years Warranty",
@@ -170,16 +224,16 @@ export const WHY_CHOOSE = {
     },
     {
       /** Exactly ten items, matching the nav entry of the same name. */
-      title: "Our 10 Core USP",
+      title: "Our 10 Core USPs",
       items: [
         "Silent Living Lifestyle (Sound Reduction 43dB)",
-        "Heat Reduction Lifestyle (Level 8 1.5W / m²K)",
+        "Heat Reduction Lifestyle (Level 8, 1.5 W/m²K)",
         "Energy Efficiency",
         "Superior Water Tightness (Level 6, ≥700 Pa)",
         "UV Protection Technology",
         "Superior Safety Performance",
         "Innovation & Modern Design",
-        "Premium Quality with Up to 15 - Years Warranty",
+        "Premium Quality with Up to 15-Year Warranty",
         "Affordable with 0% Interest EPP payment plan",
         "Professional MEVO Installation Team & After-Sales Service",
       ],
@@ -190,7 +244,7 @@ export const WHY_CHOOSE = {
         "Wind Resistance Level 9 (≥5000 Pa = 500 kgf/m²)",
         "Air Tightness Level 8 (-67% to 96% Airflow Leakage)",
         "Water Tightness Level 6 (≥700 Pa)",
-        "Thermal Insulation Level 8 (1.5W/ m²k, CRF ≥75)",
+        "Thermal Insulation Level 8 (1.5 W/m²K, CRF ≥75)",
         "Acoustic Insulation Level 5 (Sound Reduction 43dB)",
         "Superior German Hardware System",
       ],
@@ -329,7 +383,9 @@ export const STATS_ZH: typeof STATS = STATS.map((stat, i) => ({
   ...STATS_TEXT_ZH[i],
 }));
 
-export const CTA = "To Get More Details";
+/** Was "To Get More Details", which is not idiomatic and read as a sentence
+    fragment where /contact uses it as an <h2>. */
+export const CTA = "Speak to our team";
 
 /**
  * The /contact page.
@@ -446,12 +502,12 @@ export const USP = {
 };
 
 export const SERVICES = {
-  heading: "our Services",
+  heading: "Our Services",
   /** One photograph per service. The pinned runway shows exactly one pair at a
       time, so each image has to carry its service on its own. */
   items: [
     {
-      title: "architectural consultation",
+      title: "Architectural Consultation",
       body: "We provide professional consultation to understand your design requirements, project needs, and performance expectations for homeowners, architects, interior designers and developers.",
       image: {
         src: "/services/01.jpg",
@@ -459,15 +515,15 @@ export const SERVICES = {
       },
     },
     {
-      title: "custom Design & system Selection",
-      body: "Every project is unique. Our team provides customized solutions to match architectural concepts and lifestyle requirements.",
+      title: "Custom Design & System Selection",
+      body: "Every project is unique. Our team provides customised solutions to match architectural concepts and lifestyle requirements.",
       image: {
         src: "/services/02.jpg",
         alt: "A window system held open at its cross-section while a hand points at the profile",
       },
     },
     {
-      title: "Supply & project Solution",
+      title: "Supply & Project Solutions",
       body: "From small residential projects to large developments, MEVO MALAYSIA provides reliable supply solutions with professional project coordination.",
       image: {
         src: "/services/03.jpg",
@@ -476,7 +532,7 @@ export const SERVICES = {
     },
     {
       title: "Installation & Technical Support",
-      body: "Our professional installation team which is Certified MEVO Installers ensures every system performs according to design expectations.",
+      body: "Our installation team, all Certified MEVO Installers, ensures every system performs according to design expectations.",
       image: {
         src: "/services/04.jpg",
         alt: "An installer fixing a window frame in place with a cordless drill",
@@ -583,8 +639,16 @@ export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
 
 export const FOOTER = {
   brand: "MEVO MALAYSIA",
+  /**
+   * This was "We are dedicated to providing innovative solutions that empower
+   * businesses to excel in their respective industries" — WordPress-template
+   * boilerplate that named neither the product, the material nor the country,
+   * and addressed "businesses" when the services copy sells to homeowners and
+   * architects. It sat in the footer of every page, so it was also the one
+   * sentence every page repeated to a crawler.
+   */
   blurb:
-    "We are dedicated to providing innovative solutions that empower businesses to excel in their respective industries.",
+    "Aluminium window and door systems engineered for the Malaysian climate — supplied, installed and serviced by MEVO Malaysia from our Shah Alam showroom.",
   reachHeading: "Reach Out to Us",
   phone: "014 - 879 7371",
   /** The number as dialled: spaces and the leading zero are for reading, the
@@ -611,7 +675,6 @@ export const FOOTER = {
   copyright: "\u00a9 2026 MEVO MALAYSIA",
   privacy: "Privacy & Cookies",
   cookiePreferences: "Cookie preferences",
-  terms: "Terms and Conditions",
 };
 
 /** Only the standfirst. Everything else in the footer is a proper noun, an
@@ -619,8 +682,11 @@ export const FOOTER = {
     point at English pages, so translating their labels would promise a
     translation that is not there. */
 export const FOOTER_ZH: Partial<typeof FOOTER> = {
+  /** Rewritten alongside the English above, which it was a translation of.
+      Flagged for the client to confirm rather than left describing a sentence
+      the site no longer says. */
   blurb:
-    "我们致力于提供创新的解决方案，赋能企业在其各自行业中脱颖而出。",
+    "专为马来西亚气候打造的铝合金门窗系统 —— 由 MEVO 马来西亚莎阿南展厅提供供应、安装与售后服务。",
 };
 
 /**

@@ -119,9 +119,17 @@ export function Background() {
       ref={rootRef}
       data-autoplay={SEQUENCE}
       data-autoplay-speed={SPEED}
-      className="relative h-[370dvh] motion-reduce:h-auto"
+      className="relative h-[370svh] motion-reduce:h-auto"
     >
-      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]">
+      {/* `lvh`, where the runway around it is `svh`. The two are doing
+          different jobs: the runway is a length in the scroll chain and has to
+          hold still, but this frame has to COVER, and a box sized to the
+          viewport-with-chrome leaves a strip of page showing along the bottom
+          the moment the URL bar slides away. `lvh` is the viewport at its
+          tallest, so the frame always reaches the foot of the screen; the
+          overflow when the bar is showing costs nothing, because what is
+          inside is `object-cover` and clipped anyway. */}
+      <div className="sticky top-0 h-[100lvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]">
         <div data-bg-scale className="absolute inset-0">
           {background.images.map((image, i) => (
             <div key={image.src} data-bg={i} className="absolute inset-0">

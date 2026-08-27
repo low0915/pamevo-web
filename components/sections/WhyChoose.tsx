@@ -69,7 +69,10 @@ export function WhyChoose() {
       const leader = section.querySelector<SVGLineElement>("[data-leader]");
 
       // The marker travels with the photograph while the panel stays put, so
-      // the line between them is measured rather than assumed.
+      // the line between them is measured rather than assumed. It stops on the
+      // marker's top-right corner rather than running to its centre: the panel
+      // is up and to the right, so that is the corner facing it, and stopping
+      // there leaves the square reading as an unbroken outline.
       const drawLeader = () => {
         if (!frame || !marker || !panel || !leader) return;
         const f = frame.getBoundingClientRect();
@@ -79,8 +82,8 @@ export function WhyChoose() {
         // the corner on every frame of the scrub.
         if (!m.width) return;
         const p = panel.getBoundingClientRect();
-        leader.setAttribute("x1", String(m.left + m.width / 2 - f.left));
-        leader.setAttribute("y1", String(m.top + m.height / 2 - f.top));
+        leader.setAttribute("x1", String(m.right - f.left));
+        leader.setAttribute("y1", String(m.top - f.top));
         leader.setAttribute("x2", String(p.left - f.left));
         leader.setAttribute("y2", String(p.top - f.top + 18));
       };
@@ -160,11 +163,11 @@ export function WhyChoose() {
       // section's paragraph swap finishes, and lands it flush as the frame
       // releases. bg-bg because the runway outside the frame is transparent and
       // would otherwise show the section beneath.
-      className="sheet relative -mt-[110dvh] h-[460dvh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
+      className="sheet relative -mt-[110svh] h-[460svh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
     >
       <div
         data-frame
-        className="sticky top-0 h-[100dvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]"
+        className="sticky top-0 h-[100lvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]"
       >
         <div
           data-drift
@@ -210,7 +213,7 @@ export function WhyChoose() {
 
         <div
           data-panel
-          className="glass absolute top-1/2 right-[6%] left-6 flex max-h-[86dvh] -translate-y-1/2 flex-col rounded-[4px] p-6 max-md:top-auto max-md:bottom-6 max-md:translate-y-0 md:left-auto md:w-[min(36%,470px)] md:p-8 motion-reduce:static motion-reduce:mx-6 motion-reduce:my-10 motion-reduce:max-h-none motion-reduce:translate-y-0"
+          className="glass absolute top-1/2 right-[6%] left-6 flex max-h-[86svh] -translate-y-1/2 flex-col rounded-[4px] p-6 max-md:top-auto max-md:bottom-6 max-md:translate-y-0 md:left-auto md:w-[min(36%,470px)] md:p-8 motion-reduce:static motion-reduce:mx-6 motion-reduce:my-10 motion-reduce:max-h-none motion-reduce:translate-y-0"
         >
           {/* Scroll progress, one segment per part. */}
           <div aria-hidden className="mb-7 flex gap-3">
@@ -238,9 +241,13 @@ export function WhyChoose() {
                 className="col-start-1 row-start-1 motion-reduce:row-start-auto motion-reduce:mb-8"
                 style={i > 0 ? { opacity: 0 } : undefined}
               >
-                <h3 className="text-2xl font-medium tracking-tight text-ink md:text-3xl">
+                {/* h2, not h3. This section has no heading of its own — each
+                    part's title is the heading — so an h3 here sat under no h2
+                    and broke the page outline between Background's h2 and
+                    Stats'. The type scale is set by the classes, not the tag. */}
+                <h2 className="text-2xl font-medium tracking-tight text-ink md:text-3xl">
                   {part.title}
-                </h3>
+                </h2>
 
                 <ul className="mt-4 list-disc space-y-2 pl-4 text-base leading-relaxed text-ink marker:text-ink-3">
                   {part.items.map((item) => (

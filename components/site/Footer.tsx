@@ -24,10 +24,18 @@ const MARKS = {
 export function Footer() {
   return (
     <footer
-      className="relative border-t border-line bg-surface pt-20 pb-10 md:pt-24"
+      /* The gutters sit out here, on the footer itself, and the 1440 cap goes
+         on the box inside them. That is the order every section on the site
+         uses — see Projects, ProductCatalog, ProductsIntro, /contact and
+         /privacy — and the order matters: capping first and padding inside the
+         cap, which is what this did, measured the 1440 to the OUTSIDE of the
+         gutters and left the footer's content 96px narrower than the section
+         directly above it on any viewport past the cap. The border still spans
+         the full width, because it is on the footer and not on this box. */
+      className="relative border-t border-line bg-surface px-4 pt-20 pb-10 md:px-8 md:pt-24 lg:px-12"
       style={{ zIndex: Z.raised }}
     >
-      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-[1440px]">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-4">
             {/* The lockup stands in for the wordmark here, at the same
@@ -128,9 +136,10 @@ export function Footer() {
               {FOOTER.cookiePreferences}
             </button>
 
-            <a href="#" aria-disabled="true" className="hover:text-ink">
-              {FOOTER.terms}
-            </a>
+            {/* "Terms and Conditions" used to sit here as an href="#" that went
+                nowhere. A visible link that cannot be followed is worse than no
+                link: it advertises a document the site does not have, and it is
+                one more crawlable dead end. Put it back when the page exists. */}
           </div>
         </div>
       </div>

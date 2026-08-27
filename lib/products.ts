@@ -292,7 +292,7 @@ export const PRODUCTS: Product[] = [
   {
     no: "07",
     slug: "dm112-windowdoor-system",
-    title: "DM112 Window&Door System",
+    title: "DM112 Window & Door System",
     category: "Doors",
     images: [
       {
@@ -439,7 +439,7 @@ export const PRODUCTS: Product[] = [
   {
     no: "11",
     slug: "dm80-biofold-door",
-    title: "DM80 Biofold Door",
+    title: "DM80 Bifold Door",
     category: "Doors",
     images: [
       {

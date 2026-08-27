@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 
 import { FOOTER, PRIVACY, SEO } from "@/lib/content";
+import { pageMetadata } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
 
-export const metadata: Metadata = {
-  /** The layout template appends " | MEVO Malaysia". */
-  title: SEO.privacy.title,
-  description: SEO.privacy.description,
-};
+/** Title, description, canonical and the social cards, from one entry. See
+    lib/seo.ts for why the nested keys cannot be defaulted in the layout. */
+export const metadata: Metadata = pageMetadata(SEO.privacy);
 
 /** Wider than the ~65ch a body column usually wants: this is a reference
     document read in sections rather than start to finish, and the narrower

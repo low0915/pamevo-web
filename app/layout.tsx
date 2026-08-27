@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -8,7 +8,7 @@ import { Grain } from "@/components/ui/Grain";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { CookieConsent } from "@/components/site/CookieConsent";
 import { LocaleSync } from "@/lib/locale";
-import { SEO } from "@/lib/content";
+import { SEO, SITE } from "@/lib/content";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,7 +48,26 @@ const harmonySC = localFont({
   adjustFontFallback: false,
 });
 
+/**
+ * Root metadata: FLAT KEYS ONLY.
+ *
+ * Note what is deliberately absent — `openGraph`, `twitter` and `alternates`.
+ * Next merges metadata shallowly, replacing nested keys wholesale rather than
+ * field by field, so defaulting any of them here would hand every page that
+ * does not restate them the home page's values. For `alternates` that means
+ * canonicalising the whole site onto "/". Each page builds its own through
+ * `pageMetadata()` in lib/seo.ts, which is where that reasoning is written out.
+ *
+ * `icons` is absent too, and for a different reason: it used to point at
+ * /logo.png, which is the 2220x174 co-branded wordmark and renders as a smear
+ * at 16px. Dropping the key lets Next's file conventions take over —
+ * app/favicon.ico, and app/icon.png / app/apple-icon.png once a square mark
+ * exists — which cannot go stale the way a hand-written path can.
+ */
 export const metadata: Metadata = {
+  /** Every relative canonical and og:image below resolves against this. Without
+      it they resolve against localhost in production, silently. */
+  metadataBase: new URL(SITE.url),
   title: {
     default: SEO.home.title,
     /** Sub-pages set only their own half of the title; this appends the brand
@@ -56,7 +75,32 @@ export const metadata: Metadata = {
     template: SEO.titleTemplate,
   },
   description: SEO.home.description,
-  icons: { icon: "/logo.png" },
+  applicationName: SITE.name,
+  publisher: SITE.legalName,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      /* Let Google use a full-size image and an untruncated snippet. Without
+         these it may choose a thumbnail, which for a product catalogue that
+         lives on its photography is the wrong default. */
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  /* The showroom's phone number is already a real <a href="tel:">; leaving
+     detection on lets iOS Safari re-style arbitrary digit runs — the SSM
+     company number, the spec figures — as if they were phone numbers too. */
+  formatDetection: { telephone: false, address: false },
+};
+
+/** themeColor is deprecated inside `metadata` as of Next 14; this is where it
+    goes now. The value is the brand ground, so the mobile browser chrome
+    matches the page rather than flashing white against it. */
+export const viewport: Viewport = {
+  themeColor: "#f4f5f6",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

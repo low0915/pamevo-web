@@ -102,7 +102,10 @@ export function Header() {
                 alt={LOGO_ALT}
                 width={2220}
                 height={174}
-                priority
+                /* Was `priority`, deprecated as of Next 16. Eager rather than
+                   preload: above the fold on every page, but small, and a
+                   preload would compete in <head> with each page's real LCP. */
+                loading="eager"
                 className="h-4 w-auto"
               />
             </motion.span>

@@ -178,15 +178,37 @@ export function Hero() {
       ref={rootRef}
       data-autoplay={SEQUENCE}
       data-autoplay-speed={SPEED}
-      className="relative h-[500dvh]"
+      className="relative h-[500svh]"
     >
-      <div className="sticky top-0 h-[100dvh] w-full overflow-hidden">
+      {/* `lvh`, where the runway around it is `svh`. The two are doing
+          different jobs: the runway is a length in the scroll chain and has to
+          hold still, but this frame has to COVER, and a box sized to the
+          viewport-with-chrome leaves a strip of page showing along the bottom
+          the moment the URL bar slides away. `lvh` is the viewport at its
+          tallest, so the frame always reaches the foot of the screen; the
+          overflow when the bar is showing costs nothing, because what is
+          inside is `object-cover` and clipped anyway. */}
+      <div className="sticky top-0 h-[100lvh] w-full overflow-hidden">
         <video
           ref={videoRef}
           className="graded absolute inset-0 h-full w-full object-cover"
           src="/hero-video.mp4"
           muted
           playsInline
+          /* `auto`, and it has to stay `auto`.
+
+             At 3.0 MB this is the largest single asset on the site and the
+             obvious candidate for `preload="metadata"` — but this video is not
+             played, it is SCRUBBED: the timeline below drives `currentTime`
+             from scroll position. Seeking needs the byte range already
+             buffered, so anything less than `auto` turns the hero into a
+             stutter on first scroll, or a still frame until the network
+             catches up.
+
+             The cost is real and is worth paying down elsewhere: a `poster`
+             would give the frame something to paint before the first bytes
+             land, and a smaller source would cut what has to be fetched. Both
+             need an asset that does not exist in public/ yet. */
           preload="auto"
           aria-hidden
           tabIndex={-1}
@@ -247,7 +269,11 @@ export function Hero() {
                   alt=""
                   width={2220}
                   height={174}
-                  priority
+                  /* Was `priority`, deprecated as of Next 16. The LCP element
+                     on the home page — the <video> has no poster, so it is not
+                     an LCP candidate — which is the case that still wants a
+                     real preload rather than merely eager loading. */
+                  preload
                   className="mx-auto h-auto w-full max-w-[520px] md:mx-0 md:max-w-[760px] lg:max-w-[980px]"
                 />
               </div>

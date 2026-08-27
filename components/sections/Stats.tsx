@@ -242,7 +242,7 @@ export function Stats() {
   }, []);
 
   return (
-    <section className="band-runway sheet relative mb-[4em] -mt-[110dvh] min-h-[110dvh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0">
+    <section className="band-runway sheet relative mb-[4em] -mt-[110svh] min-h-[110svh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0">
       {/* Pinned, so the curtain that follows has something still to ride over.
           A pinned frame is one screen, and globals.css holds this band to it.
           `min-h` is for everywhere else: a curtain has to be at least as tall

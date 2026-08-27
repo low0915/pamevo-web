@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { CaretDown, Rows, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 
 import { PRODUCTS, type Product } from "@/lib/products";
@@ -95,7 +95,7 @@ export function ProductCatalog() {
   );
 
   return (
-    <section className="mb-[4em] px-4 pb-24 md:px-8 md:pb-36 lg:px-12">
+    <section className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12">
       <div className="mx-auto w-full max-w-[1440px]">
         <h2 className="sr-only">{PRODUCTS_PAGE.catalogLabel}</h2>
 
@@ -210,7 +210,11 @@ export function ProductCatalog() {
                   src={l.src}
                   alt={l.alt}
                   fill
-                  priority={l.key === FIRST_KEY}
+                  /* Was `priority`, deprecated as of Next 16. Eager rather
+                     than preload: this photograph and the ProductsIntro hero
+                     are both plausible LCP depending on viewport, so preloading
+                     both would only have them race. */
+                  loading={l.key === FIRST_KEY ? "eager" : "lazy"}
                   sizes="(max-width: 1023px) 100vw, (max-width: 1440px) 60vw, 900px"
                   quality={78}
                   className="graded-soft object-cover"
@@ -339,130 +343,146 @@ export function ProductCatalog() {
                       </button>
                     </h3>
 
-                    {/* Unmounted when closed rather than held at height 0. A
+                    {/* Always mounted, and closed by animating to height 0
+                        rather than by unmounting.
+
+                        This panel used to unmount, on the reasoning that a
                         zero-height panel keeps its content focusable and in the
-                        accessibility tree, which is the classic accordion bug. */}
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          // AnimatePresence tracks its children by key. Without
-                          // one the exit never runs, and the closed panel is
-                          // left mounted at full height.
-                          key={`panel-${p.no}`}
-                          id={`panel-${p.no}`}
-                          role="region"
-                          aria-labelledby={`row-${p.no}`}
-                          className="overflow-hidden"
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
-                        >
-                          <div className="relative border-t border-[rgb(255_255_255/0.55)] px-5 pt-5 pb-6">
-                            {p.groups.map((g, gi) => (
-                              <div key={g.title} className="mt-4 first:mt-0">
-                                <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
-                                  {g.title}
-                                  {g.titleZh ? (
+                        accessibility tree — which is a real bug, but `inert` is
+                        the fix for it rather than unmounting. Unmounting had a
+                        cost that was invisible from inside the component: `open`
+                        starts at the first product, so the server rendered ONE
+                        product's specifications and nineteen bare titles. Every
+                        thermal rating, hardware brand and profile dimension in
+                        the catalogue — the whole of what anyone would search
+                        for — was absent from the HTML and appeared only after a
+                        click.
+
+                        `inert` takes the closed panel out of the tab order and
+                        out of the accessibility tree, so nothing is focusable
+                        behind a collapsed row, while the text stays in the
+                        document where a crawler can read it. Content hidden
+                        this way in a standard accordion is indexed normally.
+
+                        AnimatePresence is gone with the unmount: there is no
+                        exit to sequence any more, so `animate` alone drives both
+                        directions. */}
+                    <motion.div
+                      id={`panel-${p.no}`}
+                      role="region"
+                      aria-labelledby={`row-${p.no}`}
+                      inert={!isOpen}
+                      className="overflow-hidden"
+                      initial={false}
+                      animate={{
+                        height: isOpen ? "auto" : 0,
+                        opacity: isOpen ? 1 : 0,
+                      }}
+                      transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
+                    >
+                      <div className="relative border-t border-[rgb(255_255_255/0.55)] px-5 pt-5 pb-6">
+                        {p.groups.map((g, gi) => (
+                          <div key={g.title} className="mt-4 first:mt-0">
+                            <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
+                              {g.title}
+                              {g.titleZh ? (
+                                <span
+                                  lang="zh-Hans"
+                                  className="ml-2 font-sans normal-case"
+                                >
+                                  {g.titleZh}
+                                </span>
+                              ) : null}
+                            </p>
+                            <ul className="mt-2 space-y-2.5">
+                              {g.items.map((item, ii) => (
+                                <li
+                                  key={item.en}
+                                  className={`text-base leading-relaxed text-ink ${
+                                    !hasViews &&
+                                    gi === lastGroup &&
+                                    ii === g.items.length - 1
+                                      ? gutter
+                                      : ""
+                                  }`}
+                                >
+                                  {item.en}
+                                  {item.zh ? (
                                     <span
                                       lang="zh-Hans"
-                                      className="ml-2 font-sans normal-case"
+                                      className="mt-1 block text-base text-ink-2"
                                     >
-                                      {g.titleZh}
+                                      {item.zh}
                                     </span>
                                   ) : null}
-                                </p>
-                                <ul className="mt-2 space-y-2.5">
-                                  {g.items.map((item, ii) => (
-                                    <li
-                                      key={item.en}
-                                      className={`text-base leading-relaxed text-ink ${
-                                        !hasViews &&
-                                        gi === lastGroup &&
-                                        ii === g.items.length - 1
-                                          ? gutter
-                                          : ""
-                                      }`}
-                                    >
-                                      {item.en}
-                                      {item.zh ? (
-                                        <span
-                                          lang="zh-Hans"
-                                          className="mt-1 block text-base text-ink-2"
-                                        >
-                                          {item.zh}
-                                        </span>
-                                      ) : null}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
 
-                            {/* Product 16 is photographed three times because
-                                the three photographs are its three variants, so
-                                this strip is content rather than decoration. */}
-                            {p.images.length > 1 && (
-                              <div className="mt-5">
-                                <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
-                                  {PRODUCTS_PAGE.viewsLabel}
-                                </p>
-                                <div className={`mt-2 flex flex-wrap gap-2 ${gutter}`}>
-                                  {p.images.map((img, i) => {
-                                    const key = `${p.slug}-${i}`;
-                                    return (
-                                      <button
-                                        key={key}
-                                        type="button"
-                                        aria-pressed={shown === key}
-                                        aria-label={img.alt}
-                                        onClick={() => setShown(key)}
-                                        className="relative h-14 w-20 overflow-hidden rounded-[6px] border border-[rgb(126_133_140/0.3)] transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] aria-pressed:border-ink"
-                                      >
-                                        <Image
-                                          src={img.src}
-                                          alt=""
-                                          fill
-                                          sizes="80px"
-                                          quality={50}
-                                          className="graded-soft object-cover"
-                                        />
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* The panel's closing move, and the only thing in
-                                it that is not a specification.
-
-                                A Link, not a button: it navigates, so it wants
-                                to be openable in a new tab and to be picked up
-                                as a link by anything reading the page.
-
-                                `bottom-6` is the panel's own `pb-6`, so the
-                                button's foot lands on the last line's foot
-                                rather than near it. */}
-                            <div
-                              className={
-                                floats
-                                  ? "absolute right-5 bottom-6"
-                                  : "mt-6 flex justify-end"
-                              }
-                            >
-                              <Link
-                                href={PRODUCTS_PAGE.cta.href}
-                                aria-label={PRODUCTS_PAGE.cta.aria(p.title)}
-                                className="inline-flex items-center rounded-full bg-ink px-5 py-2.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
-                              >
-                                {PRODUCTS_PAGE.cta.label}
-                              </Link>
+                        {/* Product 16 is photographed three times because
+                            the three photographs are its three variants, so
+                            this strip is content rather than decoration. */}
+                        {p.images.length > 1 && (
+                          <div className="mt-5">
+                            <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
+                              {PRODUCTS_PAGE.viewsLabel}
+                            </p>
+                            <div className={`mt-2 flex flex-wrap gap-2 ${gutter}`}>
+                              {p.images.map((img, i) => {
+                                const key = `${p.slug}-${i}`;
+                                return (
+                                  <button
+                                    key={key}
+                                    type="button"
+                                    aria-pressed={shown === key}
+                                    aria-label={img.alt}
+                                    onClick={() => setShown(key)}
+                                    className="relative h-14 w-20 overflow-hidden rounded-[6px] border border-[rgb(126_133_140/0.3)] transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] aria-pressed:border-ink"
+                                  >
+                                    <Image
+                                      src={img.src}
+                                      alt=""
+                                      fill
+                                      sizes="80px"
+                                      quality={50}
+                                      className="graded-soft object-cover"
+                                    />
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        )}
+
+                        {/* The panel's closing move, and the only thing in
+                            it that is not a specification.
+
+                            A Link, not a button: it navigates, so it wants
+                            to be openable in a new tab and to be picked up
+                            as a link by anything reading the page.
+
+                            `bottom-6` is the panel's own `pb-6`, so the
+                            button's foot lands on the last line's foot
+                            rather than near it. */}
+                        <div
+                          className={
+                            floats
+                              ? "absolute right-5 bottom-6"
+                              : "mt-6 flex justify-end"
+                          }
+                        >
+                          <Link
+                            href={PRODUCTS_PAGE.cta.href}
+                            aria-label={PRODUCTS_PAGE.cta.aria(p.title)}
+                            className="inline-flex items-center rounded-full bg-ink px-5 py-2.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
+                          >
+                            {PRODUCTS_PAGE.cta.label}
+                          </Link>
+                        </div>
+                      </div>
+                    </motion.div>
                   </li>
                 );
               })}

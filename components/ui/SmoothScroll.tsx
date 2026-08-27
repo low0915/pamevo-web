@@ -264,8 +264,27 @@ export function SmoothScroll() {
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
+    // On a phone the URL bar collapses and expands as the page is scrolled,
+    // and every one of those fires `resize`. Left alone, ScrollTrigger
+    // re-measures each pin and scrub mid-gesture and the page jumps under the
+    // thumb - worst on the service stack, which is five sticky panels deep.
+    // This makes it ignore a resize that only changed the height on a touch
+    // device, which is exactly the URL bar and nothing else. An orientation
+    // change still refreshes, because that changes the width.
+    ScrollTrigger.config({ ignoreMobileResize: true });
+
     measure();
-    window.addEventListener("resize", measure);
+    // Same reasoning for the autoplay's own measurements: the runs are read off
+    // `window.innerHeight`, so a URL bar sliding away would re-cut every runway
+    // in the middle of one being played. Only a width change is a real layout
+    // change worth re-reading.
+    let lastWidth = window.innerWidth;
+    const onResize = () => {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      measure();
+    };
+    window.addEventListener("resize", onResize);
     ScrollTrigger.addEventListener("refresh", measure);
     window.addEventListener("wheel", onWheel, { passive: true });
     window.addEventListener("touchstart", onTouch, { passive: true });
@@ -284,7 +303,7 @@ export function SmoothScroll() {
       lenis.off("scroll", onScroll);
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33);
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", onResize);
       ScrollTrigger.removeEventListener("refresh", measure);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouch);

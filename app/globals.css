@@ -301,21 +301,21 @@ body {
    The runway is sized by the same rule the hero uses for its own sheet: a
    pinned section must outlast its timeline by two screens plus the gap below
    it, or the curtain arrives before the section is done or leaves before it is
-   covered. The timeline here is `4 x (100dvh - band)`, so the runway is
-   `400dvh - 4 x band` plus 200dvh, 20dvh of buffer and the 4em bottom margin.
+   covered. The timeline here is `4 x (100svh - band)`, so the runway is
+   `400svh - 4 x band` plus 200svh, 20svh of buffer and the 4em bottom margin.
    The buffer is split: half of it sits ahead of the curtain and half behind,
    so neither condition lands exactly on its limit.
    The band is in px because it clears the fixed header island, which is why
    this needs calc where the other sections do not. */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   .svc-runway {
-    /* 400dvh - 448 (timeline) + 220dvh + 64 (two screens, buffer, gap). */
-    height: calc(620dvh - 384px);
+    /* 400svh - 448 (timeline) + 220svh + 64 (two screens, buffer, gap). */
+    height: calc(620svh - 384px);
   }
   .svc-frame {
     position: sticky;
     top: 0;
-    height: 100dvh;
+    height: 100svh;
     overflow: hidden;
   }
   /* Every panel leaves the flow and fills the frame, so a panel rising into it
@@ -353,18 +353,18 @@ body {
      variants after `motion-reduce:` ones, so a `md:-mt-*` would outlive the
      very pin it depends on and eat into the last panel.
 
-     One full screen plus the 4em gap below the stack, and 10dvh over that so
+     One full screen plus the 4em gap below the stack, and 10svh over that so
      the cover completes before the pin lets go rather than exactly with it.
      Anything less than a screen and the pin releases first, so both are moving
      during the handover and the overlap never completes. */
   .svc-curtain {
-    margin-top: calc(-110dvh - 4em);
+    margin-top: calc(-110svh - 4em);
   }
   /* The stat band, pinned so the curtain above has something still to ride
-     over. Its runway is 240dvh: 30dvh of hold, one screen for the curtain to
-     travel, and the 110dvh the curtain is pulled up by, with 10dvh of slack. */
+     over. Its runway is 240svh: 30svh of hold, one screen for the curtain to
+     travel, and the 110svh the curtain is pulled up by, with 10svh of slack. */
   .band-runway {
-    height: 240dvh;
+    height: 240svh;
   }
   /* No padding: the band is one full-bleed 16:9 composition whose rules run to
      the frame's own edges, and it measures its own insets off that frame. */
@@ -372,7 +372,7 @@ body {
     position: sticky;
     top: 0;
     display: flex;
-    height: 100dvh;
+    height: 100svh;
     flex-direction: column;
     justify-content: center;
   }
@@ -382,7 +382,7 @@ body {
      two pinned frames in the same scroll range. The pinned sheets get this for
      free from their runways; this one has to be told. */
   .svc-curtain-floor {
-    min-height: 110dvh;
+    min-height: 110svh;
   }
 }
 
@@ -395,13 +395,24 @@ body {
   /* The band is 16px deeper here, so the timeline is 64px shorter and the
      runway follows it down. */
   .svc-runway {
-    height: calc(620dvh - 448px);
+    height: calc(620svh - 448px);
   }
 }
 
 /* The same two curtains, below `md`.
 
-   Everything above is gated at 768 because it is built on pinned 100dvh
+   Every height here is `svh`, not `dvh`, and that is load-bearing rather than
+   pedantic. `dvh` is the *dynamic* viewport height: on a phone it tracks the
+   URL bar shrinking and growing as the page is scrolled. These boxes are
+   chained to each other through negative margins - a curtain is pulled up by
+   exactly the height the section before it stands - so a viewport height that
+   moves while the reader is scrolling moves every box in the chain at once,
+   and the page jumps under the thumb. `svh` is the height with the browser
+   chrome showing and never changes, so the chain is measured once and holds.
+   It is also the safer of the two for a sticky panel: `svh` can never exceed
+   the visible viewport, which is the condition `.svc-card` relies on below.
+
+   Everything above is gated at 768 because it is built on pinned 100svh
    frames, and neither a service panel nor the stat band fits one screen on a
    phone as it is written for the wide layout. So the reading is rebuilt from
    sticky boxes instead of from a pin: a box holds still, and the section after
@@ -415,7 +426,7 @@ body {
    A box is also clamped to its containing block, so a `bottom` inset on a
    first child buys no movement at all.
 
-   A curtain needs a runway as well as something held: 110dvh of empty box for
+   A curtain needs a runway as well as something held: 110svh of empty box for
    the section after to pull itself up by. It is a pseudo-element rather than
    padding on the same box, which is not stylistic either - a sticky box is
    confined to its containing block, and that is the parent's *content* box.
@@ -447,22 +458,22 @@ body {
 
      A section can never be shorter than its own pull-up: it would seat the
      section after it over the panel still being held behind it. Services is
-     several screens of panels, so it can pull the full 110dvh and close over
+     several screens of panels, so it can pull the full 110svh and close over
      the stat band completely. Projects is one screen of content on a phone,
-     and asking it for 110dvh means asking it to stand 110dvh tall - which it
+     and asking it for 110svh means asking it to stand 110svh tall - which it
      does by growing a floor it has nothing to put in, leaving a band of empty
      ground above the footer that no amount of trimming its padding can reach,
      because under a binding floor every pixel taken off the padding goes
-     straight back into the slack. So its curtain is cut to 80dvh, which is
+     straight back into the slack. So its curtain is cut to 80svh, which is
      under what the section already measures on any phone: the floor stops
      binding, the section is its own content again, and the curtain still
      closes over four fifths of the screen before the page carries on. */
   .band-runway::after {
-    height: 110dvh;
+    height: 110svh;
   }
 
   .svc-frame::after {
-    height: 80dvh;
+    height: 80svh;
   }
 
   /* The stat band holds its last screenful while Services rides over it. It
@@ -476,11 +487,11 @@ body {
      exactly that if the measurement never lands. */
   .band-frame {
     position: sticky;
-    top: min(0px, calc(100dvh - var(--band-h, 100dvh)));
+    top: min(0px, calc(100svh - var(--band-h, 100svh)));
   }
 
   .svc-curtain {
-    margin-top: calc(-110dvh - 4em);
+    margin-top: calc(-110svh - 4em);
   }
 
   /* One panel per screen, each holding at the top while the next scrolls up
@@ -493,15 +504,15 @@ body {
   .svc-card {
     position: sticky;
     top: 0;
-    height: 100dvh;
+    height: 100svh;
     overflow: hidden;
   }
 
   /* Projects only, and later than `.svc-curtain` on purpose: same specificity,
      so source order is what lets this one take the shorter pull. */
   .svc-curtain-floor {
-    min-height: 80dvh;
-    margin-top: calc(-80dvh - 4em);
+    min-height: 80svh;
+    margin-top: calc(-80svh - 4em);
   }
 }
 

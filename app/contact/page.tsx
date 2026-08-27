@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { CONTACT, FOOTER, SEO, WHATSAPP } from "@/lib/content";
+import { JsonLd } from "@/components/site/JsonLd";
+import { contactGraph } from "@/lib/schema";
+import { pageMetadata } from "@/lib/seo";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/sections/ContactForm";
 
-export const metadata: Metadata = {
-  /** The layout template appends " | MEVO Malaysia". */
-  title: SEO.contact.title,
-  description: SEO.contact.description,
-};
+/** Title, description, canonical and the social cards, from one entry. See
+    lib/seo.ts for why the nested keys cannot be defaulted in the layout. */
+export const metadata: Metadata = pageMetadata(SEO.contact);
 
 /**
  * Contact.
@@ -49,14 +50,20 @@ export default function ContactPage() {
 
   return (
     <main className="flex-1">
+      {/* HomeAndConstructionBusiness + BreadcrumbList. This page rather than
+          the layout: Google wants marked-up NAP data to be visible on the page
+          asserting it, and this is where the address and number are printed. */}
+      <JsonLd data={contactGraph()} />
+
       {/* Full-bleed banner. The texture is decorative and the heading carries
           the meaning, so the image is alt="" rather than described. */}
-      <section className="relative flex h-[46dvh] min-h-[380px] w-full items-end overflow-hidden md:h-[56dvh]">
+      <section className="relative flex h-[46svh] min-h-[380px] w-full items-end overflow-hidden md:h-[56svh]">
         <Image
           src="/scratched-metal-background.jpg"
           alt=""
           fill
-          priority
+          /* Was `priority`, deprecated as of Next 16. The LCP element here. */
+          preload
           quality={70}
           sizes="100vw"
           className="graded object-cover"
