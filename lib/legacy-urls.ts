@@ -76,16 +76,33 @@ const pages = [
   { source: "/post-sitemap1.xml", destination: "/sitemap.xml", permanent: true },
   { source: "/category-sitemap1.xml", destination: "/sitemap.xml", permanent: true },
 
-  // The Chinese tree. The live site published /zh/<path> for every page; this
-  // build has no /zh routes yet, and the copy to fill them does not exist (see
-  // lib/locale.tsx). Consolidating onto the English equivalent is the honest
-  // outcome: the reader lands on a real page carrying a working EN/ZH toggle,
-  // rather than on a 404 or on a Chinese URL serving English text.
+  // The Chinese tree.
   //
-  // When /zh routes do ship, this rule becomes the identity and should be
-  // deleted rather than edited.
-  { source: "/zh", destination: "/", permanent: true },
-  { source: "/zh/:path*", destination: "/:path*", permanent: true },
+  // /zh, /zh/contact and /zh/our-products are REAL ROUTES in this build and are
+  // deliberately absent from this list — a redirect here would take precedence
+  // over the page and the Chinese site would never render. The live WordPress
+  // site published those same three paths, so they need no redirect at all:
+  // they carry straight over.
+  //
+  // What does need handling is everything else the old /zh tree published —
+  // /zh/our-story, /zh/blog/<product>, /zh/about and the rest — which has no
+  // Chinese page here. Those go to the Chinese home page rather than to their
+  // English equivalent: a reader who asked for Chinese should land somewhere
+  // Chinese, and /zh is the page most likely to answer them.
+  //
+  // The product posts are the one exception worth routing properly: the
+  // catalogue is bilingual, so /zh/blog/<slug> has a genuine destination.
+  { source: "/zh/blog", destination: "/zh/our-products", permanent: true },
+  { source: "/zh/blog/:slug*", destination: "/zh/our-products", permanent: true },
+  { source: "/zh/shop", destination: "/zh/our-products", permanent: true },
+  { source: "/zh/our-story", destination: "/zh", permanent: true },
+  { source: "/zh/about", destination: "/zh", permanent: true },
+  { source: "/zh/about/:path*", destination: "/zh", permanent: true },
+  { source: "/zh/our-10-core-usp", destination: "/zh", permanent: true },
+  { source: "/zh/services", destination: "/zh", permanent: true },
+  // /zh/privacy has no Chinese page and never will while the notice is
+  // English-only, so it goes to the English one rather than to /zh.
+  { source: "/zh/privacy", destination: "/privacy", permanent: true },
 ];
 
 /**

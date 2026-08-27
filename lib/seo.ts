@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { SEO, SITE } from "./content";
+import { SEO, SEO_ZH, SITE } from "./content";
+import { enPath, isPaired, zhPath, type Locale } from "./paths";
 
 /**
  * The metadata layer.
@@ -14,16 +15,16 @@ import { SEO, SITE } from "./content";
  * nothing. There is no per-field merge.
  *
  * The consequence is the trap this file is built to avoid: putting
- * `alternates: { canonical: "/" }` in the root layout does not give every page
- * a sensible default, it gives every page that does not restate `alternates`
- * the HOME PAGE's canonical — quietly canonicalising the entire site onto "/"
- * and asking Google to drop every other URL. `openGraph` fails the same way,
- * more visibly: a page setting only `title` would share on WhatsApp under the
- * home page's og:title.
+ * `alternates: { canonical: "/" }` in a root layout does not give every page a
+ * sensible default, it gives every page that does not restate `alternates` the
+ * HOME PAGE's canonical — quietly canonicalising the site onto "/" and asking
+ * Google to drop every other URL. Now that `alternates` also carries hreflang,
+ * the same mistake would additionally tell Google that every page is the
+ * translation of the home page.
  *
- * So the root layout carries only flat keys, every page restates its own
- * nested ones in full, and this function is what makes restating them cheap
- * enough that nobody is tempted to skip it.
+ * So both root layouts carry only flat keys, every page restates its own nested
+ * ones in full, and this function is what makes restating them cheap enough
+ * that nobody is tempted to skip it.
  */
 
 type PageMeta = {
@@ -36,23 +37,51 @@ type PageMeta = {
   image?: { url: string; alt: string };
 };
 
-export function pageMetadata({
-  path,
-  title,
-  description,
-  image,
-}: PageMeta): Metadata {
+/**
+ * The hreflang pair for a path, or nothing.
+ *
+ * Emitted only for the three paths that genuinely exist in both languages. It
+ * is worth being strict about: an `hreflang="zh-Hans"` pointing at a URL that
+ * serves English is not a small inaccuracy, it is an instruction to Google to
+ * serve that page to Chinese-language searchers, who then bounce. /privacy has
+ * no Chinese version and so gets no `languages` key at all.
+ *
+ * `x-default` goes to the English URL — it is the version to show a reader
+ * whose language matches neither, and it is the one the whole site canonicalises
+ * around.
+ */
+function languages(path: string) {
+  const en = enPath(path);
+  if (!isPaired(en)) return undefined;
+
+  return {
+    en: en,
+    "zh-Hans": zhPath(en),
+    "x-default": en,
+  };
+}
+
+export function pageMetadata(
+  { path, title, description, image }: PageMeta,
+  locale: Locale = "EN",
+): Metadata {
   const url = path === "/" ? SITE.url : `${SITE.url}${path}`;
+  const alternates = languages(path);
 
   return {
     title,
     description,
-    /* Relative, and resolved against metadataBase in app/layout.tsx. */
-    alternates: { canonical: path },
+    alternates: {
+      /* Relative, and resolved against metadataBase in the root layout. Each
+         language self-canonicalises: /zh/contact points at itself, not at the
+         English page, or the Chinese version would never be indexed. */
+      canonical: path,
+      ...(alternates ? { languages: alternates } : {}),
+    },
     openGraph: {
       type: "website",
       siteName: SITE.name,
-      locale: SITE.locale,
+      locale: locale === "ZH" ? "zh_MY" : SITE.locale,
       url,
       title,
       description,
@@ -64,18 +93,12 @@ export function pageMetadata({
       description,
       ...(image ? { images: [image.url] } : {}),
     },
-    /*
-     * No `alternates.languages`, deliberately.
-     *
-     * The Chinese copy is a client-side toggle over one URL (see lib/locale.tsx)
-     * and only part of the site has it, so there is no Chinese URL to point an
-     * hreflang at. Emitting hreflang="zh-Hans" against a URL that serves
-     * English HTML is worse than emitting nothing: Search Console flags it, and
-     * Google is invited to serve the English page to Chinese-language searchers
-     * who then bounce. This gains a `languages` key the day /zh routes ship
-     * with the copy to fill them, and not before.
-     */
   };
+}
+
+/** The Chinese half, so a /zh page reads as one line the way an English one does. */
+export function pageMetadataZh(entry: PageMeta): Metadata {
+  return pageMetadata(entry, "ZH");
 }
 
 /**
@@ -88,5 +111,4 @@ export const NOINDEX = {
   robots: { index: false, follow: false },
 } satisfies Metadata;
 
-/** Every page's metadata, so the sitemap and the pages cannot disagree. */
-export const PAGES = SEO;
+export { SEO, SEO_ZH };

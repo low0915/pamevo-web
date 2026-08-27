@@ -14,7 +14,7 @@ import {
 import { CaretDown, List } from "@phosphor-icons/react/dist/ssr";
 import { siWhatsapp } from "simple-icons";
 import { NAV, NAV_ZH, LOCALES, LOGO_ALT, WHATSAPP } from "@/lib/content";
-import { useLocale } from "@/lib/locale";
+import { counterpart, useLocale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 import { replayHero } from "@/lib/autoplay";
 import { MobileNav } from "./MobileNav";
@@ -38,8 +38,12 @@ export function Header() {
   const [openMenu, setOpenMenu] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
   const reduce = useReducedMotion();
+  /* Also read by the locale toggle below: English and Chinese are separate
+     URLs under separate root layouts, so switching language is a navigation
+     rather than a state change, and `counterpart` maps this path to its
+     opposite. */
   const pathname = usePathname();
-  const { locale: active, setLocale } = useLocale();
+  const { locale: active } = useLocale();
   /* A straight swap, not `useCopy`: NAV is a bare array, so there is no object
      for a partial overlay to merge onto. */
   const nav = active === "ZH" ? NAV_ZH : NAV;
@@ -92,7 +96,13 @@ export function Header() {
           {/* Home is where the hero plays, so the mark is also the way back to
               the top of it — including from the home page itself, where the
               link alone would not move anything. */}
-          <Link href="/" aria-label="MEVO Malaysia, home" onClick={replayHero}>
+          {/* The current language's home, not always the English one: from /zh
+              this has to stay in Chinese. */}
+          <Link
+            href={active === "ZH" ? "/zh" : "/"}
+            aria-label="MEVO Malaysia, home"
+            onClick={replayHero}
+          >
             <motion.span
               className="block origin-left"
               style={reduce ? undefined : { transform: logoTransform }}
@@ -184,20 +194,48 @@ export function Header() {
           </nav>
 
           <div className="ml-auto hidden items-center gap-0.5 rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.35)] p-0.5 lg:ml-4 lg:flex">
-            {LOCALES.map((locale) => (
-              <button
-                key={locale}
-                type="button"
-                onClick={() => setLocale(locale)}
-                aria-pressed={locale === active}
-                lang={locale === "ZH" ? "zh-Hans" : "en"}
-                className={`rounded-full px-2 py-0.5 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
-                  locale === active ? "bg-ink text-bg" : "text-ink-3"
-                }`}
-              >
-                {locale}
-              </button>
-            ))}
+            {LOCALES.map((locale) => {
+              const current = locale === active;
+              const className = `rounded-full px-2 py-0.5 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] ${
+                current ? "bg-ink text-bg" : "text-ink-3 active:scale-[0.97]"
+              }`;
+
+              /* The pill for the language already being read is not a link.
+                 It used to be one, pointing at the page it was already on, so
+                 clicking it re-requested the document — and because the two
+                 languages are separate root layouts, that is a full reload
+                 rather than a client navigation: the hero re-pins and the
+                 scrubbed sections start over, for no change of any kind.
+
+                 A segmented control has nothing to do in its current position,
+                 so this renders as plain text carrying `aria-current`. Only the
+                 other language is focusable, which is also the honest tab
+                 order: there is exactly one action here. */
+              if (current) {
+                return (
+                  <span
+                    key={locale}
+                    aria-current="true"
+                    lang={locale === "ZH" ? "zh-Hans" : "en"}
+                    className={className}
+                  >
+                    {locale}
+                  </span>
+                );
+              }
+
+              return (
+                <a
+                  key={locale}
+                  href={counterpart(pathname, locale)}
+                  hrefLang={locale === "ZH" ? "zh-Hans" : "en"}
+                  lang={locale === "ZH" ? "zh-Hans" : "en"}
+                  className={className}
+                >
+                  {locale}
+                </a>
+              );
+            })}
           </div>
 
           {/* ml-auto below lg, where the nav and the locale switch are hidden:

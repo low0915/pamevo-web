@@ -1,6 +1,7 @@
 import Image from "next/image";
 
-import { PRODUCTS_PAGE } from "@/lib/content";
+import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH } from "@/lib/content";
+import type { Locale } from "@/lib/paths";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
@@ -36,7 +37,11 @@ import { Reveal } from "@/components/ui/Reveal";
  * The band is `min-h` rather than the fixed `h` /contact uses, so a long
  * heading on a narrow phone wraps instead of being clipped.
  */
-export function ProductsIntro() {
+export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
+  /* A server component, so the locale arrives as a prop rather than through
+     the client-side context — the same rule ContactBody follows. */
+  const copy = locale === "ZH" ? { ...PRODUCTS_PAGE, ...PRODUCTS_PAGE_ZH } : PRODUCTS_PAGE;
+
   return (
     <section className="relative flex min-h-[46svh] w-full items-end overflow-hidden md:min-h-[56svh]">
       {/* The ground. The photograph is a cut-out with transparent corners, so
@@ -80,7 +85,7 @@ export function ProductsIntro() {
               from. */}
           <Reveal className="mix-blend-difference">
             <h1 className="text-5xl leading-[0.95] font-medium tracking-tighter text-white sm:text-7xl md:text-8xl lg:text-[8.5rem] xl:text-[10rem]">
-              {PRODUCTS_PAGE.heading}
+              {copy.heading}
             </h1>
           </Reveal>
         </div>

@@ -1,123 +1,66 @@
 "use client";
 
-import { useEffect, useMemo, useSyncExternalStore } from "react";
-import { LOCALES } from "./content";
+import { createContext, useContext, useMemo } from "react";
 
-export type Locale = (typeof LOCALES)[number];
+/* The URL helpers live in lib/paths.ts, which carries no "use client": the
+   server builds hreflang from them during `generateMetadata`, and a client
+   module's exports cannot be called from the server. Re-exported here so client
+   components still import the locale and its paths from one place. */
+export {
+  counterpart,
+  enPath,
+  zhPath,
+  isPaired,
+  HTML_LANG,
+  PAIRED_PATHS,
+  type Locale,
+} from "./paths";
 
-/** Where the choice is remembered between visits. A language preference is a
-    functional setting, not tracking, so it is stored outright rather than
-    gated behind the cookie banner. */
-const STORAGE_KEY = "mevo-locale";
-
-/** What `<html lang>` becomes for each toggle position. ZH is Simplified —
-    the same subtag the product specs already carry in ProductCatalog. */
-const HTML_LANG: Record<Locale, string> = { EN: "en", ZH: "zh-Hans" };
-
-function parse(value: string | null): Locale | null {
-  return value === "EN" || value === "ZH" ? value : null;
-}
+import type { Locale } from "./paths";
 
 /**
- * The chosen locale, held as one module-level store rather than in React
- * state.
+ * The locale, read from the ROUTE rather than from a client store.
  *
- * The page is not routed per language: there is one URL and the copy swaps in
- * place. That is deliberate at this size — only part of the site is
- * translated, so a /zh route would promise a Chinese site that does not exist
- * yet. What that leaves is a single value several unrelated components read
- * (both toggles, four sections), and localStorage and other tabs writing to it
- * from outside React. That is an external store, so it is subscribed to as one
- * — which is also what keeps the restore off an effect that would have to
- * setState during mount.
+ * This used to be a module-level store backed by localStorage, because one URL
+ * served both languages and the copy swapped in place. That had one fatal
+ * property for search: the server could only ever render English. `<html lang>`
+ * was corrected by an effect after hydration, and the Chinese copy existed only
+ * inside the JS bundle, so no crawler ever saw a word of it.
+ *
+ * Now English lives at `/` and Chinese at `/zh`, each with its own root layout,
+ * and the locale is a constant for the whole tree beneath. A constant handed
+ * down from a server component is a context, not a store — which is also what
+ * lets the server render Chinese HTML with `lang="zh-Hans"` already on it.
+ *
+ * There is no setter any more. Switching language is a navigation, and the
+ * toggle in the header is a link — see `counterpart` below.
  */
-let current: Locale = "EN";
-let restored = false;
-const listeners = new Set<() => void>();
+const LocaleContext = createContext<Locale>("EN");
 
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-function onStorage(event: StorageEvent) {
-  if (event.key !== STORAGE_KEY) return;
-  const next = parse(event.newValue);
-  if (!next || next === current) return;
-  current = next;
-  emit();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  if (listeners.size === 1) window.addEventListener("storage", onStorage);
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) window.removeEventListener("storage", onStorage);
-  };
-}
-
-function getSnapshot(): Locale {
-  /* Read once, then cached in `current`: getSnapshot has to return the same
-     value until something calls a listener, so it cannot go to storage on
-     every render. */
-  if (!restored) {
-    restored = true;
-    try {
-      current = parse(window.localStorage.getItem(STORAGE_KEY)) ?? current;
-    } catch {
-      /* Private modes can refuse storage outright. EN is the fallback. */
-    }
-  }
-  return current;
-}
-
-/** The server, and the client's hydration pass, always render English. A
-    returning ZH reader is switched over in the commit right after, which is a
-    re-render rather than a hydration mismatch. */
-function getServerSnapshot(): Locale {
-  return "EN";
-}
-
-export function setLocale(next: Locale) {
-  if (next === current) return;
-  current = next;
-  restored = true;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, next);
-  } catch {
-    /* Nothing to do: the choice still applies for this visit. */
-  }
-  emit();
+export function LocaleProvider({
+  locale,
+  children,
+}: {
+  locale: Locale;
+  children: React.ReactNode;
+}) {
+  return (
+    <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>
+  );
 }
 
 export function useLocale() {
-  const locale = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  /* `setLocale` is a module function, so it is already stable across
-     renders and needs no memoisation. */
-  return { locale, setLocale };
-}
-
-/**
- * Keeps `<html lang>` on the language actually being read. Mounted once in the
- * root layout; renders nothing.
- */
-export function LocaleSync() {
-  const { locale } = useLocale();
-
-  useEffect(() => {
-    document.documentElement.lang = HTML_LANG[locale];
-  }, [locale]);
-
-  return null;
+  return { locale: useContext(LocaleContext) };
 }
 
 /**
  * Picks the copy for the current locale.
  *
  * The ZH object is a partial overlay, not a parallel translation: only the
- * strings the client has actually supplied are in it, and everything else
- * falls through to the English original. That is what keeps a half-translated
- * page coherent rather than half-empty.
+ * strings that have actually been supplied are in it, and everything else falls
+ * through to the English original. That is what keeps a partly-translated
+ * section coherent rather than half-empty — and it is still true per section,
+ * even though the three routed pages are now translated end to end.
  */
 export function useCopy<T extends object>(en: T, zh: Partial<T>): T {
   const { locale } = useLocale();

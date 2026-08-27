@@ -1,5 +1,3 @@
-import type { Metadata } from "next";
-
 import { Hero } from "@/components/sections/Hero";
 import { Background } from "@/components/sections/Background";
 import { WhyChoose } from "@/components/sections/WhyChoose";
@@ -7,25 +5,24 @@ import { Stats } from "@/components/sections/Stats";
 import { Services } from "@/components/sections/Services";
 import { Projects } from "@/components/sections/Projects";
 import { JsonLd } from "@/components/site/JsonLd";
-import { SEO } from "@/lib/content";
 import { homeGraph } from "@/lib/schema";
-import { pageMetadata } from "@/lib/seo";
+import type { Locale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 
 /**
- * The home page exported no metadata at all, inheriting the layout's title and
- * description and carrying no canonical and no social card. `title` here
- * resolves to the same string the layout already defaults to; what this adds
- * is the canonical and the Open Graph block.
+ * The home page body, shared by `/` and `/zh`.
+ *
+ * Every section here is a client component that reads the locale from context,
+ * so the markup is identical in both languages and lives in one place. Only the
+ * JSON-LD needs telling which locale it is describing, because it is built on
+ * the server outside that context.
  */
-export const metadata: Metadata = pageMetadata(SEO.home);
-
-export default function Home() {
+export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
   return (
     <main className="flex-1">
       {/* Organization + WebSite. The home page only: organisation markup
           repeated sitewide asserts the same entity once per URL. */}
-      <JsonLd data={homeGraph()} />
+      <JsonLd data={homeGraph(locale)} />
 
       <Hero />
 

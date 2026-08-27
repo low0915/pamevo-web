@@ -4,6 +4,8 @@
  * and spelling. Lorem Ipsum and template attributions are deliberately absent.
  */
 
+import { zhPath } from "./paths";
+
 /** `href` is set only on pages that actually exist. Everything else stays an
     inert placeholder until its route is built. */
 export type NavItem = { label: string; href?: string; children?: { label: string }[] };
@@ -14,8 +16,14 @@ export const NAV: NavItem[] = [
 ];
 
 /**
- * Labels only. `href` is carried over from NAV rather than repeated, so a route
- * can never be right in one language and stale in the other.
+ * Labels, and the Chinese URL for each.
+ *
+ * The href is DERIVED from the English one through `zhPath` rather than being
+ * carried over unchanged. It used to be carried over, on the reasoning that a
+ * route could then never be right in one language and stale in the other —
+ * which was true while both languages shared one URL. Once /zh became real
+ * routes that same sharing became the bug: the Chinese header linked a Chinese
+ * reader straight out to the English pages.
  *
  * "联系我们" rather than a bare "联系": the English "Contact" stands alone as
  * a noun, the Chinese verb does not, and it is the same phrase the projects
@@ -28,9 +36,12 @@ const NAV_LABELS_ZH = ["我们的产品", "联系我们"];
 export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
   ...item,
   label: NAV_LABELS_ZH[i],
+  href: item.href ? zhPath(item.href) : undefined,
 }));
 
-export const LOCALES = ["EN", "ZH"] as const;
+/* Defined in lib/paths.ts and re-exported here, so importing it from
+   "@/lib/content" keeps working. See the note there. */
+export { LOCALES } from "./paths";
 
 /** Deep link to the sales WhatsApp. Same number as FOOTER.phone, written in the
     international format the api.whatsapp.com endpoint expects. */
@@ -123,14 +134,60 @@ export const SEO = {
   },
 };
 
+/**
+ * The Chinese head copy, for the three routed /zh pages.
+ *
+ * A full object rather than a partial overlay: metadata is read on the server
+ * by `generateMetadata`, outside React, so there is no `useCopy` to merge it —
+ * lib/seo.ts picks between SEO and SEO_ZH on the locale directly.
+ *
+ * `path` is the Chinese URL, and it is what the page's own canonical becomes.
+ * The English path is derived from it for the hreflang pair rather than being
+ * repeated, so the two can never disagree about which pages are counterparts.
+ *
+ * There is no `privacy` entry. That page is English-only; see PAIRED_PATHS in
+ * lib/locale.tsx.
+ */
+export const SEO_ZH = {
+  titleTemplate: "%s | MEVO 马来西亚",
+  home: {
+    path: "/zh",
+    /**
+     * No brand suffix here, where SEO.home.title carries one — and the
+     * asymmetry is load-bearing rather than an oversight.
+     *
+     * A title template applies to CHILD segments, not to the segment that
+     * defines it. The English home page is app/(en)/page.tsx, which sits in the
+     * same segment as the layout holding the template, so nothing is appended
+     * and the brand has to be written into the string. The Chinese home page is
+     * app/(zh)/zh/page.tsx — one segment deeper than app/(zh)/layout.tsx — so
+     * the template does apply, and a brand written in here would be printed
+     * twice.
+     */
+    title: "马来西亚铝合金门窗",
+    description:
+      "为马来西亚住宅与发展项目打造的高性能铝合金门窗及阳光房。MEVO 系统，由莎阿南展厅提供供应、安装与售后服务。",
+  },
+  products: {
+    path: "/zh/our-products",
+    title: "铝合金门窗系统",
+    description:
+      "浏览 20 款 MEVO 门窗系统：平开窗、上悬窗、推拉窗、极简全景窗、折叠门、入户门、阳光房与铝包木，附完整规格。",
+  },
+  contact: {
+    path: "/zh/contact",
+    title: "联系我们",
+    description:
+      "就铝合金门窗事宜联系 MEVO 马来西亚：在线咨询、致电 014 - 879 7371，或莅临莎阿南展厅。",
+  },
+};
+
 export const HERO = {
-  wordmark: "MEVO MALAYSIA",
   tagline: "Innovation. Performance. Affordable.",
   /** The tagline split for the scroll-driven reveal. Same words, same order. */
   taglineWords: ["Innovation.", "Performance.", "Affordable."],
   subheading:
     "Redefining Modern Living Through High-Performance Window & Door Systems",
-  imageAlt: "Modern architecture with a white geometric facade against the sky",
   /**
    * The page’s real <h1>. What is visible in that slot is the logo image, so
    * the heading text is rendered sr-only beside it: screen readers and
@@ -148,9 +205,9 @@ export const HERO = {
  * English object beside it: what is here replaces the original, what is
  * missing falls through untranslated. See `useCopy` in lib/locale.tsx.
  *
- * `heading` and `imageAlt` stay English on purpose - they are the sr-only h1
- * and the alt text, and a half-translated accessibility layer is worse than a
- * consistent one.
+ * `heading` stays English on purpose - it is the sr-only h1, and a
+ * half-translated accessibility layer is worse than a consistent one. The same
+ * goes for every `alt` in this file.
  */
 export const HERO_ZH: Partial<typeof HERO> = {
   tagline: "创新。性能。实惠。",
@@ -158,6 +215,17 @@ export const HERO_ZH: Partial<typeof HERO> = {
       hero timeline needs no change: three words in, three words out. */
   taglineWords: ["创新。", "性能。", "实惠。"],
   subheading: "通过高性能门窗系统重新定义现代生活",
+  /**
+   * The real <h1>, translated now that Chinese has a URL of its own.
+   *
+   * The note above says `heading` stays English because a half-translated
+   * accessibility layer is worse than a consistent one. That held while one URL
+   * served both languages. On /zh it inverts: the h1 is the single strongest
+   * statement a page makes about what it is, and leaving it English on a page
+   * that is otherwise Chinese is the one thing most likely to cost the page its
+   * own language.
+   */
+  heading: "P.A. Projects x MEVO 马来西亚 —— 铝合金门窗系统专家",
 };
 
 export const BACKGROUND = {
@@ -386,6 +454,7 @@ export const STATS_ZH: typeof STATS = STATS.map((stat, i) => ({
 /** Was "To Get More Details", which is not idiomatic and read as a sentence
     fragment where /contact uses it as an <h2>. */
 export const CTA = "Speak to our team";
+export const CTA_ZH = "联系我们的团队";
 
 /**
  * The /contact page.
@@ -432,7 +501,6 @@ export const CONTACT = {
     placeholders: {
       message: "The project, the rooms or elevations involved, and any timeline you are working to.",
     },
-    optional: "optional",
     submit: "Send enquiry",
     submitting: "Sending",
     retry: "Try again",
@@ -465,40 +533,80 @@ export const CONTACT = {
 };
 
 /**
- * Retained, not rendered. The eleven-point bento section that used this was
- * removed once the Why Choose panel took over that role. Kept so the copy is
- * not lost with it.
+ * The contact page in Chinese.
+ *
+ * Complete, not partial — and it has to be. `useCopy` merges one level deep
+ * (`{...en, ...zh}`), so supplying a half-filled `form` would replace the
+ * English `form` wholesale and take its untranslated siblings down with it.
+ * Every nested object below is therefore given in full.
+ *
+ * Written rather than transliterated. "Send an enquiry" is 发送咨询 because
+ * 咨询 is what a Malaysian Chinese reader calls this kind of pre-sales
+ * question; a literal 询问 reads as an interrogation. The error strings keep
+ * the English originals' manner — instructions rather than diagnoses, so
+ * "请告诉我们您的姓名。" rather than "无效输入".
+ *
+ * The phone number is left in its dialling form in every string. It is a
+ * number, not a word, and the Latin digits are what a reader will key in.
+ *
+ * `consentLink` points at /privacy, which is English. That is a real seam and
+ * it is the honest one: the policy genuinely has no Chinese version, so the
+ * label is translated and the document it opens is not pretended to be.
  */
-export const USP = {
-  heading: "Why Choose MEVO Malaysia",
-  clusters: [
-    {
-      name: "Quality & Systems",
-      items: [
-        "Reliable Quality Standards",
-        "Premium International Window & Door Systems",
-        "Modern Architectural Design Solutions",
-        "Complete Architectural Living Solutions",
-      ],
+export const CONTACT_ZH: Partial<typeof CONTACT> = {
+  banner: {
+    heading: "谈谈您的项目",
+    lede: "无论是住宅、发展项目还是商业幕墙的门窗需求，请告诉我们您正在建造什么，我们会为您配置合适的系统。",
+  },
+  details: {
+    heading: CTA_ZH,
+    blurb: "可直接联系我们的团队，或填写表格，我们将在一个工作日内回复。",
+    labels: {
+      phone: "电话",
+      email: "电邮",
+      address: "展厅与办公室",
+      company: "注册公司名称",
     },
-    {
-      name: "Performance & Climate",
-      items: [
-        "Heat Reduction & Energy Efficiency Performance",
-        "Tropical climate performance",
-        "Affordable Luxury Without Compromise",
-      ],
+  },
+  form: {
+    heading: "发送咨询",
+    hint: "留下电话或电邮皆可 —— 由您决定我们以哪种方式回复。",
+    labels: {
+      name: "姓名",
+      email: "电邮",
+      phone: "电话",
+      message: "有什么可以帮到您？",
     },
-    {
-      name: "Delivery & Support",
-      items: [
-        "Professional Design-to-Installation Services",
-        "Residential, Commercial & Industrial Expertise",
-        "Trusted Project Delivery & Technical Support",
-        "End-to-End Solution Provider",
-      ],
+    placeholders: {
+      message: "项目概况、涉及的房间或立面，以及您的时间安排。",
     },
-  ],
+    submit: "发送咨询",
+    submitting: "发送中",
+    retry: "重试",
+    errors: {
+      name: "请告诉我们这封咨询来自谁。",
+      contact: "请留下电话或电邮，以便我们回复。",
+      email: "这个电邮地址似乎不正确。",
+      phone: "这个电话号码似乎不正确。",
+      message: "请简单说明一下您的项目。",
+      failed:
+        "发送失败。请致电 014 - 879 7371 或通过 WhatsApp 联系我们，我们会从那里继续跟进。",
+      rateLimited:
+        "短时间内收到多次咨询。如有急事，请致电 014 - 879 7371。",
+    },
+    sent: {
+      heading: "咨询已发送",
+      body: "我们已经收到，将在一个工作日内回复。如有急事，请致电 014 - 879 7371。",
+      again: "再发一封",
+    },
+    status: {
+      submitting: "正在发送您的咨询。",
+      sent: "咨询已发送。",
+      error: "您的咨询未能发送。",
+    },
+    consent: "发送即表示您同意我们的",
+    consentLink: "隐私与 Cookie 政策",
+  },
 };
 
 export const SERVICES = {
@@ -577,6 +685,8 @@ const SERVICES_ITEMS_ZH = [
 ];
 
 export const SERVICES_ZH: Partial<typeof SERVICES> = {
+  /* Was untranslated, so the ZH panel labels read "Our Services [01]". */
+  heading: "我们的服务",
   items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_ZH[i] })),
 };
 
@@ -629,7 +739,8 @@ export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
   heading: "我们的项目",
   blurb:
     "从住宅到商业空间，探索为每一个独特项目量身打造的铝合金门窗。",
-  cta: { ...PROJECTS.cta, label: "联系我们" },
+  /* href too, not just the label: this pointed a Chinese reader at /contact. */
+  cta: { ...PROJECTS.cta, label: "联系我们", href: zhPath(PROJECTS.cta.href) },
   openLabel: (project: string) => `查看${project}`,
   images: PROJECTS.images.map((image, i) => ({
     ...image,
@@ -933,8 +1044,6 @@ export const PRIVACY = {
 
 export const PRODUCTS_PAGE = {
   heading: "Our Products",
-  slogan: HERO.tagline,
-  subheading: HERO.subheading,
   /** Names the catalogue section for screen readers. The h1 above it already
       names the page, so this heading is not repeated visually. */
   catalogLabel: "Product catalog",
@@ -950,5 +1059,28 @@ export const PRODUCTS_PAGE = {
     label: "Contact us",
     href: "/contact",
     aria: (product: string) => `Contact us about ${product}`,
+  },
+};
+
+/**
+ * The catalogue chrome in Chinese.
+ *
+ * The product data itself needs nothing here: lib/products.ts already carries a
+ * `zh` on 85 of its 86 spec bullets and ProductCatalog prints both languages
+ * together in either locale, which is the one part of the site that was already
+ * bilingual before any of this.
+ *
+ * `cta.href` points at /zh/contact rather than /contact, so a reader who gets
+ * to the enquiry form from the Chinese catalogue stays in Chinese.
+ */
+export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
+  heading: "我们的产品",
+  catalogLabel: "产品目录",
+  viewsLabel: "视图",
+  viewLabel: "目录布局",
+  cta: {
+    label: "联系我们",
+    href: "/zh/contact",
+    aria: (product: string) => `就 ${product} 联系我们`,
   },
 };

@@ -1,5 +1,6 @@
-import { ADDRESS, BACKGROUND, FOOTER, SEO, SITE } from "./content";
-import { PRODUCTS } from "./products";
+import { ADDRESS, BACKGROUND, FOOTER, SEO, SEO_ZH, SITE } from "./content";
+import type { Locale } from "./paths";
+import { describe, PRODUCTS, type Product } from "./products";
 
 /**
  * schema.org graphs.
@@ -85,14 +86,18 @@ function organization() {
  * no site search here to describe. What this node is still live for is the site
  * NAME Google prints in a result, which is otherwise guessed from the title.
  */
-function website() {
+function website(locale: Locale) {
+  const zh = locale === "ZH";
   return {
     "@type": "WebSite",
-    "@id": WEBSITE_ID,
-    url: SITE.url,
+    /* One @id per language: these are two documents, not one described twice,
+       and collapsing them would have the Chinese page assert it is the English
+       one. */
+    "@id": zh ? `${SITE.url}/zh#website` : WEBSITE_ID,
+    url: zh ? `${SITE.url}/zh` : SITE.url,
     name: SITE.name,
     publisher: { "@id": ORG_ID },
-    inLanguage: "en-MY",
+    inLanguage: zh ? "zh-Hans-MY" : "en-MY",
   };
 }
 
@@ -140,21 +145,25 @@ function breadcrumbs(trail: { name: string; url?: string }[]) {
   };
 }
 
+/** The SEO entry set for a locale, so a graph names the page it is actually on. */
+const seo = (locale: Locale) => (locale === "ZH" ? SEO_ZH : SEO);
+
 const graph = (...nodes: object[]) => ({
   "@context": "https://schema.org",
   "@graph": nodes,
 });
 
-export function homeGraph() {
-  return graph(organization(), website());
+export function homeGraph(locale: Locale = "EN") {
+  return graph(organization(), website(locale));
 }
 
-export function contactGraph() {
+export function contactGraph(locale: Locale = "EN") {
+  const copy = seo(locale);
   return graph(
     showroom(),
     breadcrumbs([
-      { name: "Home", url: SITE.url },
-      { name: SEO.contact.title },
+      { name: zh(locale, "Home", "首页"), url: zh(locale, SITE.url, `${SITE.url}/zh`) },
+      { name: copy.contact.title },
     ]),
   );
 }
@@ -172,22 +181,88 @@ export function contactGraph() {
  * When /our-products/[slug] routes are added, this becomes the place to attach
  * them.
  */
-export function productsGraph() {
+export function productsGraph(locale: Locale = "EN") {
+  const copy = seo(locale);
+  const base = `${SITE.url}${copy.products.path}`;
   return graph(
     {
       "@type": "ItemList",
-      name: SEO.products.title,
+      name: copy.products.title,
       numberOfItems: PRODUCTS.length,
       itemListElement: PRODUCTS.map((product, i) => ({
         "@type": "ListItem",
         position: i + 1,
         name: product.title,
-        url: `${SITE.url}${SEO.products.path}#${product.slug}`,
+        url: `${base}#${product.slug}`,
       })),
     },
     breadcrumbs([
-      { name: "Home", url: SITE.url },
-      { name: SEO.products.title },
+      { name: zh(locale, "Home", "首页"), url: zh(locale, SITE.url, `${SITE.url}/zh`) },
+      { name: copy.products.title },
+    ]),
+  );
+}
+
+/** Picks one of two strings on the locale. Small, but it keeps the breadcrumb
+    trails from reading half in each language. */
+function zh<T>(locale: Locale, en: T, cn: T): T {
+  return locale === "ZH" ? cn : en;
+}
+
+/**
+ * One product, for its own page.
+ *
+ * NOTE, so nobody is surprised six weeks from now: there is no `offers` node,
+ * because this is a quotation-based catalogue with no published prices. Google
+ * will therefore NOT render a product rich result, and Search Console WILL
+ * report "Missing field 'offers'" as a non-critical warning on all twenty
+ * pages. That is expected and correct.
+ *
+ * Do not invent an offer, a price or an aggregateRating to silence it — marking
+ * up data the page does not show is a structured-data policy violation, and it
+ * risks a manual action against the whole domain to quiet a warning that costs
+ * nothing.
+ *
+ * What the markup does earn without offers: the model number, brand, category
+ * and profile figures become machine-readable, and the product is tied to the
+ * Organization node rather than floating free.
+ */
+export function productGraph(product: Product, locale: Locale = "EN") {
+  const copy = seo(locale);
+  const url = `${SITE.url}${copy.products.path}/${product.slug}`;
+
+  return graph(
+    {
+      "@type": "Product",
+      "@id": `${url}#product`,
+      name: product.title,
+      sku: `MEVO-${product.no}`,
+      mpn: product.title.split(" ")[0],
+      category: product.category,
+      url,
+      description: describe(product, 300),
+      image: product.images.map((image) => `${SITE.url}${encodeURI(image.src)}`),
+      brand: { "@type": "Brand", name: "MEVO" },
+      manufacturer: { "@id": ORG_ID },
+      /* The "Product Parameters" bullets are already "Label: value" strings,
+         which is the shape a PropertyValue wants. Anything without a colon is
+         skipped rather than emitted as a nameless property. */
+      additionalProperty: product.groups
+        .flatMap((group) => group.items)
+        .filter((item) => item.en.includes(":"))
+        .map((item) => {
+          const [name, ...rest] = item.en.split(":");
+          return {
+            "@type": "PropertyValue",
+            name: name.trim(),
+            value: rest.join(":").trim(),
+          };
+        }),
+    },
+    breadcrumbs([
+      { name: zh(locale, "Home", "首页"), url: zh(locale, SITE.url, `${SITE.url}/zh`) },
+      { name: copy.products.title, url: `${SITE.url}${copy.products.path}` },
+      { name: product.title },
     ]),
   );
 }

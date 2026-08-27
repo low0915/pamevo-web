@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CONTACT } from "@/lib/content";
+import { CONTACT, CONTACT_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 
 const FIELD =
   "mt-2 w-full rounded-[10px] border border-line bg-bg px-4 py-3 text-base text-ink transition-colors duration-[160ms] ease-[var(--ease-out)] placeholder:text-ink-3 focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60 aria-[invalid=true]:border-[rgb(163_52_52/0.55)]";
@@ -42,6 +43,11 @@ type Field = "name" | "contact" | "message";
  * checks both again and answers the same way it answers a validation failure.
  */
 export function ContactForm() {
+  /* Reads the locale from context rather than the module, so the same form
+     renders Chinese under /zh without a second component. CONTACT_ZH supplies
+     every nested object in full — `useCopy` merges one level deep, so a partial
+     `form` would replace the English one and lose its siblings. */
+  const contact = useCopy(CONTACT, CONTACT_ZH);
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [values, setValues] = useState({
@@ -74,7 +80,7 @@ export function ContactForm() {
   };
 
   const check = (field: Field, source: typeof values) => {
-    const { errors: copy } = CONTACT.form;
+    const { errors: copy } = contact.form;
 
     if (field === "name") {
       return source.name.trim().length < LIMITS.name ? copy.name : undefined;
@@ -141,8 +147,8 @@ export function ContactForm() {
         setErrors({
           message:
             response.status === 429
-              ? CONTACT.form.errors.rateLimited
-              : CONTACT.form.errors.failed,
+              ? contact.form.errors.rateLimited
+              : contact.form.errors.failed,
         });
         return;
       }
@@ -150,7 +156,7 @@ export function ContactForm() {
       setStatus("sent");
     } catch {
       setStatus("error");
-      setErrors({ message: CONTACT.form.errors.failed });
+      setErrors({ message: contact.form.errors.failed });
     }
   };
 
@@ -173,17 +179,17 @@ export function ContactForm() {
         data-entering
       >
         <h2 className="text-xl font-medium tracking-tight text-ink md:text-2xl">
-          {CONTACT.form.sent.heading}
+          {contact.form.sent.heading}
         </h2>
         <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-ink-2">
-          {CONTACT.form.sent.body}
+          {contact.form.sent.body}
         </p>
         <button
           type="button"
           onClick={reset}
           className="mt-8 inline-flex items-center rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
         >
-          {CONTACT.form.sent.again}
+          {contact.form.sent.again}
         </button>
       </div>
     );
@@ -197,12 +203,12 @@ export function ContactForm() {
       className="rounded-[16px] border border-line bg-surface p-6 md:p-8"
     >
       <h2 className="text-xl font-medium tracking-tight text-ink md:text-2xl">
-        {CONTACT.form.heading}
+        {contact.form.heading}
       </h2>
 
       <div className="mt-6">
         <label htmlFor="contact-name" className={LABEL}>
-          {CONTACT.form.labels.name}
+          {contact.form.labels.name}
         </label>
         <input
           id="contact-name"
@@ -225,12 +231,12 @@ export function ContactForm() {
       </div>
 
       <fieldset className="mt-6 border-0 p-0">
-        <legend className="text-sm text-ink-3">{CONTACT.form.hint}</legend>
+        <legend className="text-sm text-ink-3">{contact.form.hint}</legend>
 
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="contact-email" className={LABEL}>
-              {CONTACT.form.labels.email}
+              {contact.form.labels.email}
             </label>
             <input
               id="contact-email"
@@ -252,7 +258,7 @@ export function ContactForm() {
 
           <div>
             <label htmlFor="contact-phone" className={LABEL}>
-              {CONTACT.form.labels.phone}
+              {contact.form.labels.phone}
             </label>
             <input
               id="contact-phone"
@@ -282,7 +288,7 @@ export function ContactForm() {
 
       <div className="mt-6">
         <label htmlFor="contact-message" className={LABEL}>
-          {CONTACT.form.labels.message}
+          {contact.form.labels.message}
         </label>
         <textarea
           id="contact-message"
@@ -290,7 +296,7 @@ export function ContactForm() {
           rows={5}
           value={values.message}
           disabled={busy}
-          placeholder={CONTACT.form.placeholders.message}
+          placeholder={contact.form.placeholders.message}
           onChange={(event) => set("message")(event.target.value)}
           onBlur={() => validate("message")}
           aria-invalid={!!errors.message}
@@ -336,17 +342,17 @@ export function ContactForm() {
             rather than one becoming the other. */}
         <span className="contact-label" data-busy={busy}>
           {busy
-            ? CONTACT.form.submitting
+            ? contact.form.submitting
             : status === "error"
-              ? CONTACT.form.retry
-              : CONTACT.form.submit}
+              ? contact.form.retry
+              : contact.form.submit}
         </span>
       </button>
 
       <p className="mt-4 text-sm text-ink-3">
-        {CONTACT.form.consent}{" "}
+        {contact.form.consent}{" "}
         <Link href="/privacy" className="underline underline-offset-4 hover:text-ink">
-          {CONTACT.form.consentLink}
+          {contact.form.consentLink}
         </Link>
         .
       </p>
@@ -355,9 +361,9 @@ export function ContactForm() {
           once rather than field by field. */}
       <p role="status" aria-live="polite" className="sr-only">
         {status === "submitting"
-          ? CONTACT.form.status.submitting
+          ? contact.form.status.submitting
           : status === "error"
-            ? CONTACT.form.status.error
+            ? contact.form.status.error
             : ""}
       </p>
     </form>

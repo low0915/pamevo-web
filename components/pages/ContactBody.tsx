@@ -1,19 +1,22 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 
-import { CONTACT, FOOTER, SEO, WHATSAPP } from "@/lib/content";
+import { CONTACT, FOOTER, WHATSAPP } from "@/lib/content";
 import { JsonLd } from "@/components/site/JsonLd";
 import { contactGraph } from "@/lib/schema";
-import { pageMetadata } from "@/lib/seo";
+import type { Locale } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/sections/ContactForm";
 
-/** Title, description, canonical and the social cards, from one entry. See
-    lib/seo.ts for why the nested keys cannot be defaulted in the layout. */
-export const metadata: Metadata = pageMetadata(SEO.contact);
-
 /**
- * Contact.
+ * The contact page body, shared by /contact and /zh/contact.
+ *
+ * A server component, so the copy arrives as a prop rather than through the
+ * locale context — context is a client-side mechanism and this page renders on
+ * the server, which is the whole point of routing the languages. Each route
+ * passes the object it wants: CONTACT, or CONTACT merged with CONTACT_ZH.
+ *
+ * The form inside is a client component and does read that context, so it needs
+ * nothing passed to it.
  *
  * A banner band, then the two ways to reach the company side by side: the
  * details on the left for anyone who would rather call, the form on the right
@@ -32,20 +35,26 @@ export const metadata: Metadata = pageMetadata(SEO.contact);
  *
  * The root layout renders children bare, so each page owns its own <main>.
  */
-export default function ContactPage() {
+export function ContactBody({
+  copy,
+  locale = "EN",
+}: {
+  copy: typeof CONTACT;
+  locale?: Locale;
+}) {
   const detail = [
     {
-      label: CONTACT.details.labels.phone,
+      label: copy.details.labels.phone,
       value: FOOTER.phone,
       href: FOOTER.phoneHref,
     },
     {
-      label: CONTACT.details.labels.email,
+      label: copy.details.labels.email,
       value: FOOTER.email,
       href: FOOTER.emailHref,
     },
-    { label: CONTACT.details.labels.address, value: FOOTER.address },
-    { label: CONTACT.details.labels.company, value: FOOTER.company },
+    { label: copy.details.labels.address, value: FOOTER.address },
+    { label: copy.details.labels.company, value: FOOTER.company },
   ];
 
   return (
@@ -53,7 +62,7 @@ export default function ContactPage() {
       {/* HomeAndConstructionBusiness + BreadcrumbList. This page rather than
           the layout: Google wants marked-up NAP data to be visible on the page
           asserting it, and this is where the address and number are printed. */}
-      <JsonLd data={contactGraph()} />
+      <JsonLd data={contactGraph(locale)} />
 
       {/* Full-bleed banner. The texture is decorative and the heading carries
           the meaning, so the image is alt="" rather than described. */}
@@ -82,13 +91,13 @@ export default function ContactPage() {
           <div className="mx-auto w-full max-w-[1440px]">
             <Reveal>
               <h1 className="max-w-[18ch] text-5xl leading-[1.04] font-medium tracking-tighter text-ink md:text-6xl lg:text-7xl">
-                {CONTACT.banner.heading}
+                {copy.banner.heading}
               </h1>
             </Reveal>
 
             <Reveal delay={0.08}>
               <p className="mt-5 max-w-[62ch] text-base leading-relaxed text-ink-2">
-                {CONTACT.banner.lede}
+                {copy.banner.lede}
               </p>
             </Reveal>
           </div>
@@ -101,10 +110,10 @@ export default function ContactPage() {
             <Reveal>
               <div>
                 <h2 className="text-xl font-medium tracking-tight text-ink md:text-2xl">
-                  {CONTACT.details.heading}
+                  {copy.details.heading}
                 </h2>
                 <p className="mt-4 max-w-[48ch] text-base leading-relaxed text-ink-2">
-                  {CONTACT.details.blurb}
+                  {copy.details.blurb}
                 </p>
 
                 <dl className="mt-8 grid gap-6">

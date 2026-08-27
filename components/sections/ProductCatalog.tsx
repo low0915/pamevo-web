@@ -7,7 +7,9 @@ import { motion, useReducedMotion } from "motion/react";
 import { CaretDown, Rows, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 
 import { PRODUCTS, type Product } from "@/lib/products";
-import { PRODUCTS_PAGE } from "@/lib/content";
+import { ProductSpecs } from "@/components/product/ProductSpecs";
+import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH } from "@/lib/content";
+import { useCopy } from "@/lib/locale";
 import { Z } from "@/lib/z";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -62,6 +64,11 @@ type View = (typeof VIEWS)[number]["id"];
  */
 export function ProductCatalog() {
   const reduce = useReducedMotion();
+  /* A client component, so the locale comes from context. The chrome — the
+     heading, the view switch, the CTA and its /zh/contact href — was reading
+     the English constants directly, so /zh/our-products rendered an English
+     "Our Products" over Chinese specifications. */
+  const copy = useCopy(PRODUCTS_PAGE, PRODUCTS_PAGE_ZH);
 
   /** Which row is expanded. Null is a legal state: rows close on re-click. */
   const [open, setOpen] = useState<string | null>(FIRST.no);
@@ -97,7 +104,7 @@ export function ProductCatalog() {
   return (
     <section className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12">
       <div className="mx-auto w-full max-w-[1440px]">
-        <h2 className="sr-only">{PRODUCTS_PAGE.catalogLabel}</h2>
+        <h2 className="sr-only">{copy.catalogLabel}</h2>
 
         {/* Above the grid rather than inside the right column, so the first
             entry starts level with the top of the photograph.
@@ -109,7 +116,7 @@ export function ProductCatalog() {
         <div className="mb-5 flex justify-end">
           <div
             role="group"
-            aria-label={PRODUCTS_PAGE.viewLabel}
+            aria-label={copy.viewLabel}
             className="flex items-center gap-0.5 rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.35)] p-0.5"
           >
             {VIEWS.map(({ id, label, Icon }) => (
@@ -253,13 +260,21 @@ export function ProductCatalog() {
                 // it very nearly fills the card anyway.
                 const floats = view !== "grid";
                 const hasViews = p.images.length > 1;
-                const lastGroup = p.groups.length - 1;
                 const gutter = floats ? "pr-36" : "";
                 return (
                   <li
                     key={p.no}
+                    id={p.slug}
                     data-row={p.no}
-                    className="glass glass-flat glass-rim relative overflow-hidden rounded-[8px]"
+                    /* The id is the product's slug, not its number, and it is
+                       the one addressable thing about a product while the
+                       catalogue is a single page: it is what the ItemList in
+                       lib/schema.ts points each entry at, what `scroll-mt`
+                       below clears the fixed header for, and what anyone
+                       sharing a link to one product actually sends. The slugs
+                       are the live WordPress ones, so those links keep working
+                       if per-product routes are ever added. */
+                    className="glass glass-flat glass-rim relative scroll-mt-28 overflow-hidden rounded-[8px]"
                   >
                     <h3>
                       <button
@@ -381,45 +396,13 @@ export function ProductCatalog() {
                       transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
                     >
                       <div className="relative border-t border-[rgb(255_255_255/0.55)] px-5 pt-5 pb-6">
-                        {p.groups.map((g, gi) => (
-                          <div key={g.title} className="mt-4 first:mt-0">
-                            <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
-                              {g.title}
-                              {g.titleZh ? (
-                                <span
-                                  lang="zh-Hans"
-                                  className="ml-2 font-sans normal-case"
-                                >
-                                  {g.titleZh}
-                                </span>
-                              ) : null}
-                            </p>
-                            <ul className="mt-2 space-y-2.5">
-                              {g.items.map((item, ii) => (
-                                <li
-                                  key={item.en}
-                                  className={`text-base leading-relaxed text-ink ${
-                                    !hasViews &&
-                                    gi === lastGroup &&
-                                    ii === g.items.length - 1
-                                      ? gutter
-                                      : ""
-                                  }`}
-                                >
-                                  {item.en}
-                                  {item.zh ? (
-                                    <span
-                                      lang="zh-Hans"
-                                      className="mt-1 block text-base text-ink-2"
-                                    >
-                                      {item.zh}
-                                    </span>
-                                  ) : null}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
+                        {/* Shared with the detail page at
+                            /our-products/[slug]; see components/product. */}
+                        <ProductSpecs
+                          groups={p.groups}
+                          gutter={gutter}
+                          reserveOnLastLine={!hasViews}
+                        />
 
                         {/* Product 16 is photographed three times because
                             the three photographs are its three variants, so
@@ -427,7 +410,7 @@ export function ProductCatalog() {
                         {p.images.length > 1 && (
                           <div className="mt-5">
                             <p className="font-mono text-xs tracking-tight text-ink-2 uppercase underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px]">
-                              {PRODUCTS_PAGE.viewsLabel}
+                              {copy.viewsLabel}
                             </p>
                             <div className={`mt-2 flex flex-wrap gap-2 ${gutter}`}>
                               {p.images.map((img, i) => {
@@ -474,11 +457,11 @@ export function ProductCatalog() {
                           }
                         >
                           <Link
-                            href={PRODUCTS_PAGE.cta.href}
-                            aria-label={PRODUCTS_PAGE.cta.aria(p.title)}
+                            href={copy.cta.href}
+                            aria-label={copy.cta.aria(p.title)}
                             className="inline-flex items-center rounded-full bg-ink px-5 py-2.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
                           >
-                            {PRODUCTS_PAGE.cta.label}
+                            {copy.cta.label}
                           </Link>
                         </div>
                       </div>

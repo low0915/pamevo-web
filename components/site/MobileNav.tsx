@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "@phosphor-icons/react/dist/ssr";
 import { NAV, NAV_ZH, LOCALES, LOGO_ALT } from "@/lib/content";
-import { useLocale } from "@/lib/locale";
+import { counterpart, useLocale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 import { holdAutoplay, releaseAutoplay } from "@/lib/autoplay";
 import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
@@ -49,7 +50,9 @@ export function MobileNav({
   onClose: () => void;
 }) {
   const reduce = useReducedMotion();
-  const { locale: active, setLocale } = useLocale();
+  const { locale: active } = useLocale();
+  /* A link, not a button: the two languages are separate URLs. */
+  const pathname = usePathname();
   /* See the note in Header: NAV is a bare array, so this is a swap rather than
      an overlay. Both surfaces read the same two lists. */
   const nav = active === "ZH" ? NAV_ZH : NAV;
@@ -177,20 +180,40 @@ export function MobileNav({
           </nav>
 
           <div className="flex shrink-0 gap-1 px-8 pt-6 pb-10 sm:px-9">
-            {LOCALES.map((locale) => (
-              <button
-                key={locale}
-                type="button"
-                onClick={() => setLocale(locale)}
-                aria-pressed={locale === active}
-                lang={locale === "ZH" ? "zh-Hans" : "en"}
-                className={`rounded-full px-3 py-1 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
-                  locale === active ? "bg-ink text-bg" : "text-ink-3"
-                }`}
-              >
-                {locale}
-              </button>
-            ))}
+            {LOCALES.map((locale) => {
+              const current = locale === active;
+              const className = `rounded-full px-3 py-1 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] ${
+                current ? "bg-ink text-bg" : "text-ink-3 active:scale-[0.97]"
+              }`;
+
+              /* Not a link when it is the language already being read — see the
+                 same control in Header.tsx for why. */
+              if (current) {
+                return (
+                  <span
+                    key={locale}
+                    aria-current="true"
+                    lang={locale === "ZH" ? "zh-Hans" : "en"}
+                    className={className}
+                  >
+                    {locale}
+                  </span>
+                );
+              }
+
+              return (
+                <a
+                  key={locale}
+                  href={counterpart(pathname, locale)}
+                  hrefLang={locale === "ZH" ? "zh-Hans" : "en"}
+                  lang={locale === "ZH" ? "zh-Hans" : "en"}
+                  onClick={onClose}
+                  className={className}
+                >
+                  {locale}
+                </a>
+              );
+            })}
           </div>
         </motion.div>
       )}

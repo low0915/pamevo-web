@@ -48,6 +48,21 @@ export type Product = {
   images: ProductImage[];
   /** One to three groups, in the order the live page prints them. */
   groups: ProductSpecGroup[];
+  /**
+   * Two or three sentences for the product's own page, and its meta
+   * description.
+   *
+   * Optional, and absent on most products: these are DERIVED from the
+   * specification bullets above rather than written from new information —
+   * the same facts as prose, so a page has something to be about besides a
+   * list. Nothing here may claim anything the spec bullets do not.
+   *
+   * A product without one still gets a page; `describe()` falls back to
+   * stitching the first bullets together. Prose is what lifts a page from
+   * "indexed" to "ranks for something other than its model number", so it is
+   * worth having the client confirm each one.
+   */
+  blurb?: string;
 };
 
 const PARAMETERS = "Product Parameters";
@@ -63,6 +78,10 @@ export const PRODUCTS: Product[] = [
     slug: "dm106-casement-window",
     title: "DM106 Casement Window",
     category: "Windows",
+    /* Derived from this product's own three advantage bullets and its 1.8mm
+       frame-and-sash thickness. No claim here is absent from those. */
+    blurb:
+      "The DM106 is a thermally broken aluminium casement window built on a 46.6mm topological heat insulation strip, with frame and sash profiles up to 1.8mm. A one-piece welded equal-pressure seal strip runs the perimeter unbroken, and the vertical isothermal line design keeps the temperature gradient consistent across the profile — the combination that holds heat out in a tropical climate without giving up the slim sightline. Hardware is ROTO, HOPPE or MEVO's own.",
     images: [
       {
         src: "/products/01.jpg",
@@ -709,3 +728,43 @@ export const PRODUCTS: Product[] = [
     ],
   },
 ];
+
+/**
+ * A product's meta description.
+ *
+ * Prefers the hand-written `blurb`, trimmed to what a result snippet shows.
+ * Falls back to stitching the product's own first bullets together — mechanical,
+ * but truthful and unique per product, which is the bar a description has to
+ * clear. An absent description is the one case where Google has nothing to
+ * rewrite a snippet from.
+ */
+export function describe(product: Product, limit = 155): string {
+  const source =
+    product.blurb ??
+    [
+      `${product.title}.`,
+      ...product.groups.flatMap((group) => group.items.map((item) => item.en)),
+    ].join(" ");
+
+  if (source.length <= limit) return source;
+  /* Cut on a word, not mid-word, and drop a trailing comma or full stop so the
+     ellipsis does not follow punctuation. */
+  const cut = source.slice(0, limit - 1);
+  return cut.slice(0, cut.lastIndexOf(" ")).replace(/[,.;:]$/, "") + "…";
+}
+
+/** The other products in a product's category, for the related strip. */
+export function related(product: Product, limit = 4): Product[] {
+  return PRODUCTS.filter(
+    (other) => other.category === product.category && other.slug !== product.slug,
+  ).slice(0, limit);
+}
+
+/** Position in PRODUCTS, for the previous/next pair on a detail page. */
+export function neighbours(product: Product) {
+  const i = PRODUCTS.findIndex((p) => p.slug === product.slug);
+  return {
+    previous: i > 0 ? PRODUCTS[i - 1] : null,
+    next: i < PRODUCTS.length - 1 ? PRODUCTS[i + 1] : null,
+  };
+}
