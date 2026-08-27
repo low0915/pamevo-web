@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { ImageResponse } from "next/og";
 
-import { SEO } from "@/lib/content";
+import { SITE } from "@/lib/content";
 
 /**
  * The share card, for every route under this segment.
@@ -21,6 +21,14 @@ import { SEO } from "@/lib/content";
  * Rendered once at build. `readFile` rather than a fetch: this runs during the
  * build with no server to fetch from, and the CSP forbids off-origin loads
  * anyway.
+ *
+ * EVERY element below carries an explicit `display`, and every text node is a
+ * single expression rather than an interpolation sitting beside literal text.
+ * Satori — the renderer behind ImageResponse — implements only a subset of CSS
+ * and throws rather than guessing: "Expected <div> to have explicit display ...
+ * if it has more than one child node". `{expr} · literal` is two child nodes,
+ * which is what broke this the first time. It fails the BUILD, not the request,
+ * so a card that renders here cannot take the deploy down later.
  */
 export const alt =
   "MEVO Malaysia — aluminium windows, doors and sunrooms, Shah Alam";
@@ -55,16 +63,24 @@ export default async function OpengraphImage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div
             style={{
+              display: "flex",
               fontSize: 62,
               letterSpacing: "-0.03em",
               color: "#101215",
               lineHeight: 1.05,
             }}
           >
-            Aluminium Windows &amp; Doors
+            {"Aluminium Windows & Doors"}
           </div>
-          <div style={{ fontSize: 30, color: "#5b6169", letterSpacing: "-0.01em" }}>
-            {SEO.home.title.split("|")[0].trim()} · Shah Alam, Selangor
+          <div
+            style={{
+              display: "flex",
+              fontSize: 30,
+              color: "#5b6169",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {`${SITE.name} · Shah Alam, Selangor`}
           </div>
         </div>
 
@@ -72,6 +88,7 @@ export default async function OpengraphImage() {
             language the page uses, and it stops the card reading as a slide. */}
         <div
           style={{
+            display: "flex",
             width: "100%",
             height: 6,
             background: "linear-gradient(90deg, #7e858c 0%, #c9ced3 55%, #f4f5f6 100%)",
