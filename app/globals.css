@@ -298,10 +298,26 @@ body {
 
    The curve itself is in the component - every card's drop is computed from
    where it currently sits in the frame, not from its index, so the cards travel
-   along the valley as the strip is dragged. What is left here is the hover: the
-   photograph eases from the site's near-monochrome grade to the softer one used
-   for feature photography, and only where there is a real pointer to hover
-   with. */
+   along the valley as the strip is dragged. What is left here is the grading:
+   the photograph eases from the site's near-monochrome wash to the softer grade
+   used for feature photography, under either of the two conditions that mean
+   "this is the one being looked at".
+
+   The first is position. The card in the middle of the frame is the one the
+   strip is showing, and it is in colour: the component puts `data-centred` on
+   whichever card is nearest the middle and moves it as the strip is dragged, so
+   colour travels along the run under the reader's attention rather than waiting
+   to be asked for. Deliberately NOT inside the hover query below - the middle
+   of the frame is something a phone has too, and it is the only one of the two
+   that a touch device gets at all.
+
+   The second is the pointer, unchanged: hovering a card grades it the same way,
+   and only where there is a real pointer to hover with. The two land on the
+   same filter on purpose, so hovering the centred card is not a third state. */
+[data-centred] .graded {
+  filter: saturate(0.6) contrast(1.05);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .photo-card:hover .graded {
     filter: saturate(0.6) contrast(1.05);

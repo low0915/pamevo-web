@@ -69,6 +69,12 @@ function valleyDepth(width: number) {
  * Dragging is direct: the strip tracks the pointer exactly, then carries the
  * speed it was released at into a decaying glide. Arrow keys throw it by about
  * a card, and a trackpad's horizontal swipe drives it too.
+ *
+ * Whichever card is nearest the middle carries `data-centred`, and globals.css
+ * grades that one in colour where the rest are near-monochrome. It is the same
+ * grade hover gives, and for the same reason - the card being looked at is in
+ * colour - except that the middle of the frame is something a phone has too,
+ * where hover is not.
  */
 export function Projects() {
   const projects = useCopy(PROJECTS, PROJECTS_ZH);
@@ -97,9 +103,13 @@ export function Projects() {
     let lastX = 0;
     let travelled = 0;
     let placed = false;
+    /** Which card currently carries `data-centred`. -1 before the first draw. */
+    let centred = -1;
 
     const draw = () => {
       const half = width / 2;
+      let nearest = 0;
+      let nearestDistance = Infinity;
 
       for (let i = 0; i < cards.length; i++) {
         const raw = i * step + offsetRef.current;
@@ -113,6 +123,27 @@ export function Projects() {
         const y = depth * (1 - fromCentre * fromCentre);
 
         cards[i].style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+        // The card in the middle of the frame is the one the strip is
+        // "showing", and it is graded in colour rather than in the site's
+        // near-monochrome. `fromCentre` is already the number that says so -
+        // it is what the valley is computed from - so this costs a comparison
+        // rather than a second pass or any measuring of its own.
+        const distance = Math.abs(fromCentre);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearest = i;
+        }
+      }
+
+      // Written only when it changes. `draw` runs every frame of every drag and
+      // every glide, and touching the DOM on each of them - for an attribute
+      // that is the same as it was - would put a style recalc in the middle of
+      // a gesture that is otherwise pure transforms.
+      if (nearest !== centred) {
+        if (centred !== -1) cards[centred].removeAttribute("data-centred");
+        cards[nearest].setAttribute("data-centred", "");
+        centred = nearest;
       }
     };
 

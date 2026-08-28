@@ -169,7 +169,23 @@ export function Background() {
               and the block stays put, where `justify-end` would push the
               heading off the top of an `overflow-hidden` frame. `pt-24` still
               guards that case - it is the fixed header island's own height. */}
-          <h2 className="max-w-[16ch] text-6xl leading-[1.02] font-medium tracking-tighter text-white max-md:mt-auto md:text-7xl lg:text-[5rem] xl:text-[5.5rem]">
+          {/* Fluid below `md`, fixed above it.
+
+              The mobile size was a flat 60px, and that is where this section
+              broke: the heading and the panel share the frame's height, the
+              frame is `overflow-hidden`, and 60px put `Industry Leadership &
+              Background` on four lines on a 360px phone. Measured there, the
+              panel's foot landed 108px BELOW the frame - the last lines of the
+              paragraph and the progress rule were simply cut off. A flat size
+              cannot help: the widths that break it are the ones where the
+              heading gains a line, and it gains it silently.
+
+              `clamp` ties it to the viewport instead, so the heading takes the
+              same three lines from 320px up rather than growing a fourth on the
+              narrow end. The desktop sizes come down a step with it - this is a
+              section heading over photography, not the page's own title, and it
+              was competing with the hero. */}
+          <h2 className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white max-md:mt-auto md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]">
             {background.heading}
           </h2>
 
@@ -177,8 +193,14 @@ export function Background() {
               scroll indicator used to occupy. Held rather than reclaimed, so
               removing the indicator left the panel in exactly the box it
               already had. */}
-          <div className="mt-10 w-full md:absolute md:top-1/2 md:right-8 md:mt-0 md:flex md:w-[min(52%,644px)] md:-translate-y-1/2 md:items-center md:pr-[60px] lg:right-10">
-            <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-7 md:min-w-0 md:flex-1 md:p-9">
+          {/* The gap and the panel's own padding are tighter below `md` than
+              they were. On a phone the heading and the panel share one
+              viewport-tall frame that clips, so every millimetre of rhythm here
+              is spent against the paragraph having somewhere to go; above `md`
+              the panel floats beside the heading with the whole frame to itself
+              and keeps its original spacing. */}
+          <div className="mt-6 w-full md:absolute md:top-1/2 md:right-8 md:mt-0 md:flex md:w-[min(52%,644px)] md:-translate-y-1/2 md:items-center md:pr-[60px] lg:right-10">
+            <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:min-w-0 md:flex-1 md:p-9">
               {/* Both paragraphs occupy one cell, so the panel keeps a fixed
                   height and does not resize as the text swaps. */}
               <div className="grid">
