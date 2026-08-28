@@ -147,7 +147,7 @@ export function ProductCatalog() {
             move. As a block child of a block container its containing block is
             the whole column, which is the length of the catalogue. The gap goes
             with the grid, so the figure carries the spacing itself. */}
-        <div className="grid gap-6 [--pin-gap:1.5rem] [--pin-h:34dvh] [--pin-top:6rem] max-lg:block md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] xl:gap-8">
+        <div className="grid gap-6 max-lg:block md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,40rem)] xl:gap-8">
           {/* LEFT: pinned beside the list. top-24 clears the header island,
               which owns the first 80px of the viewport, with a little air
               beyond it. The frame is square, capped so it can never outgrow the
@@ -158,46 +158,23 @@ export function ProductCatalog() {
               A keyed AnimatePresence would mount the incoming layer and only
               then start fetching, so an uncached shot fades to an empty box.
               Hovering a row mounts its layer ahead of the click. */}
-          {/* Masks the strip above the pinned photograph, below `lg`. A row
-              scrolling up passes under the picture, which paints over it, and
-              then out the other side into the 24 of clearance above it - where
-              it has nothing to be in front of and reads as the list leaking
-              past its own frame. This covers that strip in the page's own
-              ground, so the list ends at the photograph's top edge.
-
-              Zero height, so it claims no room in the column, with the band
-              itself painted by an absolutely positioned child. It has to sit
-              in the same block container as the list to stick for the length
-              of it, and it cannot wrap the figure: that would make the wrapper
-              the grid item at `lg` and leave the figure sticking inside a box
-              its own height, which is no travel at all.
-
-              It runs past the foot of the picture by `--pin-gap` as well, so a
-              row does not surface hard against the picture's own bottom edge -
-              it comes out of a band of ground, the same gap that separates the
-              two when nothing is stuck yet.
-
-              First in the column and on the same `raised` step as the picture,
-              so the picture - later in the document - still paints over it
-              where the two meet before either has begun to stick. */}
-          <div
-            aria-hidden
-            style={{ zIndex: Z.raised }}
-            className="pointer-events-none sticky top-0 h-0 lg:hidden"
-          >
-            <div className="absolute inset-x-0 top-0 h-[calc(var(--pin-top)+var(--pin-h)+var(--pin-gap))] bg-bg" />
-          </div>
-
           {/* Sticky at every width now, so on a phone the photograph holds the
               top of the screen and only the catalogue under it travels. `top-24`
               clears the header island at both, with a little air beyond it.
 
-              `--pin-h` is a flat third of the screen below `lg`, not a ratio
-              with a cap. The mask above has to know where the picture's foot
-              falls in order to leave a gap under it, and a 4:3 box puts that
-              somewhere different on every phone. A fixed band crops instead,
-              which `object-cover` inside absorbs, and it keeps the picture to
-              a third of the screen on a short phone as well as a tall one.
+              `--pin-h` is a flat band below `lg`, not a ratio with a cap. The
+              mask above has to know where the picture's foot falls in order to
+              leave a gap under it, and a 4:3 box puts that somewhere different
+              on every phone. A fixed band crops instead, which `object-cover`
+              inside absorbs, and it holds the same proportion of a short phone
+              as of a tall one.
+
+              It was a third of the screen. At 34dvh the picture and the header
+              island together took 383px of an 844px phone, which left less
+              room than an open row needs: reading a product's specifications
+              meant scrolling its own title up behind the picture, so the panel
+              was left captioned by nothing. 22dvh leaves the row's header and
+              its panel able to sit below the picture at once.
 
               It also needs to out-paint the rows, which is new: they carry
               `relative`, so they are positioned boxes later in the document and
@@ -205,7 +182,7 @@ export function ProductCatalog() {
               own answer to that and still sits well under the header. */}
           <figure
             style={{ zIndex: Z.raised }}
-            className="sticky top-[var(--pin-top)] h-[var(--pin-h)] w-full overflow-hidden rounded-[8px] border border-[rgb(126_133_140/0.25)] bg-surface-2 max-lg:mb-[var(--pin-gap)] lg:top-32 lg:aspect-square lg:h-auto lg:max-h-[calc(100dvh-11rem)]"
+            className="hidden w-full overflow-hidden rounded-[8px] border border-[rgb(126_133_140/0.25)] bg-surface-2 lg:sticky lg:top-32 lg:block lg:aspect-square lg:max-h-[calc(100dvh-11rem)]"
           >
             {LAYERS.filter((l) => mounted.has(l.key)).map((l) => (
               <div
@@ -274,8 +251,39 @@ export function ProductCatalog() {
                        sharing a link to one product actually sends. The slugs
                        are the live WordPress ones, so those links keep working
                        if per-product routes are ever added. */
+                    /* The scroll offset is the pinned photograph's whole
+                       footprint below `lg`, not the header island's height:
+                       jumping to #dm106-casement-window with only the island
+                       cleared would land the row behind the picture. Above
+                       `lg` the photograph is beside the list rather than over
+                       it, so there the island is all there is to clear. */
                     className="glass glass-flat glass-rim relative scroll-mt-28 overflow-hidden rounded-[8px]"
                   >
+                    {/* Sticky below `lg`, parked exactly at the pinned
+                        photograph's foot.
+
+                        Without this the row's own header scrolls behind the
+                        picture the moment its panel is opened — the panel is
+                        taller than the screen left under the photograph — and
+                        what is left on screen is a column of specifications
+                        captioned by nothing. Shrinking the picture only moved
+                        the scroll position at which that happens; it could not
+                        remove it, because nothing stops the reader scrolling
+                        further.
+
+                        The row above dropped `overflow-hidden` for this:
+                        `position: sticky` is inert inside an overflow-hidden
+                        ancestor, which becomes the element's scroll box, and
+                        that box is the row itself and does not scroll. The
+                        thumbnail takes its own corner radius below instead.
+
+                        Only while the row is open: a closed row has no panel
+                        to read, so it has nothing to stay above, and leaving
+                        it unstyled keeps its own rounded foot rather than
+                        squaring it off with a header background.
+
+                        Above `lg` the photograph sits beside the list rather
+                        than over it, so nothing needs to stick. */}
                     <h3>
                       <button
                         type="button"
@@ -396,6 +404,36 @@ export function ProductCatalog() {
                       transition={{ duration: reduce ? 0 : 0.24, ease: EASE_OUT }}
                     >
                       <div className="relative border-t border-[rgb(255_255_255/0.55)] px-5 pt-5 pb-6">
+                        {/* The photograph, below `lg` only.
+
+                            On a phone it lives HERE — inside the row it
+                            describes, in normal flow — rather than pinned to
+                            the top of the screen. Pinning worked on a desktop,
+                            where the picture sits in its own column beside the
+                            list and overlaps nothing. On a phone there is one
+                            column, so a pinned picture has to overlay the
+                            catalogue, and everything that scrolled under it was
+                            clipped: first the row's own title, then, once the
+                            title was made sticky too, the specifications
+                            passing under that. Each fix moved the seam without
+                            removing it, because the overlap itself was the
+                            problem.
+
+                            In flow nothing can be covered. The picture arrives
+                            with the specifications it belongs to, the row
+                            scrolls as one object, and the screen is free. */}
+                        <div className="relative mb-5 aspect-[4/3] w-full overflow-hidden rounded-[6px] bg-surface-2 lg:hidden">
+                          <Image
+                            src={p.images[0].src}
+                            alt=""
+                            fill
+                            sizes="100vw"
+                            quality={78}
+                            loading="lazy"
+                            className="graded-soft object-cover"
+                          />
+                        </div>
+
                         {/* Shared with the detail page at
                             /our-products/[slug]; see components/product. */}
                         <ProductSpecs

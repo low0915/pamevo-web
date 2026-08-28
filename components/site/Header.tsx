@@ -52,10 +52,18 @@ export function Header() {
   const range = [0, 120];
   const maxWidth = useTransform(scrollY, range, [1344, 1000], { clamp: true });
   const radius = useTransform(scrollY, range, [22, 999], { clamp: true });
+  /* The island's tint, unscrolled to scrolled.
+     Raised from 0.28/0.62. The unscrolled end was set when every page opened on
+     pale photography, where 0.28 was enough to hold `text-ink` at distance. Two
+     pages now open on a solid #033392 band, and over that the old value put the
+     nav at about 3.6:1 - under AA for text this size, and on the two pages a
+     reader is most likely to arrive at from the nav. At 0.55 the same ink sits
+     near 7.5:1 on the blue and the glass still reads as glass; the scrolled end
+     moves with it so the morph keeps its direction. */
   const background = useTransform(
     scrollY,
     range,
-    ["rgba(255,255,255,0.28)", "rgba(255,255,255,0.62)"],
+    ["rgba(255,255,255,0.55)", "rgba(255,255,255,0.85)"],
     { clamp: true },
   );
   const blur = useTransform(scrollY, range, [12, 28], { clamp: true });

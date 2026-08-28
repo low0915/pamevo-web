@@ -46,6 +46,20 @@ export function zhPath(path: string) {
   return path === "/" ? "/zh" : `/zh${path}`;
 }
 
+/**
+ * Whether a pathname is the home page, in either language.
+ *
+ * `/` and `/zh` are one page rendered twice, and several things are true of it
+ * and of nothing else on the site - it is the only page with scrubbed sections,
+ * and so the only one the autoplay in components/ui/SmoothScroll.tsx has any
+ * business running on. Comparing against `"/"` alone silently excludes the
+ * Chinese half of the site, which is the kind of bug that only shows up for
+ * readers nobody tests as.
+ */
+export function isHome(pathname: string) {
+  return enPath(pathname) === "/";
+}
+
 /** The EN path for any URL, ZH or not. Inverse of `zhPath`. */
 export function enPath(pathname: string) {
   if (pathname === "/zh") return "/";

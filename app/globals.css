@@ -23,11 +23,32 @@
   --ink-2: #5b6167;
   --ink-3: #8b9298;
 
+  /* The one saturated colour on the site. It is the P.A. blue from the Figma
+     file and is used as a solid field, never as a tint: white type sits
+     directly on it at 13.5:1, so nothing on the field needs a scrim. */
+  --brand: #033392;
+
   --metal: linear-gradient(135deg, #ffffff 0%, #c9ced3 45%, #7e858c 72%, #eff1f3 100%);
   --metal-edge: linear-gradient(180deg, rgb(255 255 255 / 0.9), rgb(126 133 140 / 0.35));
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Two curves for movement that is meant to be WATCHED rather than merely
+     answered. `--ease-out` above is a response curve: it is ~94% complete a
+     third of the way through, which is exactly right for a button that has to
+     feel instant, and exactly wrong for a line drawing itself. Under it a
+     1300ms sweep still snaps in 400ms and then crawls invisibly, so lengthening
+     the duration does nothing a viewer can see.
+
+     `--ease-draw` eases in and out, so a stroke starts like a hand starting and
+     spends its middle at speed. `--ease-entry` is a plain cubic ease-out -
+     still decelerating, so content arrives promptly, but without the first
+     curve's cliff. Neither is mirrored into `@theme` below: they exist for the
+     keyframes at the foot of this file, and a Tailwind utility nothing uses is
+     just another name to keep true. */
+  --ease-draw: cubic-bezier(0.45, 0, 0.25, 1);
+  --ease-entry: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 @theme inline {
@@ -38,6 +59,7 @@
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
+  --color-brand: var(--brand);
   /* HarmonyOS sits after Geist, never before it. Browsers fall back per
      character, not per element: Latin resolves in Geist because Geist has it,
      and only the characters Geist lacks - Han, and the CJK punctuation around
@@ -718,5 +740,156 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Path trace. The four hairlines on the /our-products banner draw themselves
+   in the order a hand would draw them: the two verticals fall from the top
+   edge, the horizontal sweeps across to join their feet, and the last vertical
+   drops away from that crossing. Four separate elements, but the staggered
+   delays make them read as one stroke changing direction rather than as four
+   things appearing.
+
+   `scaleY`/`scaleX` from an edge, not `width`/`height`: a transform is
+   composited and a line growing by layout is not, and this runs on first paint
+   where the main thread is busiest. The lines are 2px on their short axis and
+   that axis is never scaled, so the hairline stays crisp throughout.
+
+   `both` fill mode is what holds them at zero length before their delay
+   elapses - without it each line would be full length until its turn came, and
+   the trace would be four disappearances followed by four redraws.
+
+   Duration and delay come in as custom properties so the sequence lives with
+   the elements it sequences, in the component, rather than being split across
+   two files.
+
+   `--ease-draw`, not `--ease-out`: see the note on the tokens. A drawn line is
+   watched for its whole length, so its curve has to spend time in the middle
+   rather than front-loading everything into the first fifth. */
+.trace-down,
+.trace-across {
+  animation-duration: var(--trace-duration, 500ms);
+  animation-delay: var(--trace-delay, 0ms);
+  animation-timing-function: var(--ease-draw);
+  animation-fill-mode: both;
+}
+
+.trace-down {
+  transform-origin: top center;
+  animation-name: trace-down;
+}
+
+.trace-across {
+  transform-origin: left center;
+  animation-name: trace-across;
+}
+
+@keyframes trace-down {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes trace-across {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The global clamp higher up this file takes every animation down to 0.01ms,
+   which lands these at full length instantly - but it does not touch
+   `animation-delay`, so the lines would still wait out their stagger invisibly
+   and then snap in. Dropping the animation outright is the honest version:
+   the rules are simply drawn. */
+@media (prefers-reduced-motion: reduce) {
+  .trace-down,
+  .trace-across {
+    animation: none;
+  }
+}
+
+/* The banner's entry, on first paint. Three movements over the same easing as
+   the trace above, staggered so the band assembles rather than arriving: the
+   photograph drifts in from the edge it bleeds off, the heading is uncovered
+   from its own baseline upward, and the paragraph rises under it.
+
+   All of it is CSS and none of it is scroll-triggered. This band is the top of
+   its page and is therefore always in view, so the `Reveal` this section used
+   to lean on was buying nothing and costing the wait for hydration - the copy
+   sat at opacity 0 until the JS landed. Keyframes run on the first frame the
+   element is painted, which for a hero is the only correct time.
+
+   The heading is uncovered with `clip-path` rather than by wrapping it in an
+   `overflow: hidden` box - one element instead of two, and no chance of the
+   box clipping a descender at rest. The insets close past the border box on
+   both ends for the same reason: at rest the path is outside the type, not
+   flush with it. */
+.enter-drift,
+.enter-unmask,
+.enter-rise {
+  animation-duration: var(--enter-duration, 800ms);
+  animation-delay: var(--enter-delay, 0ms);
+  animation-timing-function: var(--ease-entry);
+  animation-fill-mode: both;
+}
+
+.enter-drift {
+  animation-name: enter-drift;
+}
+
+.enter-unmask {
+  animation-name: enter-unmask;
+}
+
+.enter-rise {
+  animation-name: enter-rise;
+}
+
+@keyframes enter-drift {
+  from {
+    opacity: 0;
+    transform: translate3d(3.5%, 0, 0) scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes enter-unmask {
+  from {
+    clip-path: inset(100% 0 -30% 0);
+    transform: translate3d(0, 0.1em, 0);
+  }
+  to {
+    clip-path: inset(-30% 0 -30% 0);
+    transform: none;
+  }
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Same reasoning as the trace: the global clamp shortens these to nothing but
+   leaves the stagger, so they are dropped outright instead. */
+@media (prefers-reduced-motion: reduce) {
+  .enter-drift,
+  .enter-unmask,
+  .enter-rise {
+    animation: none;
   }
 }

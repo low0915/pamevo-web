@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { siWhatsapp } from "simple-icons";
 
 import { CONTACT, FOOTER, WHATSAPP } from "@/lib/content";
 import { JsonLd } from "@/components/site/JsonLd";
@@ -6,6 +6,7 @@ import { contactGraph } from "@/lib/schema";
 import type { Locale } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/sections/ContactForm";
+import { PageBanner } from "@/components/sections/PageBanner";
 
 /**
  * The contact page body, shared by /contact and /zh/contact.
@@ -23,9 +24,7 @@ import { ContactForm } from "@/components/sections/ContactForm";
  * for anyone who would rather write. Below `lg` the details come first, because
  * a phone number is the faster answer and should not sit under a form.
  *
- * The banner is a band rather than a full screen. The header island floats over
- * the first 80px of the viewport, so the heading is bottom-aligned inside it,
- * clear of the island with the texture reading above it.
+ * The banner is the shared `PageBanner`, the same one /our-products opens on.
  *
  * Every number, address and link here is read from FOOTER — the same rule
  * /privacy follows, so a changed phone number changes in one place.
@@ -64,45 +63,38 @@ export function ContactBody({
           asserting it, and this is where the address and number are printed. */}
       <JsonLd data={contactGraph(locale)} />
 
-      {/* Full-bleed banner. The texture is decorative and the heading carries
-          the meaning, so the image is alt="" rather than described. */}
-      <section className="relative flex h-[46svh] min-h-[380px] w-full items-end overflow-hidden md:h-[56svh]">
-        <Image
-          src="/scratched-metal-background.jpg"
-          alt=""
-          fill
-          /* Was `priority`, deprecated as of Next 16. The LCP element here. */
-          preload
-          quality={70}
-          sizes="100vw"
-          className="graded object-cover"
-        />
+      {/* The same banner /our-products opens on, and deliberately so: they are
+          the two pages a reader arrives at from the nav, and until now they
+          announced themselves in two unrelated ways. See PageBanner for the
+          geometry, the trace and the entry.
 
-        {/* The metal runs light in places and dark in the scratch bands, which
-            is fine as a ground and unusable under type. This lifts the lower
-            band back to the page's own colour so ink type sits on it at full
-            contrast, and leaves the texture legible above. */}
-        <div
-          aria-hidden
-          className="absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-[rgb(244_245_246/0.96)] via-[rgb(244_245_246/0.72)] to-transparent"
-        />
+          The overlay is the P.A. Projects / MEVO showroom rather than the city
+          facade the products page uses. The banner blends whatever it is given
+          at 22% soft-light, so it reads as light across the blue rather than as
+          a photograph - which is what makes a building recognisable enough to
+          belong here without competing with the heading.
 
-        <div className="relative w-full px-4 pt-28 pb-10 md:px-8 md:pb-14 lg:px-12">
-          <div className="mx-auto w-full max-w-[1440px]">
-            <Reveal>
-              <h1 className="max-w-[18ch] text-5xl leading-[1.04] font-medium tracking-tighter text-ink md:text-6xl lg:text-7xl">
-                {copy.banner.heading}
-              </h1>
-            </Reveal>
-
-            <Reveal delay={0.08}>
-              <p className="mt-5 max-w-[62ch] text-base leading-relaxed text-ink-2">
-                {copy.banner.lede}
-              </p>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+          The figure is the window-corner cutaway. It is portrait where the
+          extrusions on /our-products are landscape, so it takes neither of that
+          one's framing settings: centred rather than pushed right, because the
+          figure box deliberately runs past the band's edge and a narrow subject
+          pushed into that corner is clipped instead of bleeding off it; and not
+          mirrored, because unlike the extrusions it already faces the way the
+          band wants. See BannerFigure. */}
+      <PageBanner
+        heading={copy.banner.heading}
+        subheading={copy.banner.lede}
+        /* The second number is the one to change to move the showroom up or
+           down in the band - 0% is the top of the photograph, 100% the bottom.
+           See BannerOverlay in PageBanner. */
+        overlay={{ src: "/pa mevo_up.png", position: "50% 15%" }}
+        figure={{
+          src: "/Camada 1.png",
+          position: "55% 50%",
+          scale: 1.1,
+          offsetY: "5%",
+        }}
+      />
 
       <section className="px-4 pt-20 pb-24 md:px-8 md:pt-24 md:pb-32 lg:px-12">
         <div className="mx-auto w-full max-w-[1440px]">
@@ -145,8 +137,17 @@ export function ContactBody({
                   href={WHATSAPP.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-8 inline-flex items-center rounded-full border border-line bg-surface px-6 py-3 text-base font-medium tracking-tight text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97]"
+                  className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-line bg-surface px-6 py-3 text-base font-medium tracking-tight text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97]"
                 >
+                  {/* Simple Icons for the brand mark, as the header and the
+                      footer do — the glyph is never drawn by hand here.
+                      `currentColor` so it inherits the button's ink, including
+                      in whatever state the button is in, and `aria-hidden`
+                      because the label beside it already says WhatsApp: an
+                      announced icon would say it twice. */}
+                  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden>
+                    <path d={siWhatsapp.path} />
+                  </svg>
                   {WHATSAPP.label}
                 </a>
               </div>

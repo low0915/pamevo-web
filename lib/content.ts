@@ -701,8 +701,17 @@ export const PROJECTS = {
       half in a data file cannot be translated. Same pattern as
       PRODUCTS_PAGE.cta.aria. */
   openLabel: (project: string) => `Open ${project}`,
-  /** Six photographs, and the live site's own tile names for them: PROJECT 1
-      through PROJECT 6, no captions.
+  /** Six photographs, each captioned with the product it actually shows.
+
+      They were PROJECT 1 through PROJECT 6 — the live site's own tile names,
+      and six anonymous numbers under a heading promising a portfolio. The
+      photographs are the manufacturer's product shots, so every tile already
+      HAD a subject; only the caption was withholding it.
+
+      The model code is dropped: "Casement Window" rather than "DM106 Casement
+      Window". This is the home page, where a reader is being shown what MEVO
+      makes, not looking up a part — the code belongs in the catalogue, where
+      someone is comparing systems.
 
       The pictures are the manufacturer's own installation photography out of
       `public/products/`, the same shots the catalogue in lib/products.ts hangs
@@ -720,12 +729,12 @@ export const PROJECTS = {
       Intrinsic pixel sizes are carried so the lightbox frame can be the
       picture's own shape rather than a box it sits letterboxed inside. */
   images: [
-    { src: "/products/01.jpg", label: "Project 1", alt: "Living room with a tall dark-framed casement window opening onto a misty pine forest", width: 2560, height: 1706 },
-    { src: "/products/03.jpg", label: "Project 2", alt: "Freestanding glass sunroom with a dark aluminium gable frame, standing on lit stone steps in an evening garden", width: 2560, height: 1792 },
-    { src: "/products/05-1.jpg", label: "Project 3", alt: "Minimal lounge with a full-height two-panel panoramic door opening onto a lake ringed by mountains", width: 2560, height: 1844 },
-    { src: "/products/07.jpg", label: "Project 4", alt: "Poolside living room with a combined door and window system, a screened side panel and a small opening casement", width: 2560, height: 1785 },
-    { src: "/products/15.jpg", label: "Project 5", alt: "Pale seaside room with an ultra-slim four-panel sliding door framing a rocky shore", width: 2048, height: 1536 },
-    { src: "/products/18.jpg", label: "Project 6", alt: "Modern white house entrance with a ribbed charcoal entry door, a slim sidelight and a lit wall sconce", width: 2560, height: 1920 },
+    { src: "/products/01.jpg", label: "Casement Window", alt: "Living room with a tall dark-framed casement window opening onto a misty pine forest", width: 2560, height: 1706 },
+    { src: "/products/03.jpg", label: "Sunroom", alt: "Freestanding glass sunroom with a dark aluminium gable frame, standing on lit stone steps in an evening garden", width: 2560, height: 1792 },
+    { src: "/products/05-1.jpg", label: "Slimline Panoramic Door", alt: "Minimal lounge with a full-height two-panel panoramic door opening onto a lake ringed by mountains", width: 2560, height: 1844 },
+    { src: "/products/07.jpg", label: "Window & Door System", alt: "Poolside living room with a combined door and window system, a screened side panel and a small opening casement", width: 2560, height: 1785 },
+    { src: "/products/15.jpg", label: "Interior Sliding Door", alt: "Pale seaside room with an ultra-slim four-panel sliding door framing a rocky shore", width: 2048, height: 1536 },
+    { src: "/products/18.jpg", label: "Chasing Light Entry Door", alt: "Modern white house entrance with a ribbed charcoal entry door, a slim sidelight and a lit wall sconce", width: 2560, height: 1920 },
   ],
 };
 
@@ -735,6 +744,15 @@ export const PROJECTS = {
     language rather than being copied into a second list that could drift.
     `openLabel` reads "查看" - view - rather than a literal "open", which is
     what a Chinese reader expects of a control that enlarges a photograph. */
+const PROJECT_LABELS_ZH = [
+  "系统窗",
+  "阳光房",
+  "全景门",
+  "门联窗",
+  "联动吊门",
+  "追光入户门",
+];
+
 export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
   heading: "我们的项目",
   blurb:
@@ -742,9 +760,14 @@ export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
   /* href too, not just the label: this pointed a Chinese reader at /contact. */
   cta: { ...PROJECTS.cta, label: "联系我们", href: zhPath(PROJECTS.cta.href) },
   openLabel: (project: string) => `查看${project}`,
+  /* The client's own names for these six, not a translation of the English:
+     they are the filenames the manufacturer's photographs were published
+     under on the live site (DM106-系统窗, DM126-阳光房, DM27-全景门,
+     DM112Pro-门联窗, DM10-联动吊门, 追光入户门). Same rule as the English —
+     the model code is dropped. */
   images: PROJECTS.images.map((image, i) => ({
     ...image,
-    label: `项目 ${i + 1}`,
+    label: PROJECT_LABELS_ZH[i],
   })),
 };
 
@@ -1044,6 +1067,16 @@ export const PRIVACY = {
 
 export const PRODUCTS_PAGE = {
   heading: "Our Products",
+  /** The banner's one paragraph, under the heading.
+
+      It is the whole range in a sentence — the four product families, who they
+      go to, and where — followed by the two things that make the claim worth
+      anything: the extrusion behind the systems and the team that fits them.
+      Deliberately concrete. The catalogue below is a wall of model codes, and
+      this is the only place on the page that says, in plain words, what MEVO
+      actually supplies. */
+  subheading:
+    "Casement and sliding windows, panoramic and entry doors, and sunrooms — supplied and installed for residential developments, commercial buildings and high-rise facades across Malaysia. Backed by two decades of aluminium extrusion and a certified installation team.",
   /** Names the catalogue section for screen readers. The h1 above it already
       names the page, so this heading is not repeated visually. */
   catalogLabel: "Product catalog",
@@ -1075,6 +1108,8 @@ export const PRODUCTS_PAGE = {
  */
 export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
   heading: "我们的产品",
+  subheading:
+    "平开窗与推拉窗、全景门与入户门，以及阳光房——为马来西亚各地的住宅项目、商业建筑与高层幕墙供应并安装。背靠二十年铝型材挤压经验与持证安装团队。",
   catalogLabel: "产品目录",
   viewsLabel: "视图",
   viewLabel: "目录布局",

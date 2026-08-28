@@ -11,6 +11,7 @@ import {
   HERO_REPLAY_EVENT,
 } from "@/lib/autoplay";
 import { SCROLL_LOCK_EVENT, SCROLL_UNLOCK_EVENT } from "@/lib/scroll-lock";
+import { isHome } from "@/lib/paths";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -118,8 +119,7 @@ type Played = { engaged: number; done: boolean };
  */
 export function SmoothScroll() {
   const pathname = usePathname();
-  const replayRef = useRef<(() => void) | null>(null);
-  const measureRef = useRef<(() => void) | null>(null);
+  const arriveRef = useRef<((home: boolean) => void) | null>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -150,7 +150,20 @@ export function SmoothScroll() {
 
     // Read from the DOM rather than held in here: the sections declare their
     // own runways, and both ends of one move with the viewport.
+    //
+    // Gated on the home page, and read off `location` rather than taken as an
+    // argument so that every caller is covered - this also runs on a
+    // ScrollTrigger refresh, which knows nothing about routing. The three
+    // scrubbed sections live on the home page and nowhere else, so in practice
+    // the query below already returns nothing anywhere else; the guard is what
+    // makes that a rule rather than a coincidence, and it holds even for the
+    // moment during a navigation when the outgoing page's sections are still
+    // in the document.
     const measure = () => {
+      if (!isHome(window.location.pathname)) {
+        runs = [];
+        return;
+      }
       const screen = window.innerHeight;
       runs = Array.from(
         document.querySelectorAll<HTMLElement>("[data-autoplay]"),
@@ -186,19 +199,27 @@ export function SmoothScroll() {
 
     // Held open-endedly, rather than for a countdown: a dialog is up until it
     // is not, and nobody can say in advance how long that will be.
-    let paused = false;
+    //
+    // Counted, because there are two independent holders and they overlap. The
+    // cookie notice holds from the moment it appears until it is answered, and
+    // the mobile menu holds for as long as it is open - so a reader who opens
+    // and closes the menu without answering the notice would, with a plain
+    // boolean, hand the page back while the notice was still up. The count is
+    // floored at zero so a stray release cannot take it negative and strand the
+    // autoplay off.
+    let holds = 0;
     const onHold = () => {
-      paused = true;
+      holds += 1;
     };
     const onRelease = () => {
-      paused = false;
+      holds = Math.max(0, holds - 1);
       // The same beat any other interruption gets, so the page eases back in
-      // rather than jumping the moment the dialog clears.
-      interrupt();
+      // rather than jumping the moment the last dialog clears.
+      if (holds === 0) interrupt();
     };
 
     const autoplay = (dt: number) => {
-      if (paused) return;
+      if (holds > 0) return;
       if (document.visibilityState !== "visible") return;
       if (hold > 0) {
         hold = Math.max(0, hold - dt);
@@ -243,18 +264,100 @@ export function SmoothScroll() {
     // refuse the autoplay's own scrollTo with them, which a stopped Lenis does
     // on its own. `overflow: hidden` on the body cannot do this - it declines a
     // gesture, and every one of these arrives as a script instead.
-    const onLock = () => lenis.stop();
-    const onUnlock = () => lenis.start();
+    //
+    // Counted for the same reason the hold is, and with more at stake: a lock
+    // that is taken twice and released once leaves Lenis stopped, and a stopped
+    // Lenis is a page that cannot be scrolled at all.
+    let locks = 0;
+    const onLock = () => {
+      if (locks++ === 0) lenis.stop();
+    };
+    const onUnlock = () => {
+      if (locks > 0 && --locks === 0) lenis.start();
+    };
 
-    // Back to the top, with every run armed to play again from there.
-    const replay = () => {
+    /**
+     * Keeps Lenis's idea of how far the page goes honest, continuously.
+     *
+     * Lenis measures the document once and then leans on a ResizeObserver over
+     * `documentElement` to keep `limit` current. That observer barely ever
+     * fires here: an observer reports a BOX changing, `documentElement`'s box
+     * is the viewport, and what changes on this site is the content inside it -
+     * a navigation to a shorter page, a catalogue row opening or closing.
+     * `scrollHeight` is not something a ResizeObserver watches. (Lenis also
+     * debounces it 250ms, so even where a box does change, the answer is late.)
+     *
+     * `body` is watched instead. Its box grows and shrinks with its content, so
+     * every one of those changes arrives here.
+     *
+     * The clamp is the half that matters. `resize()` on its own would leave a
+     * target carried over from a taller page sitting past the new bottom, and
+     * Lenis adds a wheel gesture to the TARGET rather than to the position - so
+     * every further scroll would push an already unreachable number further
+     * away, and the page would sit pinned at its bottom and refuse to move.
+     * Only corrected when the target is genuinely out of range, so an ordinary
+     * resize part-way through a scroll is left alone.
+     *
+     * This is the backstop. `arrive` below handles the navigation case head-on;
+     * this catches every other way the page can get shorter - and would catch
+     * the navigation case too, if the timing of that one were ever wrong again.
+     */
+    const onContentResize = () => {
+      lenis.resize();
+      if (lenis.targetScroll > lenis.limit) {
+        lenis.scrollTo(lenis.limit, { immediate: true, force: true });
+      }
+    };
+    const contentObserver = new ResizeObserver(onContentResize);
+    contentObserver.observe(document.body);
+
+    /**
+     * Arriving on a page: the top of it, measured, with Lenis told where it is.
+     *
+     * A client navigation swaps the document underneath Lenis, and it notices
+     * none of that on its own:
+     *
+     *   - `limit`, the furthest the page can scroll, is still the last page's.
+     *     Lenis keeps it fresh with a ResizeObserver over `documentElement`, and
+     *     that observer does not fire here - see `onContentResize` above.
+     *   - `targetScroll` is still the offset the reader had reached on the page
+     *     they left. Next puts the window back at the top, but Lenis is not
+     *     asked and does not look, so on its next frame it scrolls the new page
+     *     straight back down to the old number.
+     *
+     * Land on a shorter page with both carried over and the page cannot be
+     * scrolled at all: the target sits past the real bottom, the browser clamps
+     * to the bottom, and Lenis adds a wheel gesture to the TARGET rather than to
+     * the position, so every further scroll pushes an already unreachable number
+     * further away. Measured on this site before the fix: leaving the home page
+     * part-way down and arriving at /contact left a target of 8381 against a
+     * limit of 14163, on a page 941 tall. That is the stuck scroll.
+     *
+     * Scrolled to 0 rather than synced to `window.scrollY`, and that is not a
+     * shortcut. Reading the window back is a race - Next resets it, Lenis
+     * scrolls it back, and which of those has happened when this runs decides
+     * the answer. There is no need to ask: `history.scrollRestoration` is
+     * `"manual"` for the whole site (see components/site/Shell.tsx), no link
+     * carries a fragment or `scroll={false}`, and nothing here routes
+     * imperatively - so on this site every arrival, forward or back, means the
+     * top of the page. `force`, so a dialog holding the scroll lock cannot also
+     * block the correction that keeps the page scrollable once it closes.
+     *
+     * `home` additionally arms the runs, which is what makes the opening
+     * sequence play again rather than count as already sat through.
+     */
+    const arrive = (home: boolean) => {
+      lenis.resize();
       lenis.scrollTo(0, { immediate: true, force: true });
-      played = new WeakMap();
-      hold = 0;
+      if (home) {
+        played = new WeakMap();
+        hold = 0;
+      }
       measure();
     };
-    replayRef.current = replay;
-    measureRef.current = measure;
+
+    arriveRef.current = arrive;
+
 
     const raf = (time: number, deltaTime: number) => {
       autoplay(Math.min(deltaTime / 1000, MAX_FRAME));
@@ -298,9 +401,9 @@ export function SmoothScroll() {
     window.addEventListener(SCROLL_UNLOCK_EVENT, onUnlock);
 
     return () => {
-      replayRef.current = null;
-      measureRef.current = null;
+      arriveRef.current = null;
       lenis.off("scroll", onScroll);
+      contentObserver.disconnect();
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33);
       window.removeEventListener("resize", onResize);
@@ -319,24 +422,36 @@ export function SmoothScroll() {
     };
   }, []);
 
-  // A load, or a navigation that arrives home. Declared after the effect above
-  // so the replay it calls is already in hand on the first render.
+  // Every navigation, and the first load. Declared after the effect above so
+  // the callbacks it reaches for are already in hand on the first render.
   //
-  // Every other navigation re-measures instead. The runs are read off the DOM
-  // once and the effect that reads them is mounted in the layout, so it outlives
-  // any client navigation: a page that declares no `[data-autoplay]` of its own
-  // would otherwise inherit the runs of the page before it and scroll itself
-  // with them. /our-products and /contact declare none, and both were being
-  // carried down the page by the home page's hero. Re-measuring hands them the
-  // empty list they should have had.
+  // Arriving home arms the runs from the top; arriving anywhere else hands
+  // Lenis the new page and leaves it with no runs at all. Both paths re-measure,
+  // and both have to: the effect that owns the runs is mounted in the layout, so
+  // it outlives any client navigation, and a page that declares no
+  // `[data-autoplay]` of its own would otherwise inherit the runs of the page
+  // before it and scroll itself with them.
+  //
+  // `isHome`, not `pathname === "/"`. The Chinese home page is `/zh` and is the
+  // same page - under the old check it was the one home page that never got its
+  // runs armed, and every navigation within the Chinese half of the site was
+  // treated as a navigation away from home.
+  //
+  // Twice, a frame apart. This effect runs on commit, but Next puts the window
+  // back at the top of the new page after that, and the layout being measured
+  // has not been painted yet - so the first pass fixes the common case at once
+  // and the second catches the height and the scroll position once they have
+  // settled. Both are idempotent, so running twice costs a measurement.
   useEffect(() => {
-    if (pathname === "/") replayRef.current?.();
-    else measureRef.current?.();
+    const settle = () => arriveRef.current?.(isHome(pathname));
+    settle();
+    const id = requestAnimationFrame(settle);
+    return () => cancelAnimationFrame(id);
   }, [pathname]);
 
   // The header logo, for a reader who is already home.
   useEffect(() => {
-    const onReplay = () => replayRef.current?.();
+    const onReplay = () => arriveRef.current?.(true);
     window.addEventListener(HERO_REPLAY_EVENT, onReplay);
     return () => window.removeEventListener(HERO_REPLAY_EVENT, onReplay);
   }, []);
