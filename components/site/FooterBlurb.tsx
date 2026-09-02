@@ -1,6 +1,6 @@
 "use client";
 
-import { FOOTER, FOOTER_ZH } from "@/lib/content";
+import { FOOTER, FOOTER_ZH, FOOTER_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
 /**
@@ -13,6 +13,6 @@ import { useCopy } from "@/lib/locale";
  * and shipping none of their JS is worth one extra component.
  */
 export function FooterBlurb({ className }: { className?: string }) {
-  const footer = useCopy(FOOTER, FOOTER_ZH);
+  const footer = useCopy(FOOTER, { ZH: FOOTER_ZH, BM: FOOTER_BM });
   return <p className={className}>{footer.blurb}</p>;
 }

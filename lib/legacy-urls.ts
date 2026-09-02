@@ -48,12 +48,26 @@ const aliases = [
 
 const pages = [
   // Pages whose content survives, folded into the home page's sections.
-  { source: "/our-story", destination: "/", permanent: true },
+  //
+  // /our-story, /services and /our-projects ARE NOT HERE, and must not be.
+  // They were on this list — folded onto the home page, because at the time
+  // this build had nowhere else to put them — and they are now real routes
+  // built from the sections that had absorbed them. A redirect takes
+  // precedence over a page, so leaving them here did not merely waste the new
+  // pages: it made them unreachable, and the nav linked to three URLs that
+  // bounced straight back to the home page. Same trap the /zh block below
+  // warns about, walked into from the other direction.
+  //
+  // Reclaiming the old URLs rather than inventing new ones is also the better
+  // outcome: /our-story and /services are what the WordPress site published,
+  // so whatever equity those URLs carry now lands on a page about the same
+  // subject instead of on a redirect to the home page.
   { source: "/about", destination: "/", permanent: true },
   { source: "/about/directors-profile", destination: "/", permanent: true },
+  // Vision & Mission is still the one nav item with no page. When it gets one,
+  // this line points at it rather than at the home page.
   { source: "/about/vision-mision", destination: "/", permanent: true },
   { source: "/our-10-core-usp", destination: "/", permanent: true },
-  { source: "/services", destination: "/", permanent: true },
 
   // The blog index was a product archive, and so was WooCommerce's shop
   // archive. Both were genuinely about products, so both consolidate onto the
@@ -78,11 +92,12 @@ const pages = [
 
   // The Chinese tree.
   //
-  // /zh, /zh/contact and /zh/our-products are REAL ROUTES in this build and are
-  // deliberately absent from this list — a redirect here would take precedence
-  // over the page and the Chinese site would never render. The live WordPress
-  // site published those same three paths, so they need no redirect at all:
-  // they carry straight over.
+  // /zh, /zh/contact, /zh/our-products, /zh/our-story, /zh/services and
+  // /zh/our-projects are REAL ROUTES in this build and are deliberately absent
+  // from this list — a redirect here would take precedence over the page and
+  // that page would never render. The live WordPress site published several of
+  // those same paths, so they need no redirect at all: they carry straight
+  // over onto a page about the same subject.
   //
   // What does need handling is everything else the old /zh tree published —
   // /zh/our-story, /zh/blog/<product>, /zh/about and the rest — which has no
@@ -95,11 +110,9 @@ const pages = [
   { source: "/zh/blog", destination: "/zh/our-products", permanent: true },
   { source: "/zh/blog/:slug*", destination: "/zh/our-products", permanent: true },
   { source: "/zh/shop", destination: "/zh/our-products", permanent: true },
-  { source: "/zh/our-story", destination: "/zh", permanent: true },
   { source: "/zh/about", destination: "/zh", permanent: true },
   { source: "/zh/about/:path*", destination: "/zh", permanent: true },
   { source: "/zh/our-10-core-usp", destination: "/zh", permanent: true },
-  { source: "/zh/services", destination: "/zh", permanent: true },
   // /zh/privacy has no Chinese page and never will while the notice is
   // English-only, so it goes to the English one rather than to /zh.
   { source: "/zh/privacy", destination: "/privacy", permanent: true },

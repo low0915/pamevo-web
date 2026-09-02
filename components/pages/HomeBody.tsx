@@ -1,8 +1,7 @@
 import { Hero } from "@/components/sections/Hero";
+import { ProductGrid } from "@/components/sections/ProductGrid";
 import { Background } from "@/components/sections/Background";
-import { WhyChoose } from "@/components/sections/WhyChoose";
 import { Stats } from "@/components/sections/Stats";
-import { Services } from "@/components/sections/Services";
 import { Projects } from "@/components/sections/Projects";
 import { JsonLd } from "@/components/site/JsonLd";
 import { homeGraph } from "@/lib/schema";
@@ -38,10 +37,39 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
         className="relative -mt-[200svh] flow-root bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
         style={{ zIndex: Z.raised }}
       >
+        {/* The band the sheet opens on, and the only section between the
+            hero and the scrubbed pair that carries no runway of its own: the
+            reader scrolls it themselves. It rides over the hero's pinned frame
+            as the sheet rises, and has a photograph of its own to cover it
+            with. */}
+        <ProductGrid />
         <Background />
-        <WhyChoose />
+        {/* WhyChoose stood here and Services stood between Stats and Projects.
+            Both are out of the home page.
+
+            THE CURTAIN CHAIN SURVIVED THE CUT, and it is worth writing down
+            why, because it is the thing a change like this quietly breaks.
+            Every section below the hero is pulled up over the one above it and
+            has to land on a frame that is still pinned; take a link out and the
+            next curtain lands on whatever it now finds.
+
+            Stats pulls up 110svh and used to land on WhyChoose. It now lands on
+            Background, whose runway is 370svh holding a 100svh sticky frame —
+            so the frame stays pinned for 270svh and the overlap starts at 260.
+            Ten svh of slack, which is the same margin it had before and the
+            same one the rest of the stack is built on.
+
+            Projects pulls up `svc-curtain` and used to land on Services. It now
+            lands on Stats, which is what that class was written against in the
+            first place: `.band-runway` is 240svh — 30 of hold, one screen of
+            travel, 110 of pull-up — and the `- 4em` in the margin is Stats'
+            own `mb-[4em]`. Services was borrowing the same arrangement.
+
+            So nothing needed retuning. If a section is ever added back into
+            this stack, the thing to check is that whatever sits above a curtain
+            still holds a pinned frame for at least the 110svh it is pulled
+            over. */}
         <Stats />
-        <Services />
         <Projects />
       </div>
     </main>

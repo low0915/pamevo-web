@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { WHY_CHOOSE, WHY_CHOOSE_ZH } from "@/lib/content";
+import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -53,7 +53,7 @@ export function WhyChoose() {
   const rootRef = useRef<HTMLElement>(null);
   /* Only the closing commitment has Chinese copy; the three panel parts fall
      through to the English originals. See WHY_CHOOSE_ZH. */
-  const whyChoose = useCopy(WHY_CHOOSE, WHY_CHOOSE_ZH);
+  const whyChoose = useCopy(WHY_CHOOSE, { ZH: WHY_CHOOSE_ZH, BM: WHY_CHOOSE_BM });
 
   useEffect(() => {
     const section = rootRef.current;

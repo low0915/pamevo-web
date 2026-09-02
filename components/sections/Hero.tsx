@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { HERO, HERO_ZH } from "@/lib/content";
+import { HERO, HERO_ZH, HERO_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -69,7 +69,7 @@ const SPEED = 0.25;
 export function Hero() {
   const rootRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hero = useCopy(HERO, HERO_ZH);
+  const hero = useCopy(HERO, { ZH: HERO_ZH, BM: HERO_BM });
 
   useEffect(() => {
     const section = rootRef.current;

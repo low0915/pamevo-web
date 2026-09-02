@@ -20,6 +20,14 @@
  * Photography is the manufacturer's own, pulled from the live site into
  * `public/products/`. Filenames are the product number, so `05-2` is the second
  * image of product 05.
+ *
+ * THE SPECIFICATIONS ARE BILINGUAL, NOT TRILINGUAL. `ProductSpec` carries `en`
+ * and an optional `zh`, and ProductCatalog prints both in every locale — so
+ * /bm/our-products is Malay chrome around English and Chinese bullets. That is
+ * a real gap rather than an oversight: these are the manufacturer's own words
+ * about their own product, 86 of them, and the Malay has to come from the
+ * client rather than be invented here. Adding it is a `ms?` beside the `zh?`
+ * and a line in ProductSpecs; nothing else in the locale system needs to move.
  */
 
 export type ProductSpec = { en: string; zh?: string };
@@ -738,6 +746,89 @@ export const PRODUCTS: Product[] = [
  * clear. An absent description is the one case where Google has nothing to
  * rewrite a snippet from.
  */
+/**
+ * The two systems the catalogue is filtered by, and `all`.
+ *
+ * Derived from `category` rather than stored on each product, which is what the
+ * note on that field anticipated: "adding filters later is a rendering change,
+ * not a data migration". Nothing in lib/products.ts changed to make the filter
+ * work — this is the rule, written down once, next to the data it reads.
+ *
+ * Three of the five categories map straight across. The other two are the
+ * reason this is a function and not a lookup:
+ *
+ *  - Sunroom is one product, DM126, and it is neither a window nor a doorset.
+ *    It sits under Window System because a sunroom is glazing rather than a
+ *    doorway, and because a product that answers to neither filter can only be
+ *    found by a reader who never touches them.
+ *  - Aluminium-clad Wood is one product and its own title is "Doors &
+ *    Windows". DM112's is "Window & Door System" and it is filed under Doors.
+ *    Both are genuinely both, and both are listed under either filter — the
+ *    same product, not a copy of it, so the two filters overlap by two and the
+ *    counts do not add to twenty. 10 windows, 12 doors, 20 products.
+ */
+export type System = "all" | "window" | "door";
+
+/** Filed under Doors by category. Everything else that is not `BOTH` is a
+    window as far as the filter is concerned. */
+const DOOR_CATEGORIES = new Set(["Doors", "Entry Doors"]);
+
+/** Products whose own titles say they are both. Held by slug, because what
+    makes them both is the product rather than its category — DM112 is filed
+    under Doors and is called a Window & Door System. */
+const BOTH = new Set([
+  "dm112-windowdoor-system",
+  "aluminium-clad-wood-doors-windows",
+]);
+
+/**
+ * The catalogue filter as a URL, so a system can be linked to.
+ *
+ * A HASH rather than a query parameter, and that is a search decision as much
+ * as an ergonomic one. `?system=door` would be a second crawlable URL serving
+ * a subset of the same twenty products — a near-duplicate of /our-products that
+ * would need a canonical to suppress, on a page whose whole design (see the
+ * note in lib/schema.ts) is that the catalogue is ONE document. A fragment is
+ * never fetched by a crawler and never indexed separately, so /our-products
+ * stays the single URL it is meant to be while still being linkable per system.
+ *
+ * The cost is that the server cannot see it: a fragment is client-only, so the
+ * filter can only be applied after hydration. That is why ProductCatalog starts
+ * at "all" and moves in an effect rather than initialising from the hash —
+ * initialising from it would render one thing on the server and another in the
+ * browser, which React treats as a hydration error.
+ *
+ * Plurals are accepted because people type them, and an unknown fragment falls
+ * back to "all" rather than to an empty list — /our-products#anything is still
+ * the catalogue.
+ */
+export function systemFromHash(hash: string): System {
+  switch (hash.replace(/^#/, "").toLowerCase()) {
+    case "window":
+    case "windows":
+      return "window";
+    case "door":
+    case "doors":
+      return "door";
+    default:
+      return "all";
+  }
+}
+
+/** The inverse, for writing the URL back as the reader filters. "all" is the
+    absence of a fragment rather than `#all`, so the unfiltered catalogue keeps
+    the clean URL it had before this existed. */
+export function systemHash(system: System) {
+  return system === "all" ? "" : `#${system}`;
+}
+
+export function inSystem(product: Product, system: System) {
+  if (system === "all") return true;
+  if (BOTH.has(product.slug)) return true;
+  const isDoor = DOOR_CATEGORIES.has(product.category);
+  return system === "door" ? isDoor : !isDoor;
+}
+
 export function describe(product: Product, limit = 155): string {
   const source =
     product.blurb ??

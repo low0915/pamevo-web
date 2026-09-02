@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PROJECTS, PROJECTS_ZH } from "@/lib/content";
+import { PROJECTS, PROJECTS_ZH, PROJECTS_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
 import { Lightbox } from "@/components/ui/Lightbox";
@@ -76,8 +76,11 @@ function valleyDepth(width: number) {
  * colour - except that the middle of the frame is something a phone has too,
  * where hover is not.
  */
-export function Projects() {
-  const projects = useCopy(PROJECTS, PROJECTS_ZH);
+export function Projects({ standalone = false }: { standalone?: boolean }) {
+  /* See the note on Background: JSX reads a lowercase tag name as a literal
+     element and an uppercase one as a component, so the case is doing work. */
+  const Heading = standalone ? "h1" : "h2";
+  const projects = useCopy(PROJECTS, { ZH: PROJECTS_ZH, BM: PROJECTS_BM });
   const viewportRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<(HTMLLIElement | null)[]>([]);
   const offsetRef = useRef(0);
@@ -286,13 +289,19 @@ export function Projects() {
       // slack, and the section measures the same whatever it is set to. The
       // bottom margin goes too - nothing rides over this section, so the 4em
       // was gap for its own sake, sitting directly on the footer's border.
-      className="sheet svc-curtain svc-curtain-floor relative mb-[4em] flex flex-col justify-center bg-bg py-24 max-md:mb-0 max-md:py-14 md:py-36"
+      // The curtain classes are the home page's arrangement — a pull-up over
+      // the section above and a floor tall enough to cover what it is pulled
+      // over. On /our-projects there is nothing above it, and a 110svh floor on
+      // a page this short would leave a screen of empty ground under it.
+      className={`relative mb-[4em] flex flex-col justify-center bg-bg py-24 max-md:mb-0 max-md:py-14 md:py-36 ${
+        standalone ? "max-md:pt-28" : "sheet svc-curtain svc-curtain-floor"
+      }`}
     >
       <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
         <Reveal>
-          <h2 className="text-center text-4xl leading-[1.1] font-medium tracking-tighter text-ink md:text-5xl lg:text-6xl">
+          <Heading className="text-center text-4xl leading-[1.1] font-medium tracking-tighter text-ink md:text-5xl lg:text-6xl">
             {projects.heading}
-          </h2>
+          </Heading>
         </Reveal>
 
         <Reveal delay={0.06}>

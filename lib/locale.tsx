@@ -10,8 +10,12 @@ export {
   counterpart,
   enPath,
   zhPath,
+  bmPath,
+  localePath,
   isPaired,
+  isCurrentPath,
   HTML_LANG,
+  LOCALE_PREFIX,
   PAIRED_PATHS,
   type Locale,
 } from "./paths";
@@ -56,16 +60,29 @@ export function useLocale() {
 /**
  * Picks the copy for the current locale.
  *
- * The ZH object is a partial overlay, not a parallel translation: only the
+ * Each translation is a partial overlay, not a parallel object: only the
  * strings that have actually been supplied are in it, and everything else falls
  * through to the English original. That is what keeps a partly-translated
- * section coherent rather than half-empty — and it is still true per section,
- * even though the three routed pages are now translated end to end.
+ * section coherent rather than half-empty — and it is what lets a language be
+ * added a section at a time rather than all at once.
+ *
+ * Keyed by locale rather than positional, which it was while there were two
+ * languages and one overlay to pass. `useCopy(HERO, HERO_ZH)` had nowhere for a
+ * third to go except a third argument, and a call site reading
+ * `useCopy(HERO, HERO_ZH, HERO_BM)` says nothing about which is which — the
+ * order is the only thing carrying it, and the day someone adds a fourth in the
+ * wrong slot it fails silently, in one language, in production.
+ *
+ * The memo depends on the resolved overlay rather than on the map around it.
+ * Call sites write that map as a literal, so it is a new object every render;
+ * what it holds are module constants, and those are what the merge actually
+ * turns on.
  */
-export function useCopy<T extends object>(en: T, zh: Partial<T>): T {
+export function useCopy<T extends object>(
+  en: T,
+  translations: Partial<Record<Exclude<Locale, "EN">, Partial<T>>>,
+): T {
   const { locale } = useLocale();
-  return useMemo(
-    () => (locale === "ZH" ? { ...en, ...zh } : en),
-    [locale, en, zh],
-  );
+  const overlay = locale === "EN" ? undefined : translations[locale];
+  return useMemo(() => (overlay ? { ...en, ...overlay } : en), [en, overlay]);
 }

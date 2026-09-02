@@ -4,15 +4,41 @@
  * and spelling. Lorem Ipsum and template attributions are deliberately absent.
  */
 
-import { zhPath } from "./paths";
+import { bmPath, zhPath, type Locale } from "./paths";
 
 /** `href` is set only on pages that actually exist. Everything else stays an
     inert placeholder until its route is built. */
-export type NavItem = { label: string; href?: string; children?: { label: string }[] };
+export type NavItem = {
+  label: string;
+  href?: string;
+  children?: { label: string; href?: string }[];
+};
 
 export const NAV: NavItem[] = [
-  { label: "Our Products", href: "/our-products" },
-  { label: "Contact", href: "/contact" },
+  { label: "Our Story", href: "/our-story" },
+  /* Still inert: there is no section to build this page from yet. */
+  { label: "Vision & Mission" },
+  { label: "Services & Features", href: "/services" },
+  {
+    label: "Our Products",
+    href: "/our-products",
+    /* The catalogue's own two halves, and they are live now.
+    
+       Not routes of their own: both open /our-products and the fragment picks
+       the filter up on arrival. That keeps one page and one indexed URL for
+       twenty products while still letting the nav point at half of them — see
+       `systemFromHash` in lib/products.ts for why a fragment rather than a
+       query parameter, and what it costs. */
+    children: [
+      { label: "Window System", href: "/our-products#window" },
+      { label: "Door System", href: "/our-products#door" },
+    ],
+  },
+  /* The label is the client's, singular; the page it opens is headed "Our
+     Projects" by the section it is built from, and the URL follows the section
+     rather than the label. Worth aligning one way or the other. */
+  { label: "Our Project", href: "/our-projects" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 /**
@@ -25,19 +51,100 @@ export const NAV: NavItem[] = [
  * routes that same sharing became the bug: the Chinese header linked a Chinese
  * reader straight out to the English pages.
  *
- * "联系我们" rather than a bare "联系": the English "Contact" stands alone as
- * a noun, the Chinese verb does not, and it is the same phrase the projects
- * strip already ends on. No NAV entry has `children` today - if one ever does,
- * its sub-labels need translating here too, since this only rewrites the top
- * level.
+ * "联系我们" rather than a bare "联系": the English "Contact Us" is a phrase in
+ * both halves, and it is the same wording the projects strip already ends on.
+ *
+ * The sub-labels are translated here too, which the note this replaces asked
+ * for when the first `children` appeared. They are positional — index i of this
+ * list is index i of NAV, and the children line up the same way — so an item
+ * added to NAV needs a line adding here or it renders in English.
+ *
+ * FOR THE CLIENT TO CONFIRM: five of these six are new and are not the client's
+ * own words, unlike the section copy elsewhere in this file. 服务与特色 in
+ * particular is a literal rendering of "Services & Features" and a Malaysian
+ * Chinese reader may expect 服务与特点. Nothing here is load-bearing until the
+ * four unbuilt pages exist, which is the moment to have them checked.
  */
-const NAV_LABELS_ZH = ["我们的产品", "联系我们"];
+const NAV_ZH_LABELS: { label: string; children?: string[] }[] = [
+  { label: "我们的故事" },
+  { label: "愿景与使命" },
+  { label: "服务与特色" },
+  { label: "我们的产品", children: ["窗系统", "门系统"] },
+  { label: "我们的项目" },
+  { label: "联系我们" },
+];
 
 export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
   ...item,
-  label: NAV_LABELS_ZH[i],
+  label: NAV_ZH_LABELS[i].label,
   href: item.href ? zhPath(item.href) : undefined,
+  /* Falls back to the English sub-label rather than dropping the row: a missing
+     translation should show the wrong language, not an empty menu. */
+  children: item.children?.map((child, j) => ({
+    label: NAV_ZH_LABELS[i].children?.[j] ?? child.label,
+    /* Through `zhPath` for the reason the parent href is: a child carried over
+       unchanged would send a Chinese reader to the English catalogue. The
+       fragment rides along untouched, since the prefix goes on the front. */
+    href: child.href ? zhPath(child.href) : undefined,
+  })),
 }));
+
+/**
+ * The same six, in Malay, built the same way and from the same list — so a nav
+ * item added to NAV needs a line here and a line in NAV_ZH_LABELS or it renders
+ * in English in that language.
+ *
+ * "Hubungi Kami" rather than a bare "Hubungi": the verb does not stand alone as
+ * a label any more than the Chinese one does, and it is the same phrase the
+ * projects strip ends on.
+ */
+const NAV_BM_LABELS: { label: string; children?: string[] }[] = [
+  { label: "Kisah Kami" },
+  { label: "Visi & Misi" },
+  { label: "Perkhidmatan & Ciri" },
+  { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu"] },
+  { label: "Projek Kami" },
+  { label: "Hubungi Kami" },
+];
+
+export const NAV_BM: NavItem[] = NAV.map((item, i) => ({
+  ...item,
+  label: NAV_BM_LABELS[i].label,
+  href: item.href ? bmPath(item.href) : undefined,
+  children: item.children?.map((child, j) => ({
+    label: NAV_BM_LABELS[i].children?.[j] ?? child.label,
+    href: child.href ? bmPath(child.href) : undefined,
+  })),
+}));
+
+/**
+ * The language switch, as it is OFFERED rather than as it exists.
+ *
+ * LOCALES in lib/paths.ts is the list of languages the site is actually built
+ * in, and everything that depends on a route reads it: hreflang, the sitemap,
+ * `counterpart`, the two root layouts. Bahasa Melayu is not in it and must not
+ * be — adding it there would publish hreflang for pages that 404.
+ *
+ * This is the other list: what the switch shows a reader. An entry with no
+ * `locale` is a language named but not built, and renders inert, exactly as a
+ * NavItem with no `href` does. When the Malay copy lands, that one line gains
+ * a `locale` and the switch starts working — everything else follows from
+ * LOCALES.
+ */
+export const LOCALE_MENU: {
+  /** What the switch prints: the two letters, as before. */
+  code: string;
+  /** The routed locale, when the language has pages. Absent means not built. */
+  locale?: Locale;
+  /** For `lang` and `hreflang`. `ms` is Malay's own subtag. */
+  lang: string;
+  /** The language's name in the language, for the row under the code. */
+  name: string;
+}[] = [
+  { code: "EN", locale: "EN", lang: "en", name: "English" },
+  { code: "BM", locale: "BM", lang: "ms", name: "Bahasa Melayu" },
+  { code: "ZH", locale: "ZH", lang: "zh-Hans", name: "中文" },
+];
 
 /* Defined in lib/paths.ts and re-exported here, so importing it from
    "@/lib/content" keeps working. See the note there. */
@@ -132,6 +239,24 @@ export const SEO = {
     description:
       "Speak to MEVO Malaysia about aluminium windows and doors: send an enquiry, call 014 - 879 7371, or visit the Shah Alam showroom.",
   },
+  story: {
+    path: "/our-story",
+    title: "Our Story",
+    description:
+      "Established 2004, listed on Bursa Malaysia 2006: how P.A. Group grew from an aluminium extruder into the group behind MEVO Malaysia's window and door systems.",
+  },
+  services: {
+    path: "/services",
+    title: "Services & Features",
+    description:
+      "Architectural consultation, custom system selection, supply, certified installation and after-sales service for aluminium windows and doors in Malaysia.",
+  },
+  projects: {
+    path: "/our-projects",
+    title: "Our Projects",
+    description:
+      "Aluminium windows and doors from MEVO Malaysia in completed homes, commercial spaces and facades: casement, panoramic, sliding and entry systems in place.",
+  },
 };
 
 /**
@@ -179,6 +304,81 @@ export const SEO_ZH = {
     title: "联系我们",
     description:
       "就铝合金门窗事宜联系 MEVO 马来西亚：在线咨询、致电 014 - 879 7371，或莅临莎阿南展厅。",
+  },
+  story: {
+    path: "/zh/our-story",
+    title: "我们的故事",
+    description:
+      "2004 年成立，2006 年于马来西亚交易所主板上市：P.A. Group 如何从铝型材挤压商成长为 MEVO 马来西亚门窗业务背后的集团。",
+  },
+  services: {
+    path: "/zh/services",
+    title: "我们的服务",
+    description:
+      "建筑咨询、定制设计与系统选型、供应与项目协调、持证安装及售后服务 —— 马来西亚铝合金门窗的全流程服务。",
+  },
+  projects: {
+    path: "/zh/our-projects",
+    title: "我们的项目",
+    description:
+      "MEVO 马来西亚铝合金门窗在已完成住宅、商业空间与建筑幕墙中的实景：平开、全景、推拉与入户系统。",
+  },
+};
+
+/**
+ * The Malay head copy, for the three routed /bm pages.
+ *
+ * A full object rather than a partial overlay, for the same reason SEO_ZH is:
+ * metadata is read on the server by `generateMetadata`, outside React, so there
+ * is no `useCopy` to merge it.
+ *
+ * `path` carries the /bm prefix and English segments beneath it — /bm/contact,
+ * not /bm/hubungi. That is the shape /zh already uses, and it is the one that
+ * keeps PAIRED_PATHS honest: the pairing is computed by stripping a prefix, so
+ * a translated segment would need a lookup table per language and would break
+ * hreflang the first time one drifted.
+ *
+ * `title` carries no brand, where SEO.home.title does. The template appends one
+ * to child segments, and app/(bm)/bm/page.tsx is a child of the layout that
+ * defines it — see the same note on SEO_ZH.
+ */
+export const SEO_BM = {
+  titleTemplate: "%s | MEVO Malaysia",
+  home: {
+    path: "/bm",
+    title: "Tingkap & Pintu Aluminium Malaysia",
+    description:
+      "Sistem tingkap, pintu dan sunroom aluminium berprestasi tinggi untuk rumah dan projek pembangunan di Malaysia. Sistem MEVO dibekal, dipasang dan diselenggara dari Shah Alam.",
+  },
+  products: {
+    path: "/bm/our-products",
+    title: "Sistem Tingkap & Pintu Aluminium",
+    description:
+      "Terokai 20 sistem tingkap dan pintu MEVO: casement, awning, gelangsar, panoramik, bifold, pintu utama, sunroom dan aluminium bersalut kayu. Spesifikasi penuh.",
+  },
+  contact: {
+    path: "/bm/contact",
+    title: "Hubungi Kami",
+    description:
+      "Hubungi MEVO Malaysia tentang tingkap dan pintu aluminium: hantar pertanyaan, telefon 014 - 879 7371, atau kunjungi bilik pameran kami di Shah Alam.",
+  },
+  story: {
+    path: "/bm/our-story",
+    title: "Kisah Kami",
+    description:
+      "Ditubuhkan 2004, tersenarai di Bursa Malaysia 2006: bagaimana P.A. Group berkembang daripada pengekstrud aluminium kepada kumpulan di sebalik MEVO Malaysia.",
+  },
+  services: {
+    path: "/bm/services",
+    title: "Perkhidmatan Kami",
+    description:
+      "Perundingan seni bina, pemilihan sistem tersuai, pembekalan, pemasangan bertauliah dan perkhidmatan selepas jualan untuk tingkap dan pintu aluminium di Malaysia.",
+  },
+  projects: {
+    path: "/bm/our-projects",
+    title: "Projek Kami",
+    description:
+      "Tingkap dan pintu aluminium MEVO Malaysia dalam rumah, ruang komersial dan fasad yang telah siap: sistem casement, panoramik, gelangsar dan pintu utama.",
   },
 };
 
@@ -228,6 +428,31 @@ export const HERO_ZH: Partial<typeof HERO> = {
   heading: "P.A. Projects x MEVO 马来西亚 —— 铝合金门窗系统专家",
 };
 
+/**
+ * The hero in Malay.
+ *
+ * "Mampu Milik" rather than a literal "Berpatutan" for Affordable: it is the
+ * phrase Malaysian housing and property copy actually uses, and this is a line
+ * about price on a page selling to homeowners.
+ *
+ * Split on the same three beats, so the scrubbed hero timeline needs no change:
+ * three words in, three words out. The third is two words long in Malay where
+ * it is one in English and Chinese — it is the last word, which holds on screen
+ * rather than travelling through the slot, so it has the room.
+ *
+ * `heading` is the real sr-only h1 and is translated, for the reason HERO_ZH
+ * gives: on a page with its own URL the h1 is the strongest single statement it
+ * makes about what it is.
+ */
+export const HERO_BM: Partial<typeof HERO> = {
+  tagline: "Inovasi. Prestasi. Mampu Milik.",
+  taglineWords: ["Inovasi.", "Prestasi.", "Mampu Milik."],
+  subheading:
+    "Mentakrif Semula Kehidupan Moden Melalui Sistem Tingkap & Pintu Berprestasi Tinggi",
+  heading:
+    "P.A. Projects x MEVO Malaysia — pakar tingkap dan pintu aluminium",
+};
+
 export const BACKGROUND = {
   heading: "Industry Leadership & Background",
   /** One photograph per paragraph, swapped as the pinned section scrolls. */
@@ -268,6 +493,57 @@ export const BACKGROUND_ZH: Partial<typeof BACKGROUND> = {
     "在 MEVO 马来西亚，我们坚信门窗不仅仅是建筑构件——它们塑造着人们的生活、工作以及体验环境的方式。",
     "作为 MEVO 优质系统的独家总经销商和战略合作伙伴，我们提供集美观、舒适、耐用、节能和长期价值于一体的综合解决方案。结合先进的工程技术、现代建筑美学与可靠的性能，MEVO 通过专为现代生活方式设计的创新门窗和建筑解决方案，打造舒适、节能且时尚的居住空间。",
   ],
+};
+
+/**
+ * The same section in Malay — and a translation of the ENGLISH paragraphs, not
+ * of the Chinese ones. The two are different copy: the Chinese panel is the
+ * client's own brand pitch, the English is the corporate history. The history
+ * is the checkable one, so it is what the third language carries.
+ */
+export const BACKGROUND_BM: Partial<typeof BACKGROUND> = {
+  heading: "Kepimpinan Industri & Latar Belakang",
+  paragraphs: [
+    "Ditubuhkan pada 2004 dan tersenarai di Pasaran Utama Bursa Malaysia pada 2006; P.A. Resources Berhad (P.A. Group) ialah sebuah syarikat Malaysia yang terkemuka dalam aplikasi aluminium seni bina dan perindustrian. Dengan lebih dua dekad kepakaran yang terbukti, Kumpulan ini telah berkembang daripada pengeluar ekstrusi aluminium khusus kepada sebuah kumpulan perindustrian bersepadu menegak. Operasi kami merangkumi peleburan bilet, reka bentuk alat dan acuan, ekstrusi berpresisi, rawatan permukaan dan penyelesaian tenaga solar. Beribu pejabat di Kuala Selangor, P.A. Group diiktiraf secara meluas di rantau ini kerana kualiti, kepimpinan dan kepakarannya dalam industri aluminium.",
+    "Selain itu, P.A. Group telah menjalin kerjasama strategik yang mendalam dengan MEVO Doors & Windows, sebuah jenama tingkap dan pintu terkemuka dari China, yang menjadi pembekal luar negara utama kami bagi produk tingkap dan pintu. Mengkhusus dalam penyelidikan dan pembangunan serta pembuatan tingkap dan pintu jimat tenaga dan rendah karbon, MEVO mengendalikan dua pusat operasi utama di Timur dan Selatan China, yang memberikan sokongan kukuh kepada perniagaan tingkap dan pintu global Kumpulan.",
+  ],
+};
+
+/**
+ * The product band on the home page: six panes of glass over one photograph,
+ * a product to a pane.
+ *
+ * There is no visible heading by design — the band is a field of product names
+ * and nothing else — so `heading` is rendered for screen readers only. Without
+ * it the section is an unnamed landmark holding six bare links.
+ *
+ * `href` is copy rather than a route helper because the two languages do not
+ * have the same pages behind it. English has a page per product at
+ * /our-products/[slug]; Chinese has the catalogue at /zh/our-products and no
+ * detail routes, so a Chinese reader is sent to the Chinese catalogue rather
+ * than out of their own language into an English page. When
+ * /zh/our-products/[slug] exists, this is the one line that changes.
+ */
+export const PRODUCT_GRID = {
+  heading: "Our Products",
+  /** Names each pane. The visible text is the product name alone, which reads
+      as a heading rather than as a link; this says where it goes. */
+  aria: (product: string) => `View ${product}`,
+  href: (slug: string) => `/our-products/${slug}`,
+};
+
+export const PRODUCT_GRID_ZH: Partial<typeof PRODUCT_GRID> = {
+  heading: "我们的产品",
+  aria: (product: string) => `查看 ${product}`,
+  href: () => "/zh/our-products",
+};
+
+/** Same rule as the Chinese overlay: there are no /bm product pages, so a pane
+    goes to the Malay catalogue rather than out of the reader's language. */
+export const PRODUCT_GRID_BM: Partial<typeof PRODUCT_GRID> = {
+  heading: "Produk Kami",
+  aria: (product: string) => `Lihat ${product}`,
+  href: () => "/bm/our-products",
 };
 
 /**
@@ -372,6 +648,60 @@ export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
   tagline: ["我们的承诺很简单：", "创新与性能交融。尊贵生活，触手可及。"],
 };
 
+/**
+ * All three parts and the closing commitment, in Malay.
+ *
+ * The performance grades keep their English level names and SI units — "Level
+ * 8", "1.5 W/m²K", "43dB" — for the reason the Chinese overlay gives: that is
+ * the standard's own notation, and it is read as a figure rather than as a
+ * word. "Level" specifically is left alone rather than rendered "Tahap",
+ * because it names a grade in a test standard, not a quantity.
+ */
+export const WHY_CHOOSE_BM: Partial<typeof WHY_CHOOSE> = {
+  parts: [
+    {
+      title: "Mengapa Pilih MEVO Malaysia",
+      items: [
+        "Pengeluar & Penjual Tempatan Pertama Sistem MEVO",
+        "Perkhidmatan Selepas Jualan yang Dipercayai & Boleh Diharap",
+        "Cuba Sebelum Anda Beli",
+        "Waranti Sehingga 15 Tahun",
+      ],
+    },
+    {
+      title: "10 USP Teras Kami",
+      items: [
+        "Gaya Hidup Senyap (Pengurangan Bunyi 43dB)",
+        "Gaya Hidup Kurang Haba (Level 8, 1.5 W/m²K)",
+        "Kecekapan Tenaga",
+        "Kalis Air Unggul (Level 6, ≥700 Pa)",
+        "Teknologi Perlindungan UV",
+        "Prestasi Keselamatan Unggul",
+        "Inovasi & Reka Bentuk Moden",
+        "Kualiti Premium dengan Waranti Sehingga 15 Tahun",
+        "Mampu Milik dengan Pelan Bayaran EPP Faedah 0%",
+        "Pasukan Pemasangan MEVO Profesional & Perkhidmatan Selepas Jualan",
+      ],
+    },
+    {
+      title: "6 Sorotan Prestasi Kejuruteraan",
+      items: [
+        "Rintangan Angin Level 9 (≥5000 Pa = 500 kgf/m²)",
+        "Kalis Udara Level 8 (Kebocoran Aliran Udara -67% hingga 96%)",
+        "Kalis Air Level 6 (≥700 Pa)",
+        "Penebat Haba Level 8 (1.5 W/m²K, CRF ≥75)",
+        "Penebat Akustik Level 5 (Pengurangan Bunyi 43dB)",
+        "Sistem Perkakasan Jerman Unggul",
+      ],
+      note: "Sistem Perkakasan Roto Jerman, Pemegang HOPPE, Sistem Rod Transmisi TECTUS / TPEO",
+    },
+  ],
+  tagline: [
+    "Komitmen kami mudah:",
+    "Inovasi Bertemu Prestasi. Kehidupan Premium yang Mampu Milik.",
+  ],
+};
+
 /** Product shot that overlaps the stat band. Exported from the Figma layout,
     a cut-out on transparency so the rules behind it stay visible. */
 export const STATS_IMAGE = {
@@ -451,10 +781,105 @@ export const STATS_ZH: typeof STATS = STATS.map((stat, i) => ({
   ...STATS_TEXT_ZH[i],
 }));
 
+/** The heading keeps its two-line break: the comma is where the layout draws
+    the line, in every language. */
+export const STATS_INTRO_BM: Partial<typeof STATS_INTRO> = {
+  heading: ["Inovasi Kejuruteraan,", "Terbukti Merentas Setiap Jenis Bangunan"],
+  body: "P.A. Group telah mengekstrusi aluminium sejak 2004, dan kerjasama kami dengan MEVO membawa sistem tingkap dan pintu yang setanding. Gabungan itu merangkumi lebih 10,000 projek siap di Malaysia, daripada unit kediaman tunggal hinggalah fasad bangunan penuh, disokong oleh pasukan perkhidmatan yang terus terlibat selepas serahan.",
+};
+
+/** Label and supporting line only; `value` and `suffix` carry over from STATS,
+    so the counter animates to the same figures in every language. */
+const STATS_TEXT_BM = [
+  {
+    label: "Tahun Pengalaman",
+    body: "Mengekstrusi aluminium sejak 2004, tersenarai di Pasaran Utama Bursa Malaysia sejak 2006.",
+  },
+  {
+    label: "Pelanggan Berpuas Hati",
+    body: "Diukur pada prestasi yang disampaikan, bukan janji: bunyi, haba, air dan angin semuanya diuji.",
+  },
+  {
+    label: "Projek Berjaya",
+    body: "Unit kediaman, bangunan komersial dan fasad bangunan tinggi disiapkan di seluruh Malaysia.",
+  },
+];
+
+export const STATS_BM: typeof STATS = STATS.map((stat, i) => ({
+  ...stat,
+  ...STATS_TEXT_BM[i],
+}));
+
 /** Was "To Get More Details", which is not idiomatic and read as a sentence
     fragment where /contact uses it as an <h2>. */
 export const CTA = "Speak to our team";
 export const CTA_ZH = "联系我们的团队";
+export const CTA_BM = "Hubungi pasukan kami";
+
+/**
+ * The enquiry band that closes every page.
+ *
+ * Mounted once in components/site/Shell.tsx, next to the header and the footer,
+ * so it is one band on twenty-eight routes rather than a section pasted into
+ * each of them. See components/site/EnquiryBand.tsx for the drawing it is set
+ * inside, and for why it is absent on /contact.
+ *
+ * `heading` is TWO STRINGS, not one with a full stop in the middle, and the
+ * component renders each as its own block. That is the whole line-break policy:
+ * the band is a wide, shallow field with a drawing around the copy, and a
+ * heading that wrapped to four lines on a laptop would burst the elevation it
+ * sits in. Two lines, at every width, in every language, by construction —
+ * STATS_INTRO takes the same approach for the same reason.
+ *
+ * `lede` is written to two lines and wants to stay there. It is not enforced
+ * the way the heading is, because a paragraph broken by hand reads as a poem;
+ * what holds it is length against the measure the component sets. Roughly 95
+ * characters is two lines at that measure, 120 is three, and three is what the
+ * band was made shorter to avoid. Translations should be checked against the
+ * rendered band rather than against this number, since a Chinese line of the
+ * same meaning is about half the characters.
+ *
+ * The tone is deliberately unbusinesslike. This is the last thing on the page,
+ * read by someone who has already looked at the products and is deciding
+ * whether writing in is going to be a whole procedure — so it asks for a photo
+ * or a rough idea rather than for a specification, and says what happens next.
+ *
+ * No value that exists in FOOTER is repeated here. The WhatsApp link is read
+ * from WHATSAPP by the component, the same rule /contact and /privacy follow,
+ * so there is one number to change rather than four.
+ */
+export const ENQUIRY = {
+  heading: ["Tell us about your project.", "We will take it from there."],
+  lede: "Send a drawing, a photo, or just a rough idea — we will come back with the systems that suit it.",
+  primary: "Send an enquiry",
+  /** WHATSAPP.label is "Chat on WhatsApp", the same words the header uses. Held
+      separately here so the translations have somewhere to go. */
+  secondary: WHATSAPP.label,
+  /** Set into the break in the dimension line above the elevation, where a
+      drawing carries its title. */
+  systemMark: "MEVO Aluminium Systems",
+};
+
+/** The Chinese band. The heading keeps its two lines and its order — the
+    invitation, then the reassurance. */
+export const ENQUIRY_ZH: Partial<typeof ENQUIRY> = {
+  heading: ["说说您在建的项目，", "剩下的交给我们。"],
+  lede: "一张图纸、一张照片，哪怕只是一个初步想法 —— 我们都会回复适合的系统方案。",
+  primary: "在线咨询",
+  secondary: "WhatsApp 咨询",
+  systemMark: "MEVO 铝合金系统",
+};
+
+/** The Malay band. Like every other Malay string on the site this is mine
+    rather than the client's, and wants a native speaker's eye before it
+    ships. */
+export const ENQUIRY_BM: Partial<typeof ENQUIRY> = {
+  heading: ["Beritahu kami projek anda.", "Kami uruskan selebihnya."],
+  lede: "Hantar lukisan, gambar, atau sekadar idea kasar — kami akan kembali dengan sistem yang sesuai.",
+  primary: "Hantar pertanyaan",
+  secondary: "Hubungi di WhatsApp",
+  systemMark: "Sistem Aluminium MEVO",
+};
 
 /**
  * The /contact page.
@@ -609,6 +1034,82 @@ export const CONTACT_ZH: Partial<typeof CONTACT> = {
   },
 };
 
+/**
+ * The contact page in Malay.
+ *
+ * Complete rather than partial, and it has to be, for the reason CONTACT_ZH
+ * gives: `useCopy` merges one level deep, so a half-filled `form` would replace
+ * the English `form` wholesale and take its untranslated siblings with it.
+ *
+ * The errors keep the English originals' manner — instructions rather than
+ * diagnoses. "Alamat e-mel itu nampak tidak betul." rather than "Input tidak
+ * sah.", which is what a system says to itself.
+ *
+ * The phone number stays in its dialling form in every string: it is a number,
+ * not a word, and the digits are what a reader will key in.
+ *
+ * `consentLink` points at /privacy, which is English. That is a real seam and
+ * the honest one — the policy has no Malay version, so the label is translated
+ * and the document it opens is not pretended to be.
+ */
+export const CONTACT_BM: Partial<typeof CONTACT> = {
+  banner: {
+    heading: "Mari bincangkan projek anda",
+    lede: "Tingkap dan pintu untuk sebuah rumah, projek pembangunan atau fasad komersial. Beritahu kami apa yang sedang anda bina dan kami akan kembali dengan sistem yang sesuai.",
+  },
+  details: {
+    heading: CTA_BM,
+    blurb:
+      "Hubungi pasukan kami terus, atau hantar borang dan kami akan membalas dalam satu hari bekerja.",
+    labels: {
+      phone: "Telefon",
+      email: "E-mel",
+      address: "Bilik pameran & pejabat",
+      company: "Didaftarkan sebagai",
+    },
+  },
+  form: {
+    heading: "Hantar pertanyaan",
+    hint: "Nombor telefon atau e-mel — mana-mana yang anda lebih suka kami gunakan.",
+    labels: {
+      name: "Nama",
+      email: "E-mel",
+      phone: "Telefon",
+      message: "Apa yang boleh kami bantu?",
+    },
+    placeholders: {
+      message:
+        "Projek tersebut, bilik atau fasad yang terlibat, dan sebarang jangka masa yang anda rancangkan.",
+    },
+    submit: "Hantar pertanyaan",
+    submitting: "Menghantar",
+    retry: "Cuba lagi",
+    errors: {
+      name: "Beritahu kami pertanyaan ini daripada siapa.",
+      contact: "Tambah nombor telefon atau e-mel supaya kami boleh membalas.",
+      email: "Alamat e-mel itu nampak tidak betul.",
+      phone: "Nombor telefon itu nampak tidak betul.",
+      message: "Ceritakan sedikit tentang projek anda.",
+      failed:
+        "Pertanyaan itu tidak terhantar. Sila telefon 014 - 879 7371 atau hubungi kami di WhatsApp, dan kami akan teruskan dari sana.",
+      rateLimited:
+        "Itu beberapa pertanyaan dalam masa yang singkat. Sila telefon 014 - 879 7371 jika ia mendesak.",
+    },
+    sent: {
+      heading: "Pertanyaan dihantar",
+      body: "Kami sudah menerimanya, dan akan membalas dalam satu hari bekerja. Jika ia mendesak, telefon 014 - 879 7371.",
+      again: "Hantar satu lagi",
+    },
+    status: {
+      submitting: "Menghantar pertanyaan anda.",
+      sent: "Pertanyaan dihantar.",
+      error: "Pertanyaan anda tidak dapat dihantar.",
+    },
+    consent: "Dengan menghantarnya anda bersetuju dengan",
+    consentLink: "Dasar Privasi & Kuki",
+  },
+};
+
 export const SERVICES = {
   heading: "Our Services",
   /** One photograph per service. The pinned runway shows exactly one pair at a
@@ -688,6 +1189,37 @@ export const SERVICES_ZH: Partial<typeof SERVICES> = {
   /* Was untranslated, so the ZH panel labels read "Our Services [01]". */
   heading: "我们的服务",
   items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_ZH[i] })),
+};
+
+/** Title and body only, in the same order as SERVICES.items. The photographs
+    and their alt text carry over from the English entries, so the two lists
+    cannot drift apart. */
+const SERVICES_ITEMS_BM = [
+  {
+    title: "Perundingan Seni Bina",
+    body: "Kami menyediakan perundingan profesional untuk memahami keperluan reka bentuk, keperluan projek dan jangkaan prestasi anda — untuk pemilik rumah, arkitek, pereka dalaman dan pemaju.",
+  },
+  {
+    title: "Reka Bentuk Tersuai & Pemilihan Sistem",
+    body: "Setiap projek adalah unik. Pasukan kami menyediakan penyelesaian tersuai yang sepadan dengan konsep seni bina dan keperluan gaya hidup.",
+  },
+  {
+    title: "Pembekalan & Penyelesaian Projek",
+    body: "Daripada projek kediaman kecil hingga pembangunan berskala besar, MEVO MALAYSIA menyediakan penyelesaian pembekalan yang boleh diharap dengan penyelarasan projek yang profesional.",
+  },
+  {
+    title: "Pemasangan & Sokongan Teknikal",
+    body: "Pasukan pemasangan kami, semuanya Pemasang MEVO Bertauliah, memastikan setiap sistem berfungsi mengikut jangkaan reka bentuknya.",
+  },
+  {
+    title: "Perkhidmatan Selepas Jualan",
+    body: "Sokongan pelanggan yang khusus dan panduan penyelenggaraan untuk kepuasan jangka panjang.",
+  },
+];
+
+export const SERVICES_BM: Partial<typeof SERVICES> = {
+  heading: "Perkhidmatan Kami",
+  items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_BM[i] })),
 };
 
 export const PROJECTS = {
@@ -771,6 +1303,31 @@ export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
   })),
 };
 
+/** Tile labels only; every photograph's `src`, `alt` and intrinsic size carry
+    over from PROJECTS. Unlike the Chinese labels — which are the client's own
+    names for these six shots — these are translations of the English, since
+    there is no Malay set to take them from. */
+const PROJECT_LABELS_BM = [
+  "Tingkap Casement",
+  "Sunroom",
+  "Pintu Panoramik Nipis",
+  "Sistem Pintu & Tingkap",
+  "Pintu Gelangsar Dalaman",
+  "Pintu Utama Chasing Light",
+];
+
+export const PROJECTS_BM: Partial<typeof PROJECTS> = {
+  heading: "Projek Kami",
+  blurb:
+    "Daripada rumah hingga ruang komersial, terokai tingkap dan pintu aluminium yang direka untuk setiap projek yang unik.",
+  cta: { ...PROJECTS.cta, label: "Hubungi kami", href: bmPath(PROJECTS.cta.href) },
+  openLabel: (project: string) => `Buka ${project}`,
+  images: PROJECTS.images.map((image, i) => ({
+    ...image,
+    label: PROJECT_LABELS_BM[i],
+  })),
+};
+
 export const FOOTER = {
   brand: "MEVO MALAYSIA",
   /**
@@ -821,6 +1378,13 @@ export const FOOTER_ZH: Partial<typeof FOOTER> = {
       the site no longer says. */
   blurb:
     "专为马来西亚气候打造的铝合金门窗系统 —— 由 MEVO 马来西亚莎阿南展厅提供供应、安装与售后服务。",
+};
+
+/** Only the standfirst, for the reason the Chinese overlay gives: everything
+    else in the footer is a proper noun, an address or a number. */
+export const FOOTER_BM: Partial<typeof FOOTER> = {
+  blurb:
+    "Sistem tingkap dan pintu aluminium yang direka untuk iklim Malaysia — dibekal, dipasang dan diselenggara oleh MEVO Malaysia dari bilik pameran kami di Shah Alam.",
 };
 
 /**
@@ -1084,6 +1648,18 @@ export const PRODUCTS_PAGE = {
   viewsLabel: "Views",
   /** Names the list/grid switch for screen readers. */
   viewLabel: "Catalog layout",
+  /** Names the system filter for screen readers, and its three buttons. The
+      ids are `System` in lib/products.ts, which owns what each one selects;
+      only the words live here. The two product ones are the same words the
+      header's Our Products submenu uses, deliberately — a reader who opened
+      that menu and arrived here should find the halves called what they were
+      called a click ago. */
+  filterLabel: "Filter by system",
+  filters: [
+    { id: "all" as const, label: "All" },
+    { id: "window" as const, label: "Window System" },
+    { id: "door" as const, label: "Door System" },
+  ],
   /** Closes every expanded product. The same words the projects strip ends on,
       so the one thing the site asks for is asked for in one way. `aria` names
       the product in the label, because twenty buttons all reading "Contact us"
@@ -1113,9 +1689,46 @@ export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
   catalogLabel: "产品目录",
   viewsLabel: "视图",
   viewLabel: "目录布局",
+  filterLabel: "按系统筛选",
+  filters: [
+    { id: "all" as const, label: "全部" },
+    { id: "window" as const, label: "窗系统" },
+    { id: "door" as const, label: "门系统" },
+  ],
   cta: {
     label: "联系我们",
     href: "/zh/contact",
     aria: (product: string) => `就 ${product} 联系我们`,
+  },
+};
+
+/**
+ * The catalogue chrome in Malay.
+ *
+ * The product data needs nothing here: lib/products.ts carries English and
+ * Chinese on its spec bullets and ProductCatalog prints both in every locale.
+ * That is the one part of the site that is not translated for Malay, and it is
+ * a real gap rather than an oversight — see the note in lib/products.ts.
+ *
+ * `cta.href` points at /bm/contact, so a reader who reaches the enquiry form
+ * from the Malay catalogue stays in Malay.
+ */
+export const PRODUCTS_PAGE_BM: Partial<typeof PRODUCTS_PAGE> = {
+  heading: "Produk Kami",
+  subheading:
+    "Tingkap casement dan gelangsar, pintu panoramik dan pintu utama, serta sunroom — dibekal dan dipasang untuk projek kediaman, bangunan komersial dan fasad bangunan tinggi di seluruh Malaysia. Disokong oleh dua dekad ekstrusi aluminium dan pasukan pemasangan bertauliah.",
+  catalogLabel: "Katalog produk",
+  viewsLabel: "Paparan",
+  viewLabel: "Susun atur katalog",
+  filterLabel: "Tapis mengikut sistem",
+  filters: [
+    { id: "all" as const, label: "Semua" },
+    { id: "window" as const, label: "Sistem Tingkap" },
+    { id: "door" as const, label: "Sistem Pintu" },
+  ],
+  cta: {
+    label: "Hubungi kami",
+    href: "/bm/contact",
+    aria: (product: string) => `Hubungi kami tentang ${product}`,
   },
 };

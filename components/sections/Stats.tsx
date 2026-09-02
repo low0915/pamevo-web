@@ -7,8 +7,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   STATS,
   STATS_ZH,
+  STATS_BM,
   STATS_INTRO,
   STATS_INTRO_ZH,
+  STATS_INTRO_BM,
   STATS_IMAGE,
 } from "@/lib/content";
 import { useCopy, useLocale } from "@/lib/locale";
@@ -99,12 +101,12 @@ const RULE_V = `${RULE} lg:h-full lg:w-0 lg:origin-top lg:justify-self-start lg:
 export function Stats() {
   const rootRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const intro = useCopy(STATS_INTRO, STATS_INTRO_ZH);
+  const intro = useCopy(STATS_INTRO, { ZH: STATS_INTRO_ZH, BM: STATS_INTRO_BM });
   /* A straight swap rather than `useCopy`: STATS is a bare array, so there is
      no object for the overlay to merge onto. The figures are identical in both,
      so the count timeline below still reads them from STATS. */
   const { locale } = useLocale();
-  const stats = locale === "ZH" ? STATS_ZH : STATS;
+  const stats = locale === "ZH" ? STATS_ZH : locale === "BM" ? STATS_BM : STATS;
 
   // The phone curtain pins this band by its foot rather than its head, or
   // everything below its first screen would be stranded - see `.band-frame` in

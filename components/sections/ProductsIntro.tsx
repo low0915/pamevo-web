@@ -1,4 +1,8 @@
-import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH } from "@/lib/content";
+import {
+  PRODUCTS_PAGE,
+  PRODUCTS_PAGE_ZH,
+  PRODUCTS_PAGE_BM,
+} from "@/lib/content";
 import type { Locale } from "@/lib/paths";
 import { PageBanner } from "@/components/sections/PageBanner";
 
@@ -12,8 +16,19 @@ import { PageBanner } from "@/components/sections/PageBanner";
  */
 export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
   /* A server component, so the locale arrives as a prop rather than through
-     the client-side context — the same rule ContactBody follows. */
-  const copy = locale === "ZH" ? { ...PRODUCTS_PAGE, ...PRODUCTS_PAGE_ZH } : PRODUCTS_PAGE;
+     the client-side context — the same rule ContactBody follows.
+
+     Keyed off a table rather than a chain of ternaries, so a language added to
+     `Locale` that is missed here is a type error rather than an English banner
+     over a translated page. That is the failure this had: it knew about ZH and
+     rendered English for anything else, which is invisible in a build and
+     obvious only to the reader it is wrong for. */
+  const TRANSLATIONS: Record<Locale, Partial<typeof PRODUCTS_PAGE>> = {
+    EN: {},
+    BM: PRODUCTS_PAGE_BM,
+    ZH: PRODUCTS_PAGE_ZH,
+  };
+  const copy = { ...PRODUCTS_PAGE, ...TRANSLATIONS[locale] };
 
   return (
     <PageBanner

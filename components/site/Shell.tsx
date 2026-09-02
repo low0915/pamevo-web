@@ -1,5 +1,6 @@
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { EnquiryBand } from "@/components/site/EnquiryBand";
 import { Grain } from "@/components/ui/Grain";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { CookieConsent } from "@/components/site/CookieConsent";
@@ -51,6 +52,13 @@ export function Shell({
         <LocaleProvider locale={locale}>
           <Header />
           {children}
+          {/* The closing enquiry, above the footer on every route. Here rather
+              than at the foot of each page for the reason the header is here:
+              one band, twenty-eight routes, three languages, and no copy of it
+              anywhere to fall out of step. It reads the locale from the
+              provider it sits inside, and takes itself off /contact — see
+              EnquiryBand. */}
+          <EnquiryBand />
           <Footer />
         </LocaleProvider>
         <Grain />

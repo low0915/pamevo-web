@@ -6,8 +6,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "@phosphor-icons/react/dist/ssr";
-import { NAV, NAV_ZH, LOCALES, LOGO_ALT } from "@/lib/content";
-import { counterpart, useLocale } from "@/lib/locale";
+import { NAV, NAV_ZH, NAV_BM, LOCALE_MENU, LOGO_ALT } from "@/lib/content";
+import { counterpart, isCurrentPath, useLocale } from "@/lib/locale";
+import { Flag } from "@/components/ui/Flag";
 import { Z } from "@/lib/z";
 import { holdAutoplay, releaseAutoplay } from "@/lib/autoplay";
 import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
@@ -19,7 +20,18 @@ const EASE_OUT = [0.23, 1, 0.32, 1] as const;
     is the whole screen, and a list of two items at 24px in the middle of it
     reads as a panel that failed to size itself. */
 const NAV_LINK =
-  "block py-6 text-[2.25rem] leading-[1.05] font-medium tracking-tighter text-ink";
+  "relative block py-6 text-[2.25rem] leading-[1.05] font-medium tracking-tighter text-ink";
+
+/** The same mark the island carries, at this surface's scale: 2px where that
+    one is a hairline, because it sits under 36px type rather than under 14px,
+    and short rather than full-width so it reads as a mark on the label rather
+    than as another of the rules that divide the rows. */
+const CURRENT_MARK = (
+  <span
+    aria-hidden
+    className="pointer-events-none absolute bottom-5 left-0 h-0.5 w-10 bg-ink"
+  />
+);
 
 /** A hairline on the frost. The `--line` token is mixed for the page's own
     near-white ground and all but disappears here. */
@@ -55,7 +67,7 @@ export function MobileNav({
   const pathname = usePathname();
   /* See the note in Header: NAV is a bare array, so this is a swap rather than
      an overlay. Both surfaces read the same two lists. */
-  const nav = active === "ZH" ? NAV_ZH : NAV;
+  const nav = active === "ZH" ? NAV_ZH : active === "BM" ? NAV_BM : NAV;
 
   // The page is held still for as long as the menu is up. Three things, and
   // all three are needed: the body overflow refuses a reader's gesture, the
@@ -145,8 +157,19 @@ export function MobileNav({
                   }}
                 >
                   {item.href ? (
-                    <Link href={item.href} onClick={onClose} className={NAV_LINK}>
+                    <Link
+                      href={item.href}
+                      /* The sheet said nothing about where the reader was. It
+                         is the whole navigation on a phone, so it is the one
+                         surface that most needs to. */
+                      aria-current={
+                        isCurrentPath(pathname, item.href) ? "page" : undefined
+                      }
+                      onClick={onClose}
+                      className={NAV_LINK}
+                    >
                       {item.label}
+                      {isCurrentPath(pathname, item.href) && CURRENT_MARK}
                     </Link>
                   ) : (
                     <a
@@ -162,9 +185,13 @@ export function MobileNav({
                     <ul className={`${RULE} mb-5 ml-1 grid gap-1 border-l pl-4`}>
                       {item.children.map((child) => (
                         <li key={child.label}>
+                          {/* A plain anchor for the reason the island's copy
+                              of this gives: these are fragment links the
+                              catalogue reads, and a client navigation to a
+                              fragment fires no event for it to read. */}
                           <a
-                            href="#"
-                            aria-disabled="true"
+                            href={child.href}
+                            aria-disabled={child.href ? undefined : "true"}
                             onClick={onClose}
                             className="block py-1 text-base text-ink-2"
                           >
@@ -178,39 +205,77 @@ export function MobileNav({
               ))}
             </ul>
           </nav>
-
+          {/* The same three languages the header switch offers, and the same
+              three states — see LOCALE_MENU in lib/content.ts. A row of chips
+              rather than the dropdown the header uses: this sheet is the whole
+              screen and has the width for all three, and a menu inside a menu
+              would be a control opened to reach a control. */}
           <div className="flex shrink-0 gap-1 px-8 pt-6 pb-10 sm:px-9">
-            {LOCALES.map((locale) => {
-              const current = locale === active;
-              const className = `rounded-full px-3 py-1 font-mono text-xs transition-transform duration-[160ms] ease-[var(--ease-out)] ${
-                current ? "bg-ink text-bg" : "text-ink-3 active:scale-[0.97]"
+            {LOCALE_MENU.map((entry) => {
+              const current = entry.locale === active;
+              const className = `flex items-center rounded-full px-3 py-2 transition-transform duration-[160ms] ease-[var(--ease-out)] ${
+                current
+                  ? "bg-ink"
+                  : entry.locale
+                    ? "border border-[rgb(16_18_21/0.12)] active:scale-[0.97]"
+                    : "border border-[rgb(16_18_21/0.12)] opacity-45"
               }`;
+              /* The flag is `aria-hidden` wherever it is used, so each chip
+                 carries the language's own name for anything reading the page.
+                 The header's switch has the name on the row beside the flag and
+                 needs no equivalent; here the chip is the flag and nothing
+                 else. */
+              const body = (
+                <>
+                  <Flag code={entry.code} />
+                  <span className="sr-only" lang={entry.lang}>
+                    {entry.name}
+                  </span>
+                </>
+              );
 
               /* Not a link when it is the language already being read — see the
                  same control in Header.tsx for why. */
               if (current) {
                 return (
                   <span
-                    key={locale}
+                    key={entry.code}
                     aria-current="true"
-                    lang={locale === "ZH" ? "zh-Hans" : "en"}
                     className={className}
                   >
-                    {locale}
+                    {body}
                   </span>
+                );
+              }
+
+              /* Named but not built. Held at half strength rather than left
+                 looking live: on this surface there is no hover to reveal that
+                 nothing happens, and a chip that looks like the others and does
+                 nothing reads as a broken menu rather than as a language on the
+                 way. */
+              if (!entry.locale) {
+                return (
+                  <a
+                    key={entry.code}
+                    href="#"
+                    aria-disabled="true"
+                    onClick={onClose}
+                    className={className}
+                  >
+                    {body}
+                  </a>
                 );
               }
 
               return (
                 <a
-                  key={locale}
-                  href={counterpart(pathname, locale)}
-                  hrefLang={locale === "ZH" ? "zh-Hans" : "en"}
-                  lang={locale === "ZH" ? "zh-Hans" : "en"}
+                  key={entry.code}
+                  href={counterpart(pathname, entry.locale)}
+                  hrefLang={entry.lang}
                   onClick={onClose}
                   className={className}
                 >
-                  {locale}
+                  {body}
                 </a>
               );
             })}

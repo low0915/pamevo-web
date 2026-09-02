@@ -23,12 +23,19 @@ const AUTOPLAY_DELAY = 0.25;
  *  swipe, a scroll key — or after a tab comes back to the foreground, before it
  *  picks the run up again from wherever the page now is. Long enough that a
  *  deliberate scroll is not fought, short enough that the section carries on by
- *  itself if the reader simply stops. */
-const RESUME_DELAY = 1.2;
+ *  itself if the reader simply stops.
+ *
+ *  Deliberately unhurried. A reader who takes the page has usually taken it to
+ *  read something, and a run that comes back the moment their hand stops reads
+ *  as the page arguing with them — the more so now that a run reaches back for
+ *  the page a reader has scrolled up out of. Several seconds of stillness
+ *  first, and the same movement reads as the page carrying on. */
+const RESUME_DELAY = 3;
 
 /** A touch is given longer than a wheel: the fling that follows it is the
- *  browser's own momentum, which this cannot see and must not scroll against. */
-const TOUCH_RESUME_DELAY = 2;
+ *  browser's own momentum, which this cannot see and must not scroll against —
+ *  and on a phone the finger is resting on the page it is reading. */
+const TOUCH_RESUME_DELAY = 4.5;
 
 /** Keys that scroll. Anything else is typing, and no reason to stand back. */
 const SCROLL_KEYS = new Set([
@@ -48,6 +55,14 @@ const LERP = 0.1;
 /** Longest frame the autoplay will account for. A tab left in the background,
  *  or one very slow paint, would otherwise come back as a single large jump. */
 const MAX_FRAME = 0.05;
+
+/** How far above its own start a run underway will still reach for the page,
+ *  in viewport heights. A run begins at the top of its section and its sticky
+ *  frame is one viewport tall, so a page this far above the start is a section
+ *  just leaving the bottom of the screen: still in sight, and still the thing
+ *  being read. Past that the reader has gone somewhere else, and the run lets
+ *  go rather than hauling them back. */
+const RECLAIM = 1;
 
 /** What a section's `data-autoplay` pair resolves to once measured: the scroll
  *  range its scrubbed sequence occupies, and the pace to play it at. */
@@ -105,6 +120,12 @@ type Played = { engaged: number; done: boolean };
  * down, and it picks up again a beat after the last one, from wherever they
  * left it — never rewinding, never wrestling the wheel. Leaving the tab does
  * the same, so coming back does not begin with the page already moving.
+ *
+ * Wherever they left it, including above the run: a reader who scrolls back up
+ * out of a sequence still has it resumed for them, and the page eases back down
+ * into the section rather than stopping where they stood. That holds while the
+ * section is still on screen; scroll further back than that and the run lets go
+ * of the page, and engages again if they come back to it. See RECLAIM.
  *
  * Every run is armed again by the three things that mean "start over" — a load,
  * a navigation that arrives home, and the header logo, which on the home page
@@ -231,12 +252,37 @@ export function SmoothScroll() {
       for (const run of runs) {
         const progress = progressOf(run.section);
         if (progress.done) continue;
-        // Not reached yet — and nothing after it can have been, since the runs
-        // are in document order.
-        if (at < run.start) return;
         if (at >= run.end) {
           progress.done = true;
           continue;
+        }
+
+        // Above the run's start, which is two different situations.
+        //
+        // A run that has never played is simply not reached yet, and nothing
+        // after it can have been either, since the runs are in document order:
+        // the gap in front of it is the reader's own to scroll, and the
+        // autoplay waits at the edge of it.
+        //
+        // A run already underway is a different matter. A reader who scrolls
+        // back up out of one lands here, and this is where the autoplay used to
+        // park for good: every run before this one is `done` and so skipped,
+        // this one is refused for being ahead of the page, and nothing else
+        // moves the page — so the sequence stopped and never picked itself up
+        // again. It keeps the page instead, and eases back down into its
+        // section from wherever the reader left off, the same as it would from
+        // anywhere inside it.
+        //
+        // Only while the section is still on screen. A reader who has scrolled
+        // further than that has left the sequence rather than glanced back at
+        // it, so the run stands down — and, having kept no progress, engages
+        // afresh with its full opening beat if they return.
+        if (at < run.start) {
+          if (progress.engaged === 0) return;
+          if (run.start - at > window.innerHeight * RECLAIM) {
+            progress.engaged = 0;
+            return;
+          }
         }
 
         progress.engaged += dt;

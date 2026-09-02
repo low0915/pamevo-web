@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { BACKGROUND, BACKGROUND_ZH } from "@/lib/content";
+import { BACKGROUND, BACKGROUND_ZH, BACKGROUND_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -38,15 +38,31 @@ const SPEED = 0.25;
  *
  * The panel is the dark variant of the glass: a light frosted panel over this
  * photography washed out to near-white, so it is tinted dark and carries light
- * text instead, with a heavier blur since it has more image to dissolve.
+ * text instead, with a heavier blur since it has more image to dissolve. *
+ * `standalone` is this section as a PAGE rather than as a band in the home
+ * page's stack. Two things change and both have to: the curtain margin comes
+ * off — it is a pull-up over whatever sits above it on the home page, and on
+ * its own page there is nothing above it to ride over, so it would drag the
+ * section up off the top of the document — and the heading becomes the `h1`,
+ * because on its own page it is the page's own title rather than one band's
+ * label under the hero's.
  */
-export function Background() {
+export function Background({ standalone = false }: { standalone?: boolean }) {
   const rootRef = useRef<HTMLElement>(null);
-  const background = useCopy(BACKGROUND, BACKGROUND_ZH);
+  /* Capitalised because JSX reads a lowercase tag name as a literal element and
+     an uppercase one as a component; this has to be the former, held in a
+     variable, so the case is doing work rather than following a convention. */
+  const Heading = standalone ? "h1" : "h2";
+  const background = useCopy(BACKGROUND, { ZH: BACKGROUND_ZH, BM: BACKGROUND_BM });
 
   useEffect(() => {
     const section = rootRef.current;
     if (!section) return;
+    // Nothing below exists on /our-story: no pin, no scrub, no crossfade, and
+    // none of the elements the timeline reaches for. Guarded here rather than
+    // by not calling the hook, because the number of hooks a component runs
+    // cannot change between renders.
+    if (standalone) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -112,14 +128,123 @@ export function Background() {
     }, section);
 
     return () => ctx.revert();
-  }, []);
+  }, [standalone]);
+
+  /**
+   * /our-story: the same words, told as a page instead of as a mechanism.
+   *
+   * The home page's version is one pinned frame that holds still while 370svh
+   * of runway scrolls past it, crossfading photograph and paragraph at the
+   * halfway mark. That is a good band in a stack of bands and a bad page: a
+   * reader who came to /our-story from the nav wants to READ two paragraphs,
+   * and the scrubbed version hides the second one behind a scroll gesture, puts
+   * both inside a frame that clips, and reports progress through a rule that
+   * has nothing to be progress through when the section is the whole document.
+   *
+   * So the two steps become two sections and every part of the mechanism goes:
+   * no `sticky`, no ScrollTrigger, no crossfade, no progress rule, and no
+   * `data-autoplay` — which also takes this page off the autoplay's books,
+   * since that works by finding the attribute in the DOM.
+   *
+   * Each section is sized by its own content with a floor, rather than to the
+   * viewport. That is the fix for the clipping the pinned version had to fight:
+   * the long comments in the frame below are all about a heading gaining a
+   * fourth line on a 360px phone and pushing the panel's foot past an
+   * `overflow-hidden` edge. Nothing here clips, so nothing here can.
+   *
+   * The panels alternate — right under the heading, then left — so the second
+   * section is not the first one again with different words.
+   */
+  if (standalone) {
+    return (
+      <>
+        {background.images.map((image, i) => (
+          <section
+            key={image.src}
+            className="relative w-full overflow-hidden"
+          >
+            <Image
+              src={image.src}
+              alt={image.alt}
+              fill
+              sizes="100vw"
+              quality={78}
+              className="graded-soft object-cover object-[50%_35%]"
+            />
+
+            {/* Only the first section carries one, and only because it carries
+                the heading. White type over this photography is 1.8:1 on the
+                bright corner it sits in — the note on the pinned frame below
+                has the measurements. The second section's only light text is
+                inside the dark glass panel, which brings its own ground. */}
+            {i === 0 && (
+              <div
+                aria-hidden
+                className="absolute inset-x-0 top-0 h-[62%]"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgb(12 14 17 / 0.62) 0%, rgb(12 14 17 / 0.34) 45%, rgb(12 14 17 / 0) 100%)",
+                }}
+              />
+            )}
+
+            {/* `pt-24` on the first section is the fixed header island, which
+                owns the first 80px of the viewport. The rest is a floor, not a
+                height: `min-h` lets a long paragraph or a narrow phone make the
+                section taller instead of clipping it. */}
+            <div
+              className={`relative mx-auto flex w-full max-w-[1440px] flex-col px-6 pb-16 md:min-h-[80svh] md:px-8 md:pb-24 lg:px-10 ${
+                i === 0 ? "pt-24 md:pt-32" : "pt-16 md:justify-center md:pt-24"
+              }`}
+            >
+              {i === 0 && (
+                <h1 className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]">
+                  {background.heading}
+                </h1>
+              )}
+
+              {/* Right on the first, left on the second. `mt-auto` on the first
+                  drops it to the foot of the section, under the heading; the
+                  second has no heading to sit under, so it centres instead. */}
+              <div
+                className={`mt-8 w-full md:w-[min(52%,644px)] ${
+                  i === 0 ? "md:mt-auto md:self-end" : "md:mt-0 md:self-start"
+                }`}
+              >
+                <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:p-9">
+                  <p className="text-base leading-relaxed text-bg">
+                    {background.paragraphs[i]}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        ))}
+      </>
+    );
+  }
 
   return (
     <section
       ref={rootRef}
       data-autoplay={SEQUENCE}
       data-autoplay-speed={SPEED}
-      className="relative h-[370svh] motion-reduce:h-auto"
+      // Rises over the product band's held frame, the same way WhyChoose rises
+      // over this one. -110svh puts the first sight of it 40svh into that
+      // band's 150svh of hold and lands it flush 10svh before the band
+      // releases, so the release always happens behind a covered screen.
+      //
+      // The frame below is 100lvh and opaque, and it is the section's own top
+      // edge, so the rising edge needs no ground of its own — unlike WhyChoose,
+      // whose runway shows past its frame. `sheet` is the shadow that edge
+      // carries as it lifts: without it a full-bleed photograph sliding over a
+      // full-bleed photograph reads as a cut rather than as a curtain.
+      //
+      // All of which is the home page's arrangement, and none of it applies on
+      // /our-story — see `standalone`.
+      className={`relative h-[370svh] motion-reduce:h-auto ${
+        standalone ? "" : "sheet -mt-[110svh] motion-reduce:mt-0"
+      }`}
     >
       {/* `lvh`, where the runway around it is `svh`. The two are doing
           different jobs: the runway is a length in the scroll chain and has to
@@ -185,9 +310,9 @@ export function Background() {
               narrow end. The desktop sizes come down a step with it - this is a
               section heading over photography, not the page's own title, and it
               was competing with the hero. */}
-          <h2 className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white max-md:mt-auto md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]">
+          <Heading className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white max-md:mt-auto md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]">
             {background.heading}
-          </h2>
+          </Heading>
 
           {/* The right padding is the 24px rail plus its 36px gap that the
               scroll indicator used to occupy. Held rather than reclaimed, so

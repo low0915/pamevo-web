@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CONTACT, CONTACT_ZH } from "@/lib/content";
+import { CONTACT, CONTACT_ZH, CONTACT_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
 const FIELD =
@@ -47,7 +47,7 @@ export function ContactForm() {
      renders Chinese under /zh without a second component. CONTACT_ZH supplies
      every nested object in full — `useCopy` merges one level deep, so a partial
      `form` would replace the English one and lose its siblings. */
-  const contact = useCopy(CONTACT, CONTACT_ZH);
+  const contact = useCopy(CONTACT, { ZH: CONTACT_ZH, BM: CONTACT_BM });
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [values, setValues] = useState({

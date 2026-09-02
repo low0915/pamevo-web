@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { SEO, SEO_ZH, SITE } from "@/lib/content";
+import { SEO, SEO_ZH, SEO_BM, SITE } from "@/lib/content";
 import { PRODUCTS } from "@/lib/products";
 
 /**
@@ -20,6 +20,9 @@ const UPDATED = {
   products: "2026-08-27",
   contact: "2026-08-27",
   privacy: "2026-08-27",
+  story: "2026-09-01",
+  services: "2026-09-01",
+  projects: "2026-09-01",
 } as const;
 
 /**
@@ -29,20 +32,28 @@ const UPDATED = {
 const asset = (src: string) => `${SITE.url}${encodeURI(src)}`;
 
 /**
- * The hreflang pair for a page that has one, in the form the sitemap wants.
+ * The hreflang set for a page that has one, in the form the sitemap wants.
  *
- * Repeated on BOTH URLs of a pair, and each set includes the URL it sits on.
- * That is not redundancy — hreflang has to be reciprocal or Google discards the
- * annotation, and a page that does not name itself is treated as an incomplete
- * set.
+ * Repeated on ALL THREE URLs of a set, and each one includes the URL it sits
+ * on. That is not redundancy — hreflang has to be reciprocal or Google discards
+ * the annotation, and a page that does not name itself is treated as an
+ * incomplete set. Three languages means each URL names three.
+ *
+ * `ms`, not `bm`: the URL segment is /bm because that is what the language is
+ * called here, and the tag is `ms` because that is what the standard calls it.
+ * See HTML_LANG in lib/paths.ts.
  */
-const pair = (enPath: string, zhPath: string) => ({
-  languages: {
-    en: `${SITE.url}${enPath === "/" ? "" : enPath}`,
-    "zh-Hans": `${SITE.url}${zhPath}`,
-    "x-default": `${SITE.url}${enPath === "/" ? "" : enPath}`,
-  },
-});
+const set = (enPath: string, bmPath: string, zhPath: string) => {
+  const en = `${SITE.url}${enPath === "/" ? "" : enPath}`;
+  return {
+    languages: {
+      en,
+      ms: `${SITE.url}${bmPath}`,
+      "zh-Hans": `${SITE.url}${zhPath}`,
+      "x-default": en,
+    },
+  };
+};
 
 /**
  * No `changeFrequency` and no `priority` anywhere below. Google has said it
@@ -52,53 +63,42 @@ const pair = (enPath: string, zhPath: string) => ({
  * /preview-projects is absent on purpose; it is a capture harness, noindexed at
  * the page and disallowed in robots.ts.
  *
- * /privacy appears once, in English, with NO alternates. It has no Chinese
- * version and claiming one would be a lie in the one file crawlers read most
- * literally.
+ * /privacy appears once, in English, with NO alternates. It has no translation
+ * and claiming one would be a lie in the one file crawlers read most literally.
  *
  * There is no per-product URL to list: all twenty live in the catalogue. The
- * product photography is attached to that entry instead, in both languages,
- * since the images are the same images either way.
+ * product photography is attached to that entry instead, in every language,
+ * since the images are the same images whichever one is being read.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const productImages = PRODUCTS.flatMap((product) =>
     product.images.map((image) => asset(image.src)),
   );
 
-  return [
-    {
-      url: SITE.url,
-      lastModified: UPDATED.home,
-      alternates: pair(SEO.home.path, SEO_ZH.home.path),
-    },
-    {
-      url: `${SITE.url}${SEO.products.path}`,
-      lastModified: UPDATED.products,
-      alternates: pair(SEO.products.path, SEO_ZH.products.path),
-      images: productImages,
-    },
-    {
-      url: `${SITE.url}${SEO.contact.path}`,
-      lastModified: UPDATED.contact,
-      alternates: pair(SEO.contact.path, SEO_ZH.contact.path),
-    },
+  /* The three paired paths, each written once and emitted three times. Built
+     rather than listed, because nine hand-written entries carrying reciprocal
+     hreflang is nine chances for one of them to name the wrong counterpart. */
+  const paired = [
+    { key: "home", en: SEO.home, bm: SEO_BM.home, zh: SEO_ZH.home },
+    { key: "products", en: SEO.products, bm: SEO_BM.products, zh: SEO_ZH.products },
+    { key: "contact", en: SEO.contact, bm: SEO_BM.contact, zh: SEO_ZH.contact },
+    { key: "story", en: SEO.story, bm: SEO_BM.story, zh: SEO_ZH.story },
+    { key: "services", en: SEO.services, bm: SEO_BM.services, zh: SEO_ZH.services },
+    { key: "projects", en: SEO.projects, bm: SEO_BM.projects, zh: SEO_ZH.projects },
+  ] as const;
 
-    {
-      url: `${SITE.url}${SEO_ZH.home.path}`,
-      lastModified: UPDATED.home,
-      alternates: pair(SEO.home.path, SEO_ZH.home.path),
-    },
-    {
-      url: `${SITE.url}${SEO_ZH.products.path}`,
-      lastModified: UPDATED.products,
-      alternates: pair(SEO.products.path, SEO_ZH.products.path),
-      images: productImages,
-    },
-    {
-      url: `${SITE.url}${SEO_ZH.contact.path}`,
-      lastModified: UPDATED.contact,
-      alternates: pair(SEO.contact.path, SEO_ZH.contact.path),
-    },
+  return [
+    ...paired.flatMap(({ key, en, bm, zh }) => {
+      const alternates = set(en.path, bm.path, zh.path);
+      const lastModified = UPDATED[key];
+      const images = key === "products" ? productImages : undefined;
+      return [en.path, bm.path, zh.path].map((path) => ({
+        url: path === "/" ? SITE.url : `${SITE.url}${path}`,
+        lastModified,
+        alternates,
+        ...(images ? { images } : {}),
+      }));
+    }),
 
     /* English only, and no `alternates`. See the note above. */
     {

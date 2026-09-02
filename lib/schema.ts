@@ -1,5 +1,13 @@
-import { ADDRESS, BACKGROUND, FOOTER, SEO, SEO_ZH, SITE } from "./content";
-import type { Locale } from "./paths";
+import {
+  ADDRESS,
+  BACKGROUND,
+  FOOTER,
+  SEO,
+  SEO_ZH,
+  SEO_BM,
+  SITE,
+} from "./content";
+import { LOCALE_PREFIX, type Locale } from "./paths";
 import { describe, PRODUCTS, type Product } from "./products";
 
 /**
@@ -86,18 +94,24 @@ function organization() {
  * no site search here to describe. What this node is still live for is the site
  * NAME Google prints in a result, which is otherwise guessed from the title.
  */
+const IN_LANGUAGE: Record<Locale, string> = {
+  EN: "en-MY",
+  BM: "ms-MY",
+  ZH: "zh-Hans-MY",
+};
+
 function website(locale: Locale) {
-  const zh = locale === "ZH";
+  const home = `${SITE.url}${LOCALE_PREFIX[locale]}`;
   return {
     "@type": "WebSite",
-    /* One @id per language: these are two documents, not one described twice,
-       and collapsing them would have the Chinese page assert it is the English
-       one. */
-    "@id": zh ? `${SITE.url}/zh#website` : WEBSITE_ID,
-    url: zh ? `${SITE.url}/zh` : SITE.url,
+    /* One @id per language: these are three documents, not one described three
+       times, and collapsing them would have a translated page assert it is the
+       English one. */
+    "@id": locale === "EN" ? WEBSITE_ID : `${home}#website`,
+    url: home,
     name: SITE.name,
     publisher: { "@id": ORG_ID },
-    inLanguage: zh ? "zh-Hans-MY" : "en-MY",
+    inLanguage: IN_LANGUAGE[locale],
   };
 }
 
@@ -145,8 +159,10 @@ function breadcrumbs(trail: { name: string; url?: string }[]) {
   };
 }
 
-/** The SEO entry set for a locale, so a graph names the page it is actually on. */
-const seo = (locale: Locale) => (locale === "ZH" ? SEO_ZH : SEO);
+/** The SEO entry set for a locale, so a graph names the page it is actually
+    on. The translated sets carry no `privacy` entry; nothing below reads one. */
+const seo = (locale: Locale) =>
+  locale === "ZH" ? SEO_ZH : locale === "BM" ? SEO_BM : SEO;
 
 const graph = (...nodes: object[]) => ({
   "@context": "https://schema.org",
@@ -157,12 +173,30 @@ export function homeGraph(locale: Locale = "EN") {
   return graph(organization(), website(locale));
 }
 
+/**
+ * The three sections that are also pages — /our-story, /services and
+ * /our-projects — carry a breadcrumb and nothing else.
+ *
+ * Nothing else is honest. There is no `AboutPage` or `Service` node here
+ * because neither would say anything the page does not already say in prose,
+ * and a `Service` without an `offers` or an `areaServed` earns no rich result
+ * while asserting a structure nobody maintains. The breadcrumb is real: these
+ * pages genuinely sit one level under the home page of their language.
+ */
+export function pageGraph(
+  key: "story" | "services" | "projects",
+  locale: Locale = "EN",
+) {
+  const copy = seo(locale);
+  return graph(breadcrumbs([home(locale), { name: copy[key].title }]));
+}
+
 export function contactGraph(locale: Locale = "EN") {
   const copy = seo(locale);
   return graph(
     showroom(),
     breadcrumbs([
-      { name: zh(locale, "Home", "首页"), url: zh(locale, SITE.url, `${SITE.url}/zh`) },
+      home(locale),
       { name: copy.contact.title },
     ]),
   );
@@ -197,17 +231,25 @@ export function productsGraph(locale: Locale = "EN") {
       })),
     },
     breadcrumbs([
-      { name: zh(locale, "Home", "首页"), url: zh(locale, SITE.url, `${SITE.url}/zh`) },
+      home(locale),
       { name: copy.products.title },
     ]),
   );
 }
 
-/** Picks one of two strings on the locale. Small, but it keeps the breadcrumb
-    trails from reading half in each language. */
-function zh<T>(locale: Locale, en: T, cn: T): T {
-  return locale === "ZH" ? cn : en;
-}
+/** The word "Home" in each language, so no breadcrumb trail reads half in one
+    language and half in another. */
+const HOME_LABEL: Record<Locale, string> = {
+  EN: "Home",
+  BM: "Laman Utama",
+  ZH: "首页",
+};
+
+/** The first crumb: the home page of whichever language this graph is for. */
+const home = (locale: Locale) => ({
+  name: HOME_LABEL[locale],
+  url: `${SITE.url}${LOCALE_PREFIX[locale]}`,
+});
 
 /**
  * One product, for its own page.
@@ -260,7 +302,7 @@ export function productGraph(product: Product, locale: Locale = "EN") {
         }),
     },
     breadcrumbs([
-      { name: zh(locale, "Home", "首页"), url: zh(locale, SITE.url, `${SITE.url}/zh`) },
+      home(locale),
       { name: copy.products.title, url: `${SITE.url}${copy.products.path}` },
       { name: product.title },
     ]),

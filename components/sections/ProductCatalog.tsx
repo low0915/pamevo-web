@@ -1,14 +1,21 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { CaretDown, Rows, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 
-import { PRODUCTS, type Product } from "@/lib/products";
+import {
+  PRODUCTS,
+  inSystem,
+  systemFromHash,
+  systemHash,
+  type Product,
+  type System,
+} from "@/lib/products";
 import { ProductSpecs } from "@/components/product/ProductSpecs";
-import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH } from "@/lib/content";
+import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH, PRODUCTS_PAGE_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 import { Z } from "@/lib/z";
 
@@ -68,13 +75,14 @@ export function ProductCatalog() {
      heading, the view switch, the CTA and its /zh/contact href — was reading
      the English constants directly, so /zh/our-products rendered an English
      "Our Products" over Chinese specifications. */
-  const copy = useCopy(PRODUCTS_PAGE, PRODUCTS_PAGE_ZH);
+  const copy = useCopy(PRODUCTS_PAGE, { ZH: PRODUCTS_PAGE_ZH, BM: PRODUCTS_PAGE_BM });
 
   /** Which row is expanded. Null is a legal state: rows close on re-click. */
   const [open, setOpen] = useState<string | null>(FIRST.no);
   /** Which image layer is visible. */
   const [shown, setShown] = useState(FIRST_KEY);
   const [view, setView] = useState<View>("list");
+  const [system, setSystem] = useState<System>("all");
   /** Which layers have been mounted, and so fetched. Never shrinks. */
   const [mounted, setMounted] = useState<ReadonlySet<string>>(
     () => new Set([FIRST_KEY]),
@@ -101,19 +109,139 @@ export function ProductCatalog() {
     [preload],
   );
 
+  const shownProducts = PRODUCTS.filter((p) => inSystem(p, system));
+
+  /**
+   * Filtering moves the selection with the list.
+   *
+   * The photograph beside the catalogue shows whichever product is selected,
+   * and the selection survives a filter change that removes it — so filtering
+   * to Door System while a casement window was open left a window on screen
+   * beside a list of doors, with no row anywhere to explain it. The open row
+   * would also still be open, off-list and unreachable.
+   *
+   * So the first product of the new list is selected, and preloaded, exactly as
+   * if it had been clicked. The list always opens on something, which is the
+   * state this component starts in and the one it is easiest to read.
+   */
+  const filter = useCallback(
+    (next: System) => {
+      setSystem(next);
+      const first = PRODUCTS.find((p) => inSystem(p, next));
+      if (!first) return;
+      preload(first);
+      setOpen(first.no);
+      setShown(`${first.slug}-0`);
+    },
+    [preload],
+  );
+
+  /**
+   * The filter, addressable: /our-products#door opens on Door System.
+   *
+   * `replaceState` rather than assigning `location.hash`, and rather than
+   * `pushState`, for two separate reasons. Assigning the hash would make the
+   * browser jump to an element with that id — there is none, so today it does
+   * nothing, but the day someone adds `id="door"` anywhere this would start
+   * teleporting the page on every filter click. And `pushState` would put a
+   * history entry behind every press, so Back would walk the reader through
+   * their own filtering rather than returning them to where they came from.
+   *
+   * It also cannot loop: neither `replaceState` nor `pushState` fires
+   * `hashchange`, so writing the URL here never re-enters the listener below.
+   */
+  const setFilter = useCallback(
+    (next: System) => {
+      filter(next);
+      const { pathname, search } = window.location;
+      window.history.replaceState(null, "", `${pathname}${search}${systemHash(next)}`);
+    },
+    [filter],
+  );
+
+  /**
+   * Arriving with a fragment, and changing it while already here.
+   *
+   * In an effect rather than in `useState`, because the server cannot see a
+   * fragment: initialising from it would render "all" on the server and
+   * something else in the browser. See `systemFromHash` in lib/products.ts.
+   *
+   * A bare /our-products is left alone rather than filtered to "all" — the two
+   * end in the same state, but calling the filter would reset the open row and
+   * the shown image, and there is no reason to disturb them for a URL that
+   * asked for nothing.
+   *
+   * `hashchange` covers the reader who is already on this page and picks the
+   * other system out of the header menu. That only works because those links
+   * are plain anchors rather than Next's `Link`: a client navigation to a new
+   * fragment goes through `pushState`, which fires no event at all, and the
+   * filter would sit unchanged while the URL said otherwise. See the note in
+   * components/site/Header.tsx.
+   */
+  useEffect(() => {
+    const apply = () => {
+      if (!window.location.hash) return;
+      filter(systemFromHash(window.location.hash));
+    };
+    apply();
+    window.addEventListener("hashchange", apply);
+    return () => window.removeEventListener("hashchange", apply);
+  }, [filter]);
+
   return (
     <section className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12">
       <div className="mx-auto w-full max-w-[1440px]">
         <h2 className="sr-only">{copy.catalogLabel}</h2>
 
-        {/* Above the grid rather than inside the right column, so the first
-            entry starts level with the top of the photograph.
+        {/* The catalogue's toolbar: what is listed on the left, how it is
+            listed on the right. Above the grid rather than inside the right
+            column, so the first entry starts level with the top of the
+            photograph.
 
-            Two buttons rather than one that flips: with aria-pressed on each, a
-            screen reader hears which view is active without having to infer it
-            from a label that changes underneath it. Mirrors the locale toggle
-            in the header. */}
-        <div className="mb-5 flex justify-end">
+            Sticky, because the thing it controls is twenty products long and a
+            filter that scrolls away is a filter you have to go back up to reach.
+
+            `top-20` is the fixed header island, which owns the first 80px of
+            the viewport. The height below it is deliberate and not free: the
+            bar is 48px tall - a 32px control in `py-2` - which lands its foot
+            at exactly 128px, which is where the photograph beside the list
+            pins (`lg:top-32`). Any taller and the two overlap; the bar is
+            earlier in the document and would be painted over by the figure.
+
+            `bg-bg` rather than glass. Rows pass underneath it, and this is the
+            one surface on the page that has to hide what is behind it rather
+            than suggest it - a translucent bar with product titles sliding
+            through it reads as a rendering fault. `Z.raised` because the rows
+            are `relative` and would otherwise paint over a bar that comes
+            before them in the document.
+
+            Two groups, both `aria-pressed` per button rather than one control
+            that flips: a screen reader hears which one is active without having
+            to infer it from a label that changes underneath it. */}
+        <div
+          style={{ zIndex: Z.raised }}
+          className="sticky top-20 mb-5 flex flex-wrap items-center justify-between gap-3 bg-bg py-2"
+        >
+          <div
+            role="group"
+            aria-label={copy.filterLabel}
+            className="flex items-center gap-0.5 rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.35)] p-0.5"
+          >
+            {copy.filters.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={system === id}
+                onClick={() => setFilter(id)}
+                className={`h-8 rounded-full px-3.5 text-sm whitespace-nowrap transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
+                  system === id ? "bg-ink text-bg" : "text-ink-2"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div
             role="group"
             aria-label={copy.viewLabel}
@@ -222,7 +350,7 @@ export function ProductCatalog() {
                 : "flex flex-col gap-6"
             }
           >
-              {PRODUCTS.map((p) => {
+              {shownProducts.map((p) => {
                 const isOpen = open === p.no;
                 // The button sits in the panel's bottom right corner, out of
                 // flow, level with whatever line ends the panel - so it costs

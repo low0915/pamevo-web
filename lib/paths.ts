@@ -6,13 +6,39 @@
  * make that a cycle. content.ts re-exports it, so every existing import of
  * `LOCALES` from "@/lib/content" keeps working.
  */
-export const LOCALES = ["EN", "ZH"] as const;
+export const LOCALES = ["EN", "BM", "ZH"] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
-/** What `<html lang>` is for each locale. ZH is Simplified — the same subtag
-    the product specs already carry in ProductCatalog. */
-export const HTML_LANG: Record<Locale, string> = { EN: "en", ZH: "zh-Hans" };
+/**
+ * What `<html lang>` is for each locale.
+ *
+ * ZH is Simplified — the same subtag the product specs already carry in
+ * ProductCatalog. BM is `ms`, which is Malay's own ISO code, and deliberately
+ * not `bm`: `bm` is Bambara. The site calls the language BM because that is
+ * what Malaysians call it — Bahasa Melayu — and that is the label on the
+ * switch and the segment in the URL, but the tag a crawler reads has to be the
+ * one the standard defines.
+ */
+export const HTML_LANG: Record<Locale, string> = {
+  EN: "en",
+  BM: "ms",
+  ZH: "zh-Hans",
+};
+
+/**
+ * The URL each language's pages hang under. English is the site root and has
+ * no prefix, which is what makes it the default and the `x-default`.
+ *
+ * Every path helper below is derived from this table rather than written per
+ * language, so a fourth locale is a line here and a route group, not a sweep
+ * through the file.
+ */
+export const LOCALE_PREFIX: Record<Locale, string> = {
+  EN: "",
+  BM: "/bm",
+  ZH: "/zh",
+};
 
 /**
  * The URL shape of the two languages, in a module with NO "use client".
@@ -29,41 +55,97 @@ export const HTML_LANG: Record<Locale, string> = { EN: "en", ZH: "zh-Hans" };
  */
 
 /**
- * The paths that exist in both languages, English on the left.
+ * The paths that exist in EVERY language, English on the left.
  *
- * /privacy is deliberately absent. It is a PDPA notice with no Chinese text,
- * and giving it a /zh URL would publish a Chinese page of English legal copy,
- * which is worse than not offering one. It therefore gets no hreflang either.
+ * /privacy is deliberately absent. It is a PDPA notice with no translation,
+ * and giving it a /zh or /bm URL would publish a translated page of English
+ * legal copy, which is worse than not offering one. It therefore gets no
+ * hreflang either.
+ *
+ * This list is all-or-nothing by design: a path here is claimed to exist in
+ * three languages, and the hreflang built from it says so. A page that exists
+ * in two of the three would need its own shape here rather than a third
+ * entry — better to build the missing one than to describe the gap.
  */
-export const PAIRED_PATHS = ["/", "/contact", "/our-products"] as const;
+export const PAIRED_PATHS = [
+  "/",
+  "/contact",
+  "/our-products",
+  "/our-story",
+  "/services",
+  "/our-projects",
+] as const;
 
 export function isPaired(enPathname: string) {
   return (PAIRED_PATHS as readonly string[]).includes(enPathname);
 }
 
-/** The ZH URL for an EN path. `/` is `/zh`, everything else is prefixed. */
+/**
+ * An EN path in another language. `/` becomes the bare prefix, everything else
+ * is prefixed; English is returned untouched, having no prefix to add.
+ */
+export function localePath(path: string, locale: Locale) {
+  const prefix = LOCALE_PREFIX[locale];
+  if (!prefix) return path;
+  return path === "/" ? prefix : `${prefix}${path}`;
+}
+
+/** The ZH URL for an EN path. Kept as its own name because content.ts builds
+    the Chinese nav with it and reads better for it. */
 export function zhPath(path: string) {
-  return path === "/" ? "/zh" : `/zh${path}`;
+  return localePath(path, "ZH");
+}
+
+/** The BM URL for an EN path. */
+export function bmPath(path: string) {
+  return localePath(path, "BM");
 }
 
 /**
- * Whether a pathname is the home page, in either language.
+ * Whether a pathname is the home page, in any language.
  *
  * `/` and `/zh` are one page rendered twice, and several things are true of it
  * and of nothing else on the site - it is the only page with scrubbed sections,
  * and so the only one the autoplay in components/ui/SmoothScroll.tsx has any
- * business running on. Comparing against `"/"` alone silently excludes the
- * Chinese half of the site, which is the kind of bug that only shows up for
+ * business running on. Comparing against `"/"` alone silently excludes every
+ * translated half of the site, which is the kind of bug that only shows up for
  * readers nobody tests as.
  */
 export function isHome(pathname: string) {
   return enPath(pathname) === "/";
 }
 
-/** The EN path for any URL, ZH or not. Inverse of `zhPath`. */
+/**
+ * Whether a nav link points at the page being read.
+ *
+ * A PREFIX match rather than an equality one, which is the whole point of it
+ * having a name. There are twenty product pages under /our-products, and on
+ * every one of them an exact match marks nothing at all — the reader is three
+ * levels into the catalogue and the nav says they are nowhere.
+ *
+ * The boundary is a slash, so /our-products marks /our-products/dm106... and
+ * not /our-products-archive.
+ *
+ * The home page is matched exactly, because every path begins with a slash and
+ * a prefix match would mark it on every page of the site. Nothing in NAV points
+ * at home today — the logo does that — but this is exactly the kind of rule
+ * that is added later and quietly wrong.
+ */
+export function isCurrentPath(pathname: string, href: string) {
+  if (enPath(href) === "/") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** The EN path for any URL, whatever language it is in. Inverse of
+    `localePath`, and the one function every other one here goes through. */
 export function enPath(pathname: string) {
-  if (pathname === "/zh") return "/";
-  return pathname.startsWith("/zh/") ? pathname.slice(3) : pathname;
+  for (const locale of LOCALES) {
+    const prefix = LOCALE_PREFIX[locale];
+    if (!prefix) continue;
+    if (pathname === prefix) return "/";
+    if (pathname.startsWith(`${prefix}/`)) return pathname.slice(prefix.length);
+  }
+  return pathname;
 }
 
 /**
@@ -75,6 +157,5 @@ export function enPath(pathname: string) {
  */
 export function counterpart(pathname: string, target: Locale) {
   const en = enPath(pathname);
-  if (target === "EN") return isPaired(en) ? en : "/";
-  return isPaired(en) ? zhPath(en) : "/zh";
+  return localePath(isPaired(en) ? en : "/", target);
 }

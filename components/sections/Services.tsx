@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SERVICES, SERVICES_ZH } from "@/lib/content";
+import { SERVICES, SERVICES_ZH, SERVICES_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -51,9 +51,11 @@ const SETTLE_ALPHA = 0.5;
  * reduced motion, the panels are in flow and the section reads top to bottom
  * with no pin and no timeline.
  */
-export function Services() {
+export function Services({ standalone = false }: { standalone?: boolean }) {
+  /* See the note on Background: lowercase would be a literal element. */
+  const Heading = standalone ? "h1" : "h2";
   const rootRef = useRef<HTMLElement>(null);
-  const services = useCopy(SERVICES, SERVICES_ZH);
+  const services = useCopy(SERVICES, { ZH: SERVICES_ZH, BM: SERVICES_BM });
 
   useEffect(() => {
     const section = rootRef.current;
@@ -120,10 +122,18 @@ export function Services() {
   }, []);
 
   return (
-    <section ref={rootRef} className="svc-curtain sheet relative mb-[4em] bg-ink">
+    <section
+      ref={rootRef}
+      /* `svc-curtain` is a pull-up over the stat band and `sheet` is the shadow
+         the rising edge carries. Both belong to the home page's stack; on
+         /services there is nothing above this to ride over. */
+      className={`relative mb-[4em] bg-ink ${standalone ? "" : "svc-curtain sheet"}`}
+    >
       {/* The heading is carried by each panel's label, so the section keeps one
-          for structure without repeating it on screen five times. */}
-      <h2 className="sr-only">{services.heading}</h2>
+          for structure without repeating it on screen five times. It stays
+          sr-only as an `h1` too — the panels already say the words, and the
+          hero on the home page sets the same precedent. */}
+      <Heading className="sr-only">{services.heading}</Heading>
 
       <div className="svc-runway">
         <div className="svc-frame relative">

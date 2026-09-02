@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { SEO, SEO_ZH, SITE } from "./content";
-import { enPath, isPaired, zhPath, type Locale } from "./paths";
+import { SEO, SEO_ZH, SEO_BM, SITE } from "./content";
+import { bmPath, enPath, isPaired, zhPath, type Locale } from "./paths";
 
 /**
  * The metadata layer.
@@ -40,11 +40,11 @@ type PageMeta = {
 /**
  * The hreflang pair for a path, or nothing.
  *
- * Emitted only for the three paths that genuinely exist in both languages. It
- * is worth being strict about: an `hreflang="zh-Hans"` pointing at a URL that
- * serves English is not a small inaccuracy, it is an instruction to Google to
- * serve that page to Chinese-language searchers, who then bounce. /privacy has
- * no Chinese version and so gets no `languages` key at all.
+ * Emitted only for the three paths that genuinely exist in every language. It
+ * is worth being strict about: an `hreflang="ms"` pointing at a URL that serves
+ * English is not a small inaccuracy, it is an instruction to Google to serve
+ * that page to Malay-language searchers, who then bounce. /privacy exists in
+ * English alone and so gets no `languages` key at all.
  *
  * `x-default` goes to the English URL — it is the version to show a reader
  * whose language matches neither, and it is the one the whole site canonicalises
@@ -56,6 +56,10 @@ function languages(path: string) {
 
   return {
     en: en,
+    /* `ms`, not `bm`. The site calls the language BM and puts /bm in the URL,
+       because that is what it is called here; the tag has to be the standard's,
+       and `bm` is Bambara. See HTML_LANG in lib/paths.ts. */
+    ms: bmPath(en),
     "zh-Hans": zhPath(en),
     "x-default": en,
   };
@@ -81,7 +85,8 @@ export function pageMetadata(
     openGraph: {
       type: "website",
       siteName: SITE.name,
-      locale: locale === "ZH" ? "zh_MY" : SITE.locale,
+      locale:
+        locale === "ZH" ? "zh_MY" : locale === "BM" ? "ms_MY" : SITE.locale,
       url,
       title,
       description,
@@ -101,6 +106,11 @@ export function pageMetadataZh(entry: PageMeta): Metadata {
   return pageMetadata(entry, "ZH");
 }
 
+/** And the Malay. */
+export function pageMetadataBm(entry: PageMeta): Metadata {
+  return pageMetadata(entry, "BM");
+}
+
 /**
  * Pages that exist and must never be indexed.
  *
@@ -111,4 +121,4 @@ export const NOINDEX = {
   robots: { index: false, follow: false },
 } satisfies Metadata;
 
-export { SEO, SEO_ZH };
+export { SEO, SEO_ZH, SEO_BM };
