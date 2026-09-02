@@ -49,11 +49,41 @@ const SPEED = 0.25;
  */
 export function Background({ standalone = false }: { standalone?: boolean }) {
   const rootRef = useRef<HTMLElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   /* Capitalised because JSX reads a lowercase tag name as a literal element and
      an uppercase one as a component; this has to be the former, held in a
      variable, so the case is doing work rather than following a convention. */
   const Heading = standalone ? "h1" : "h2";
   const background = useCopy(BACKGROUND, { ZH: BACKGROUND_ZH, BM: BACKGROUND_BM });
+
+  /**
+   * The held frame's own height, written back as a variable.
+   *
+   * /our-story only. The frame is a floor rather than a fixed screen, so on a
+   * laptop it can end up taller than the viewport, and a frame taller than the
+   * viewport pinned at `top: 0` holds with its foot below the fold — the base
+   * of the building would never come into view. The pin is therefore
+   * `min(0px, 100lvh - height)`, which is 0 while it fits and negative once it
+   * does not, and CSS has no way to ask for the element's own height, so it is
+   * measured here.
+   *
+   * Observed rather than measured once: the frame reflows with the URL bar, a
+   * rotation, and a font swap, and a stale height leaves the pin either short
+   * of the foot or past it. Stats.tsx does the same thing for the same reason.
+   */
+  useEffect(() => {
+    if (!standalone) return;
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    const measure = () =>
+      frame.style.setProperty("--frame-h", `${Math.round(frame.offsetHeight)}px`);
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [standalone]);
 
   useEffect(() => {
     const section = rootRef.current;
@@ -131,6 +161,75 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
   }, [standalone]);
 
   /**
+   * The lead's entry on /our-story, and the bar coming out from behind the
+   * building.
+   *
+   * The wipe is a `clip-path: inset()` whose LEFT inset runs 100% to 0. That
+   * pins the visible edge to the bar's right side and grows it leftward, which
+   * is the direction asked for — and because the photograph is laid over the
+   * right 56% of the stage and painted after the bar, the first half of the
+   * travel happens underneath it. The bar appears to slide out from behind the
+   * building rather than to draw itself on the page.
+   *
+   * `clip-path` rather than `scaleX` from a right origin, which is the usual
+   * way to do this and is wrong here: a scale would squash the paragraph inside
+   * the bar as it grew. A clip moves an edge and leaves the contents alone.
+   *
+   * The paragraph fades in at 1.25s, while the wipe is still travelling. That
+   * is deliberate rather than sloppy timing: the text sits at the LEFT end of
+   * the bar, which is the last part the clip uncovers, so it is still hidden by
+   * the clip while it fades and arrives with the edge that reveals it.
+   *
+   * ScrollTrigger, not a mount timer, for consistency with every other section
+   * — though at the top of a page the start condition is already met and it
+   * fires on the first refresh, which is what a page-opening band wants.
+   */
+  useEffect(() => {
+    if (!standalone) return;
+    const section = rootRef.current;
+    if (!section) return;
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const ctx = gsap.context(() => {
+      const bar = section.querySelector<HTMLElement>("[data-lead='bar']");
+      const para = section.querySelector<HTMLElement>("[data-lead='para']");
+      const photo = section.querySelector<HTMLElement>("[data-lead='photo']");
+      const heading = section.querySelector<HTMLElement>("[data-lead='heading']");
+
+      if (reduced) {
+        gsap.set(bar, { clipPath: "inset(0% 0% 0% 0%)" });
+        gsap.set([para, photo, heading], { autoAlpha: 1, y: 0 });
+        return;
+      }
+
+      gsap.set(bar, { clipPath: "inset(0% 0% 0% 100%)" });
+      gsap.set(para, { autoAlpha: 0 });
+      gsap.set(heading, { autoAlpha: 0, y: 18 });
+      gsap.set(photo, { autoAlpha: 0, y: 24 });
+
+      const timeline = gsap.timeline({
+        scrollTrigger: { trigger: section, start: "top 70%", once: true },
+      });
+
+      timeline.to(heading, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power3.out" });
+      timeline.to(
+        photo,
+        { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out" },
+        0.1,
+      );
+      timeline.to(
+        bar,
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, ease: "power2.inOut" },
+        0.45,
+      );
+      timeline.to(para, { autoAlpha: 1, duration: 0.5, ease: "power2.out" }, 1.25);
+    }, section);
+
+    return () => ctx.revert();
+  }, [standalone]);
+
+  /**
    * /our-story: the same words, told as a page instead of as a mechanism.
    *
    * The home page's version is one pinned frame that holds still while 370svh
@@ -158,68 +257,238 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
   if (standalone) {
     return (
       <>
-        {background.images.map((image, i) => (
-          <section
-            key={image.src}
-            className="relative w-full overflow-hidden"
+        {/* ------------------------------------------------------------------
+            The lead, from Figma node 123:4, as a full-screen held frame.
+
+            A 230svh runway with a `sticky` frame inside it, which is the same
+            arrangement the home page's sections use and is what gives the page
+            its curtain: the frame holds still while the runway scrolls past,
+            and the second chapter is pulled up over it.
+
+            The composition is the design's: a light ground, a scrim at the top,
+            white heading, the brand bar carrying the paragraph, and the cut-out
+            building over it from the right. The blue is the project's
+            `--brand`; Figma says #033492 against the token's #033392, one step
+            of green and invisible on screen.
+            ------------------------------------------------------------------ */}
+        <section
+          ref={rootRef}
+          /* 230svh, forced by the curtain arithmetic rather than chosen. The
+             frame is 100lvh and the next section is pulled up 110svh, so that
+             section's top edge enters the viewport at `runway - 210`. Anything
+             under 210 and the curtain is already on screen at scroll zero — the
+             page would open half-covered. 230 leaves 20svh of the composition
+             held on its own before the rise begins, then a screen of travel,
+             then the standard 10svh of slack before the pin lets go. */
+          className="relative h-[230svh] motion-reduce:h-auto"
+        >
+          {/* `min-h`, NOT `h`, and that distinction is the whole fix.
+
+              A fixed `h-[100lvh]` with `overflow-hidden` is a ceiling: anything
+              the composition needs beyond one screen is cut off, which is why
+              the picture was briefly being shrunk to fit inside it. As a floor
+              the section still covers the screen — which is all that was asked
+              — and simply grows on the laptops where the heading, the bar and a
+              full-size building need more than 100lvh between them. Nothing
+              inside has to move or resize for it.
+
+              `lvh`, where the runway is `svh`, for the reason the home page's
+              frames give: the runway is a length in the scroll chain and must
+              hold still, but this frame has to COVER, and a box sized to the
+              viewport-with-chrome leaves a strip showing the moment the URL bar
+              slides away.
+
+              `top` is not 0 but the foot-pin from Stats.tsx: a frame TALLER
+              than the screen pinned at the top would hold with its own bottom
+              below the fold, and the base of the building would never be
+              reachable. `min(0px, 100lvh - height)` is 0 while it fits and
+              negative once it does not, which pins it by the foot instead. The
+              height is measured into `--frame-h` below, because only the DOM
+              knows it. */}
+          <div
+            ref={frameRef}
+            className="sticky flex min-h-[100lvh] w-full items-center overflow-hidden bg-bg motion-reduce:static motion-reduce:min-h-0 motion-reduce:py-20"
+            style={{ top: "min(0px, calc(100lvh - var(--frame-h, 100lvh)))" }}
           >
-            <Image
-              src={image.src}
-              alt={image.alt}
-              fill
-              sizes="100vw"
-              quality={78}
-              className="graded-soft object-cover object-[50%_35%]"
-            />
+            {/* The ground: the showroom again, blurred, behind the sharp
+                cut-out of the same building.
 
-            {/* Only the first section carries one, and only because it carries
-                the heading. White type over this photography is 1.8:1 on the
-                bright corner it sits in — the note on the pinned frame below
-                has the measurements. The second section's only light text is
-                inside the dark glass panel, which brings its own ground. */}
-            {i === 0 && (
-              <div
-                aria-hidden
-                className="absolute inset-x-0 top-0 h-[62%]"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, rgb(12 14 17 / 0.62) 0%, rgb(12 14 17 / 0.34) 45%, rgb(12 14 17 / 0) 100%)",
-                }}
-              />
-            )}
+                This replaces a grey gradient scrim over a flat light field.
+                The photograph is `images[0]` rather than a path typed out here,
+                so it stays the same file the home page's pinned frame uses and
+                there is one place to change it.
 
-            {/* `pt-24` on the first section is the fixed header island, which
-                owns the first 80px of the viewport. The rest is a floor, not a
-                height: `min-h` lets a long paragraph or a narrow phone make the
-                section taller instead of clipping it. */}
+                `scale-110` is not styling. A CSS blur samples past the
+                element's own edges and finds nothing there, so a blurred image
+                fades out into transparency around its whole perimeter and the
+                frame shows a soft translucent border. Ten per cent of overscan
+                pushes those edges outside the frame — at 1440 that is 72px a
+                side against a 40px blur, which clears it.
+
+                Decorative, so `alt=""` and `aria-hidden`: the same building is
+                already described by the cut-out in front of it, and a screen
+                reader does not need to be told it is there twice. */}
             <div
-              className={`relative mx-auto flex w-full max-w-[1440px] flex-col px-6 pb-16 md:min-h-[80svh] md:px-8 md:pb-24 lg:px-10 ${
-                i === 0 ? "pt-24 md:pt-32" : "pt-16 md:justify-center md:pt-24"
-              }`}
+              aria-hidden
+              className="pointer-events-none absolute inset-0 overflow-hidden"
             >
-              {i === 0 && (
-                <h1 className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]">
+              <Image
+                src={background.images[0].src}
+                alt=""
+                fill
+                sizes="100vw"
+                /* Lower than the sections that show this photograph sharp: it
+                   is 40px of blur away from carrying any detail, and the bytes
+                   would be spent on information the blur then destroys. */
+                quality={55}
+                className="scale-110 object-cover object-center blur-[40px]"
+              />
+            </div>
+
+            {/* Centred in the frame, with `py-20` as the floor rather than the
+                home page's `pt-32`: centring is what places this now, and the
+                padding is only there to keep the block off the fixed header
+                island, which owns the first 80px of the screen. Gutters are the
+                home page's own, and there is no max-width, so the heading sits
+                the same distance from the edge here as it does there. */}
+            <div className="relative w-full px-6 py-20 md:px-8 lg:px-10">
+              {/* Down 10% of its own height.
+
+                  A TRANSLATE and not a margin, which is what makes the number
+                  mean what it says: a percentage margin resolves against the
+                  container's WIDTH, a percentage translate against the
+                  element's own HEIGHT. It also leaves the layout alone, so
+                  nudging the title does not push the stage below it back down —
+                  the two are meant to converge.
+
+                  On a WRAPPER and not on the h1, and that is not tidiness. The
+                  entry animation does `gsap.set(heading, { y: 0 })`, which
+                  writes an inline `transform` on the h1 and beats any transform
+                  utility on the same element outright — the class was there and
+                  computed to the identity matrix. GSAP keeps the h1's transform
+                  to itself; the offset lives one level up where nothing
+                  competes for it. */}
+              <div className="translate-y-[10%]">
+                <h1
+                  data-lead="heading"
+                  className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]"
+                >
                   {background.heading}
                 </h1>
-              )}
+              </div>
 
-              {/* Right on the first, left on the second. `mt-auto` on the first
-                  drops it to the foot of the section, under the heading; the
-                  second has no heading to sit under, so it centres instead. */}
-              <div
-                className={`mt-8 w-full md:w-[min(52%,644px)] ${
-                  i === 0 ? "md:mt-auto md:self-end" : "md:mt-0 md:self-start"
-                }`}
-              >
-                <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:p-9">
-                  <p className="text-base leading-relaxed text-bg">
-                    {background.paragraphs[i]}
+              {/* The stage: bar behind, cut-out in front. The bar is FIRST in
+                  the source and the picture second, which is what puts the
+                  picture on top — both are positioned, so document order
+                  decides and no z-index is needed.
+
+                  The lift is 30% of the picture's height, and 13.6% is that
+                  written as the percentage of WIDTH a margin actually resolves
+                  against: the picture is 56% of the container and its aspect is
+                  2115/1712, so its height is always 0.4533 of the container's
+                  width, and 30% of that is 0.1360. Because both terms scale with
+                  the same width the lift stays exactly 30% of the picture at
+                  every size rather than drifting on a larger screen. Change the
+                  picture's 56% and recompute this with it.
+
+                  Still gated at 1360px. The lift grows with the screen while the
+                  heading does not, so below about that width it pulls the bar
+                  clean over the title — measured, the bar's top sat 77px above
+                  the heading's foot at 1024 when this was only 30%.
+
+                  There is NO `lg:mt-16` beside it any more, and its absence is
+                  load-bearing. Tailwind emitted the `min-[1360px]` block ahead
+                  of the `lg` one in the stylesheet — 34748 against 39665 — so
+                  at 1440 the later `lg:mt-16` won on source order and the lift
+                  computed to a flat 64px. It was dead from the moment it was
+                  gated, and it looked like the number was wrong rather than the
+                  cascade. Two margin utilities on one element only agree while
+                  Tailwind happens to sort them in the order you assumed; below
+                  1360 the base `mt-10` carries this instead, which is one rule
+                  with nothing to lose to. */}
+              <div className="relative mt-10 flex flex-col lg:block min-[1360px]:mt-[calc(4rem_-_13.6%)]">
+                <div
+                  data-lead="bar"
+                  className="order-2 bg-brand px-6 py-8 sm:px-8 sm:py-10 lg:absolute lg:inset-x-0 lg:top-[54%] lg:-translate-y-1/2 lg:px-12 lg:py-12 lg:pr-[58%]"
+                >
+                  {/* #f4f5f6 on the brand field is 10.2:1 — the same pale ink
+                      the footer and the enquiry band use on this blue.
+
+                      The bar's right padding is 58% where the design has 55%.
+                      The cut-out's far left is NOT transparent — the pavement
+                      and the tree reach the edge of the canvas — so text set to
+                      the design's measure ran under the building and lost a
+                      word off six lines. */}
+                  <p
+                    data-lead="para"
+                    className="max-w-[66ch] text-base leading-relaxed text-bg"
+                  >
+                    {background.paragraphs[0]}
                   </p>
+                </div>
+
+                {/* Pulled out through the frame's gutter so the building meets
+                    the edge of the screen. The negative margin is that gutter
+                    at each breakpoint and has to stay in step with it.
+
+                    56% of the container and nothing else. This briefly carried
+                    a second cap that shrank the picture to whatever height was
+                    left in the frame, which made the building visibly smaller
+                    on every laptop — solving the frame's problem by damaging
+                    the composition. The frame gives way instead: see `min-h`
+                    on it rather than a fixed height. */}
+                <div
+                  data-lead="photo"
+                  className="relative order-1 -mr-6 w-auto md:-mr-8 lg:-mr-10 lg:ml-auto lg:w-[56%]"
+                >
+                  <Image
+                    src={background.isolated.src}
+                    alt={background.isolated.alt}
+                    width={background.isolated.width}
+                    height={background.isolated.height}
+                    sizes="(min-width: 1024px) 56vw, 100vw"
+                    className="h-auto w-full"
+                  />
                 </div>
               </div>
             </div>
-          </section>
-        ))}
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------------
+            The second chapter, and the curtain.
+
+            `-mt-[110svh]` pulls it up over the held frame above, and `sheet` is
+            the shadow its rising edge carries — without it a full-bleed
+            photograph sliding over a full-bleed ground reads as a cut rather
+            than as a curtain. Both are the values the home page's sections
+            already use between each other, so this inherits a transition that
+            is tuned rather than inventing one.
+
+            `min-h-[110svh]` is not decoration: a curtain has to be at least as
+            tall as its own pull-up, or it stops covering partway and whatever
+            follows starts inside the frame's runway. The photograph behind it
+            is opaque and full-bleed, which is what it covers WITH.
+            ------------------------------------------------------------------ */}
+        <section className="sheet relative -mt-[110svh] w-full overflow-hidden motion-reduce:mt-0">
+          <Image
+            src={background.images[1].src}
+            alt={background.images[1].alt}
+            fill
+            sizes="100vw"
+            quality={78}
+            className="graded-soft object-cover object-[50%_35%]"
+          />
+          <div className="relative mx-auto flex min-h-[110svh] w-full max-w-[1440px] flex-col justify-center px-6 py-20 md:px-8 md:py-24 lg:px-10 motion-reduce:min-h-0">
+            <div className="w-full md:w-[min(52%,644px)] md:self-start">
+              <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:p-9">
+                <p className="text-base leading-relaxed text-bg">
+                  {background.paragraphs[1]}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </>
     );
   }

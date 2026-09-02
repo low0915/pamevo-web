@@ -14,6 +14,7 @@ export {
   localePath,
   isPaired,
   isCurrentPath,
+  hasEnquiryBand,
   HTML_LANG,
   LOCALE_PREFIX,
   PAIRED_PATHS,

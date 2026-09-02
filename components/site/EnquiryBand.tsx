@@ -8,7 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { siWhatsapp } from "simple-icons";
 
 import { ENQUIRY, ENQUIRY_ZH, ENQUIRY_BM, WHATSAPP } from "@/lib/content";
-import { enPath, localePath, useCopy, useLocale } from "@/lib/locale";
+import { hasEnquiryBand, localePath, useCopy, useLocale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -236,16 +236,22 @@ export function EnquiryBand() {
   // See the note on the component. After the hooks and never before them: an
   // early return above `useEffect` changes how many hooks run between one route
   // and the next, which React treats as a different component.
-  if (enPath(pathname) === "/contact") return null;
+  if (!hasEnquiryBand(pathname)) return null;
 
   return (
     <section
       ref={rootRef}
-      /* `relative` and `Z.raised` for one page only, and it is not this one:
-         the home page pulls its whole stack up over a pinned hero inside a
-         raised sheet, so an unraised sibling after it is painted underneath
-         that sheet and vanishes. The footer directly below carries the same
-         pair for the same reason. */
+      /* No curtain of its own any more, and no `sheet`.
+
+         This band lifting while the footer stayed put was the thing that read
+         wrong: half of what closes the page moved and the other half did not.
+         Both now sit inside components/site/ClosingSheet.tsx, which carries the
+         overlap, the shadow and the travel for the pair. This is just the band
+         again.
+
+         `relative` and `Z.raised` stay for the home page, which pulls its whole
+         stack up over a pinned hero inside a raised sheet — an unraised sibling
+         after it is painted under that sheet and vanishes. */
       className="relative overflow-hidden bg-brand px-4 py-10 md:px-8 md:py-12 lg:px-12 lg:py-16"
       style={{ zIndex: Z.raised }}
     >
@@ -492,12 +498,25 @@ export function EnquiryBand() {
               </Link>
 
               {/* The same link the header and the footer use, from WHATSAPP, so
-                  there is one number on the site rather than three. */}
+                  there is one number on the site rather than three.
+
+                  WhatsApp green, from `siWhatsapp.hex` so the colour and the
+                  mark come from one place. Inline because Tailwind cannot
+                  compile a class built from a runtime value.
+
+                  INK on the green, where the header's copy of this button puts
+                  a white mark on it. The difference is not an oversight: this
+                  one carries a LABEL, and white on #25D366 measures 1.98:1
+                  against a 4.5 bar — the ratio WhatsApp itself ships, fine for
+                  a recognisable glyph and not for a line of type. Ink is 9.5:1.
+                  It also pairs the two buttons, which are now both solid with
+                  ink on them, one white and one green. */}
               <a
                 href={WHATSAPP.url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/45 px-7 py-3.5 text-sm font-medium text-white transition-[background-color,border-color,transform] duration-[160ms] ease-[var(--ease-out)] hover:border-white hover:bg-white/10 active:scale-[0.97] sm:w-auto"
+                style={{ backgroundColor: `#${siWhatsapp.hex}` }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-medium text-ink transition-[filter,transform] duration-[160ms] ease-[var(--ease-out)] hover:brightness-95 active:scale-[0.97] sm:w-auto"
               >
                 <svg
                   viewBox="0 0 24 24"

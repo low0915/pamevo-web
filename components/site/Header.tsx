@@ -535,13 +535,28 @@ export function Header() {
 
           {/* ml-auto below xl, where the nav and the locale switch are hidden:
               without it this would sit beside the logo instead of beside the
-              menu button. Simple Icons for the brand mark, as the footer does. */}
+              menu button. Simple Icons for the brand mark, as the footer does.
+
+              WhatsApp green, and taken from `siWhatsapp.hex` rather than typed
+              in: the mark and the colour then come from the same place and
+              cannot drift apart. It is an inline style because Tailwind only
+              compiles class names it can SEE in the source, and a class built
+              from a value at runtime produces no CSS at all.
+
+              White mark on the green, which is 1.98:1 and is the ratio the
+              brand itself ships. It is defensible HERE and would not be on the
+              button in the enquiry band: this control is icon-only and carries
+              an `aria-label`, so the glyph is a recognisable mark rather than
+              information anyone has to read off it. The keyline is what holds
+              the circle's edge against a pale section, where the green alone is
+              only about 1.45:1 against the glass. */}
           <a
             href={WHATSAPP.url}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={WHATSAPP.label}
-            className="ml-auto grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.4)] text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] xl:ml-2"
+            style={{ backgroundColor: `#${siWhatsapp.hex}` }}
+            className="ml-auto grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.55)] text-white transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] xl:ml-2"
           >
             <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" aria-hidden>
               <path d={siWhatsapp.path} />

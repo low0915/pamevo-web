@@ -15,21 +15,44 @@ import { lockScroll, unlockScroll } from "@/lib/scroll-lock";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
-/** Shared by both arms of the nav leaf branch, as in Header. The links are set
-    at the scale the section headings use rather than at a menu's: this surface
-    is the whole screen, and a list of two items at 24px in the middle of it
-    reads as a panel that failed to size itself. */
+/**
+ * Shared by both arms of the nav leaf branch, as in Header.
+ *
+ * This was a flat 36px on 24px of padding, set at the scale the section
+ * headings use on the reasoning that a full-screen surface should not carry a
+ * list at menu size. The reasoning was fine and the number was not: six items
+ * at 87px each, plus the products submenu, is 642px of list, and it did not fit
+ * on most phones. Measured with the menu open: on a 375x667 the last item ended
+ * at 683px, off the bottom of the screen; on a 320x568 about 150px of the menu
+ * was unreachable, Contact Us included.
+ *
+ * So the size is tied to the thing that was actually binding, which is the
+ * height of the screen rather than its width. `svh` and not `vh` or `dvh`, for
+ * the reason globals.css gives at length: `svh` is the viewport with the URL
+ * bar showing, so it is the SMALL one and it does not move as the bar slides
+ * away — a menu that resized itself mid-scroll would be worse than one that is
+ * merely too big.
+ *
+ * The cap is 28px, so this is smaller than it was on every phone, which is what
+ * was asked for. The floor is 20px, which is where it stops being a heading and
+ * starts being a menu; below that the scroll added on the list is what keeps it
+ * reachable rather than the type getting smaller still.
+ */
 const NAV_LINK =
-  "relative block py-6 text-[2.25rem] leading-[1.05] font-medium tracking-tighter text-ink";
+  "relative block py-4 text-[clamp(1.25rem,4.4svh,1.75rem)] leading-[1.1] font-medium tracking-tighter text-ink";
 
 /** The same mark the island carries, at this surface's scale: 2px where that
-    one is a hairline, because it sits under 36px type rather than under 14px,
-    and short rather than full-width so it reads as a mark on the label rather
-    than as another of the rules that divide the rows. */
+    one is a hairline, because it sits under type twice the size, and short
+    rather than full-width so it reads as a mark on the label rather than as
+    another of the rules that divide the rows.
+
+    `bottom-3` follows the row's `py-4`: the mark wants to sit just under the
+    text box, so it is the padding less a few pixels. It was `bottom-5` against
+    the old `py-6`, and left alone it would now float inside the word. */
 const CURRENT_MARK = (
   <span
     aria-hidden
-    className="pointer-events-none absolute bottom-5 left-0 h-0.5 w-10 bg-ink"
+    className="pointer-events-none absolute bottom-3 left-0 h-0.5 w-10 bg-ink"
   />
 );
 
@@ -135,10 +158,26 @@ export function MobileNav({
             </button>
           </div>
 
-          {/* Centred in what the top row and the locale switch leave, so the
-              list sits on the optical middle of the sheet at any height. */}
-          <nav className="flex flex-1 flex-col justify-center px-8 sm:px-9">
-            <ul>
+          {/* The list sits at the TOP of what the header row leaves, and the
+              slack falls below it — between the last item and the language
+              switch at the foot of the sheet.
+
+              It was centred, `my-auto`, which put the same slack above and
+              below and left the list floating in the middle of a tall screen.
+              Top-aligned it reads as a menu rather than as a panel, and the
+              language switch keeps the foot to itself.
+
+              This also retires a hazard rather than merely restyling it. A
+              centred flex child that outgrows its container overflows EQUALLY
+              in both directions, and the half above the scroll origin cannot be
+              reached by scrolling at all — which is why the centring had to be
+              an auto margin rather than `justify-center` in the first place.
+              Aligned to the start there is no such case: too tall simply
+              scrolls, from the top, which is what `overflow-y-auto` here is
+              for. It still matters on a phone in landscape, about 390px tall,
+              where no type size makes six items and a submenu fit. */}
+          <nav className="flex flex-1 flex-col overflow-y-auto overscroll-contain px-8 sm:px-9">
+            <ul className="mb-auto w-full">
               {/* Keyed by route, not by label: the locale toggle rewrites every
                   label, and a remount would replay the entrance stagger under a
                   reader who only changed language. */}

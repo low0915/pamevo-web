@@ -184,7 +184,7 @@ export function homeGraph(locale: Locale = "EN") {
  * pages genuinely sit one level under the home page of their language.
  */
 export function pageGraph(
-  key: "story" | "services" | "projects",
+  key: "story" | "vision" | "services" | "projects",
   locale: Locale = "EN",
 ) {
   const copy = seo(locale);

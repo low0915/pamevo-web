@@ -16,8 +16,7 @@ export type NavItem = {
 
 export const NAV: NavItem[] = [
   { label: "Our Story", href: "/our-story" },
-  /* Still inert: there is no section to build this page from yet. */
-  { label: "Vision & Mission" },
+  { label: "Vision & Mission", href: "/vision-mission" },
   { label: "Services & Features", href: "/services" },
   {
     label: "Our Products",
@@ -251,6 +250,12 @@ export const SEO = {
     description:
       "Architectural consultation, custom system selection, supply, certified installation and after-sales service for aluminium windows and doors in Malaysia.",
   },
+  vision: {
+    path: "/vision-mission",
+    title: "Vision & Mission",
+    description:
+      "The vision and mission of MEVO Malaysia: premium aluminium window and door systems made affordable, backed by a 15-year product warranty, lifetime maintenance and local installation and after-sales service.",
+  },
   projects: {
     path: "/our-projects",
     title: "Our Projects",
@@ -317,6 +322,12 @@ export const SEO_ZH = {
     description:
       "建筑咨询、定制设计与系统选型、供应与项目协调、持证安装及售后服务 —— 马来西亚铝合金门窗的全流程服务。",
   },
+  vision: {
+    path: "/zh/vision-mission",
+    title: "愿景与使命",
+    description:
+      "MEVO 马来西亚的愿景与使命：以可负担的价格提供高端铝合金门窗系统，并以 15 年产品保固、终身维护及本地安装与售后服务作为支撑。",
+  },
   projects: {
     path: "/zh/our-projects",
     title: "我们的项目",
@@ -373,6 +384,12 @@ export const SEO_BM = {
     title: "Perkhidmatan Kami",
     description:
       "Perundingan seni bina, pemilihan sistem tersuai, pembekalan, pemasangan bertauliah dan perkhidmatan selepas jualan untuk tingkap dan pintu aluminium di Malaysia.",
+  },
+  vision: {
+    path: "/bm/vision-mission",
+    title: "Visi & Misi",
+    description:
+      "Visi dan misi MEVO Malaysia: sistem tingkap dan pintu aluminium premium pada harga berpatutan, disokong jaminan produk 15 tahun, penyelenggaraan sepanjang hayat serta pemasangan dan perkhidmatan selepas jualan tempatan.",
   },
   projects: {
     path: "/bm/our-projects",
@@ -466,6 +483,25 @@ export const BACKGROUND = {
       alt: "Contemporary facade seen from below against the sky",
     },
   ],
+  /**
+   * The same showroom as images[0], cut out of its sky.
+   *
+   * Used only by /our-story, where the design lays the building over a light
+   * ground and a blue bar rather than using it as a full-bleed backdrop — so it
+   * has to be a cut-out, and the alpha is the whole point of the file. Exported
+   * from Figma (node 123:113, "pa mevo_isolated 1"); about a fifth of the
+   * canvas is transparent sky.
+   *
+   * Kept beside `images` rather than replacing images[0]: the home page still
+   * wants the uncut photograph behind its pinned frame, where a transparent sky
+   * would show the section's own ground through it.
+   */
+  isolated: {
+    src: "/pa-mevo-isolated.png",
+    alt: "The MEVO and P.A. Projects showroom and office lit at dusk, cut out against the page",
+    width: 2115,
+    height: 1712,
+  },
   /**
    * The client's copy said "over 30 years of proven expertise" one sentence
    * after "Established in 2004", while STATS below counts 20 years and its
@@ -812,6 +848,106 @@ export const STATS_BM: typeof STATS = STATS.map((stat, i) => ({
 
 /** Was "To Get More Details", which is not idiomatic and read as a sentence
     fragment where /contact uses it as an <h2>. */
+
+/**
+ * /vision-mission.
+ *
+ * The client supplied both statements. They are transcribed here with four
+ * small corrections, all of them mechanical rather than editorial, and all
+ * worth having confirmed:
+ *
+ *   "15-years product warranty"  ->  "15-year product warranty"
+ *   "door and window system"     ->  "door and window systems" (plural subject)
+ *   "Localized"                  ->  "Localised", which is the spelling the
+ *                                    rest of this file uses ("specialised",
+ *                                    "recognised") and the one Malaysian
+ *                                    English takes
+ *   an em dash before "backed by", because the original ran two clauses
+ *   together without punctuation
+ *
+ * Nothing was added. The warranty term, the lifetime maintenance and the three
+ * services named in the mission are the client's own claims, and this page is
+ * the only place on the site that makes them — if any of them is wrong it is
+ * wrong in public, so they want checking before launch rather than after.
+ *
+ * The photography is chosen rather than decorative: the lattice is the
+ * aspiration the vision describes, and the profile in the hands is the thing
+ * the mission is about delivering and servicing. Both were already in the repo
+ * and unused.
+ */
+export const VISION = {
+  banner: {
+    heading: "Vision & Mission",
+    lede: "Premium window and door systems that more people in Malaysia can actually own — and the local service that keeps them working long after handover.",
+  },
+  /** The section's own heading, carried for structure. The two blocks below
+      print their own labels, so showing this as well would say it twice. */
+  heading: "Our vision and mission",
+  blocks: [
+    {
+      label: "Vision",
+      body: "To redefine premium living in Malaysia by making high-end quality accessible to more people at an affordable price — backed by a 15-year product warranty and lifetime maintenance.",
+      image: {
+        src: "/pexels-masoodaslami-29585706.jpg",
+        alt: "The white structural lattice of a contemporary building, seen from below against the sky",
+      },
+    },
+    {
+      label: "Mission",
+      body: "Localised services for delivery, installation and after-sales, to ensure the timely completion of quality door and window systems for your project in Malaysia.",
+      image: {
+        src: "/pexels-francesca-cinel-114872900-9729590.jpg",
+        alt: "Two hands holding an aluminium window profile, the chambers of its section visible at the cut end",
+      },
+    },
+  ],
+};
+
+/** Label and statement only. The photographs and their alt text carry over
+    from VISION, which is the same rule BACKGROUND follows: the pictures are
+    the same pictures in every language. */
+const VISION_TEXT_ZH = [
+  {
+    label: "愿景",
+    body: "重新定义马来西亚的优质生活 —— 以可负担的价格，让更多人享有高端品质，并以 15 年产品保固与终身维护作为支撑。",
+  },
+  {
+    label: "使命",
+    body: "以本地化的配送、安装与售后服务，确保优质门窗系统在您马来西亚的项目中按时完成。",
+  },
+];
+
+export const VISION_ZH: Partial<typeof VISION> = {
+  banner: {
+    heading: "愿景与使命",
+    lede: "让更多马来西亚家庭真正负担得起的高端门窗系统 —— 以及交付之后依然在场的本地服务。",
+  },
+  heading: "我们的愿景与使命",
+  blocks: VISION.blocks.map((block, i) => ({ ...block, ...VISION_TEXT_ZH[i] })),
+};
+
+/** Mine rather than the client's, like every other Malay string here, and
+    wanting a native speaker's eye before it ships. */
+const VISION_TEXT_BM = [
+  {
+    label: "Visi",
+    body: "Mentakrif semula kehidupan premium di Malaysia dengan menjadikan kualiti tinggi mampu dimiliki lebih ramai orang pada harga berpatutan — disokong jaminan produk 15 tahun dan penyelenggaraan sepanjang hayat.",
+  },
+  {
+    label: "Misi",
+    body: "Perkhidmatan tempatan untuk penghantaran, pemasangan dan selepas jualan, bagi memastikan sistem pintu dan tingkap berkualiti disiapkan tepat pada masanya untuk projek anda di Malaysia.",
+  },
+];
+
+export const VISION_BM: Partial<typeof VISION> = {
+  banner: {
+    heading: "Visi & Misi",
+    lede: "Sistem tingkap dan pintu premium yang benar-benar mampu dimiliki lebih ramai rakyat Malaysia — dan perkhidmatan tempatan yang mengekalkannya lama selepas serahan.",
+  },
+  heading: "Visi dan misi kami",
+  blocks: VISION.blocks.map((block, i) => ({ ...block, ...VISION_TEXT_BM[i] })),
+};
+
 export const CTA = "Speak to our team";
 export const CTA_ZH = "联系我们的团队";
 export const CTA_BM = "Hubungi pasukan kami";

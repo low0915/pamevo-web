@@ -114,7 +114,7 @@ body {
   background:
     linear-gradient(135deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.1)),
     rgb(255 255 255 / 0.45);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgb(255 255 255 / 0.7);
   box-shadow:
@@ -203,40 +203,21 @@ body {
    frame beside it, and every px of it is a px the tint does not have to pay
    for. The two trade along a measured curve —
 
-     blur  110px -> tint 0.26      blur  30px -> tint 0.50
-     blur   80px -> tint 0.36      blur  24px -> tint 0.52
-     blur   50px -> tint 0.44      blur  16px -> tint 0.55
-     blur   40px -> tint 0.46      blur  12px -> tint 0.57
-                                   blur   8px -> tint 0.58   <- here
+     blur  110px -> tint 0.26      blur  40px -> tint 0.46
+     blur   80px -> tint 0.36      blur  30px -> tint 0.50
+     blur   50px -> tint 0.44      blur  24px -> tint 0.52
 
-   — and this sits at the sharp end of it on purpose. 8px is barely frosting at
-   all: the frame, the sill and the shadow across it read through the glass as
-   themselves, which is the point of putting a window behind a window. The 0.58
-   that costs is a heavier tint than any other glass on this site, and the panes
-   are darker for it. The other end of that curve is a band you can barely see
-   the picture through and panes you can nearly read a newspaper through. This
-   is the trade the other way round.
+   — and this sits at the sharp end of it on purpose. At 24px the frame, the
+   sill and the light in the photograph all still read as themselves through the
+   glass, which is the point of putting a window behind a window; the 0.52 that
+   costs is a heavier tint than `.glass-dark`, and the panes are darker for it.
+   The other end of that curve is a band you can barely see the picture through
+   and panes you can nearly read a newspaper through. This is the trade the
+   other way round.
 
-   The curve is flat at this end — 8px, 12px and 16px are within three
-   hundredths of tint of each other — so there is no cheaper blur left to buy.
-   Below it the picture stops being frosted and the panes stop being glass.
-
-   0.58 is also exactly what the hover state needs, which is a coincidence worth
-   keeping. Hovering a pane fades a product photograph in beneath this same
-   tint, and those are catalogue shots on near-white grounds: white text over a
-   pure white ground at 0.58 holds 4.65:1, and at 0.57 it is 4.49:1. So the
-   floor set by the background photograph and the floor set by any product shot
-   that could ever be put behind the type are the same number. See ProductGrid.
-
-   Shipped a hundredth over that floor, at 0.58, which is what the top row's
-   clearance under the header costs: pushing those three names down the pane
-   moves them onto a brighter part of the picture, and 0.57 leaves a tenth of a
-   stop in hand where 0.58 leaves a quarter. Two hundredths of tint is not
-   visible; the difference between a model and a browser can be.
-
-   White holds 4.75:1 for the 18px name on a phone, where WCAG wants 4.5, and
-   4.82:1 or better across every width where the name is 24px or larger and the
-   bar is 3. The arrow is pure white and clears the same bar at 4.34:1.
+   White holds 4.66:1 for the 20px name on a phone, where WCAG wants 4.5, and
+   4.11:1 or better across every width where the name is 24px or larger and the
+   bar is 3. The arrow is pure white and clears the same bar at 3.83:1.
 
    The gradient runs the other way to the site's other glass: white at the
    bottom right, tint at the top left. Every pane carries its copy up the left
@@ -250,24 +231,9 @@ body {
 .glass-tile {
   background:
     linear-gradient(330deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.01) 45%, rgb(16 18 21 / 0.12)),
-    rgb(16 18 21 / 0.58);
-  /* 4px, down from 8, and it cost no legibility. Counter-intuitively it gained
-     a little: the photograph behind these panes is a near-white window corner,
-     so a wide blur averages its dark frame details out of the backdrop and
-     leaves it BRIGHTER than the sharp original.
-
-     Measured on the rendered page at 4px, white title against its own pane:
-     desktop 6.53:1 worst of six, phone 6.34:1 worst of six, against a 4.5 bar.
-     Take those readings with the band unoccluded — from about 3.3 viewport
-     heights down the home page. Any further and the Background curtain has
-     already risen over the bottom row, and what gets measured is the
-     photograph on top of it rather than the pane underneath.
-
-     The tint above is what carries this, not the blur, and at 4px the blur is
-     too small to rescue a brighter picture. Swap landing-product-bg.png and
-     re-measure the tint. */
-  -webkit-backdrop-filter: blur(4px) saturate(150%);
-  backdrop-filter: blur(4px) saturate(150%);
+    rgb(16 18 21 / 0.52);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
 }
 
 /* Refracted rim, drawn as a masked gradient border. */

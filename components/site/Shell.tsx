@@ -1,6 +1,8 @@
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { EnquiryBand } from "@/components/site/EnquiryBand";
+import { ClosingSheet } from "@/components/site/ClosingSheet";
+import { PageHold } from "@/components/site/PageHold";
 import { Grain } from "@/components/ui/Grain";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { CookieConsent } from "@/components/site/CookieConsent";
@@ -51,15 +53,28 @@ export function Shell({
             section through `useCopy`. */}
         <LocaleProvider locale={locale}>
           <Header />
-          {children}
-          {/* The closing enquiry, above the footer on every route. Here rather
-              than at the foot of each page for the reason the header is here:
-              one band, twenty-eight routes, three languages, and no copy of it
-              anywhere to fall out of step. It reads the locale from the
-              provider it sits inside, and takes itself off /contact — see
-              EnquiryBand. */}
-          <EnquiryBand />
-          <Footer />
+          {/* The page, held. Once it has been scrolled almost entirely past it
+              pins by its foot, so its last screen stops on the display and the
+              closing sheet below is drawn up over something standing still —
+              which is the same thing the home page's sections do to each other.
+              See PageHold. */}
+          <PageHold>{children}</PageHold>
+          {/* The closing enquiry and the footer, as ONE sheet.
+
+              Grouped rather than stacked: they are what closes every page, and
+              a curtain that lifted the band while leaving the footer behind
+              read as one of them coming loose. ClosingSheet carries the
+              overlap, the shadow and the travel for the pair.
+
+              Here rather than at the foot of each page for the reason the
+              header is here: one band, twenty-five routes that show it, three
+              languages, and no copy of it anywhere to fall out of step. It
+              reads the locale from the provider it sits inside, and takes
+              itself off /contact — see EnquiryBand. */}
+          <ClosingSheet>
+            <EnquiryBand />
+            <Footer />
+          </ClosingSheet>
         </LocaleProvider>
         <Grain />
         {/* Last, and in the root layout rather than a page: the plugin sweeps

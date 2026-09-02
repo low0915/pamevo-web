@@ -64,9 +64,11 @@ const pages = [
   // subject instead of on a redirect to the home page.
   { source: "/about", destination: "/", permanent: true },
   { source: "/about/directors-profile", destination: "/", permanent: true },
-  // Vision & Mission is still the one nav item with no page. When it gets one,
-  // this line points at it rather than at the home page.
-  { source: "/about/vision-mision", destination: "/", permanent: true },
+  // The page exists now, so this points at it rather than at the home page.
+  // Note the source spelling: the WordPress slug had "mision" with one S, and
+  // it stays misspelt here because that is the URL that was published and the
+  // one that has links pointing at it. The destination is spelt correctly.
+  { source: "/about/vision-mision", destination: "/vision-mission", permanent: true },
   { source: "/our-10-core-usp", destination: "/", permanent: true },
 
   // The blog index was a product archive, and so was WooCommerce's shop

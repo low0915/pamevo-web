@@ -72,6 +72,7 @@ export const PAIRED_PATHS = [
   "/contact",
   "/our-products",
   "/our-story",
+  "/vision-mission",
   "/services",
   "/our-projects",
 ] as const;
@@ -113,6 +114,28 @@ export function bmPath(path: string) {
  */
 export function isHome(pathname: string) {
   return enPath(pathname) === "/";
+}
+
+/**
+ * Whether a page closes with the enquiry band — and so with the curtain.
+ *
+ * One predicate for two things that must agree. The band takes itself off
+ * /contact, where it would be a link to the page being read, sitting above the
+ * footer under a form asking for the same thing. The curtain has to come off
+ * with it: the sheet that rides up over the held page IS the band plus the
+ * footer, and on /contact that is a footer on its own — half the height, unable
+ * to cover the screen, drawing a curtain over a form for no reason.
+ *
+ * They were separate checks for one revision and that is exactly how these
+ * drift: put the band back on /contact and the curtain returns with it, from
+ * this line, rather than from someone remembering.
+ *
+ * `enPath` first, so /bm/contact and /zh/contact are covered by the one
+ * comparison — matching the literal "/contact" would leave both translated
+ * contact pages behaving differently from the English one.
+ */
+export function hasEnquiryBand(pathname: string) {
+  return enPath(pathname) !== "/contact";
 }
 
 /**
