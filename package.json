@@ -5,10 +5,11 @@
   "scripts": {
     "predev": "node scripts/build-cjk-subset.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/build-cjk-subset.mjs",
+    "prebuild": "node scripts/build-cjk-subset.mjs && node scripts/check-assets.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-assets": "node scripts/check-assets.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

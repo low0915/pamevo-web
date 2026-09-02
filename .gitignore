@@ -62,10 +62,17 @@ create-a-new-section-functional-kite.md
 # section wants them later; if one gets used, un-ignore it here or it will be
 # missing from the deploy.
 #
-# scratched-metal-background.jpg was in this list and should not have been:
-# /contact renders it as the banner behind the heading, eagerly and above the
-# fold. Ignored, it never reached the deploy, so that banner was a 404 in
-# production and a blank band on the page. Un-ignored below.
+# THIS HAS NOW BITTEN TWICE. Both times the same way: a file was listed here
+# BECAUSE nothing referenced it, then a section was built that used it, and the
+# list was never revisited. The build passes, the page is perfect locally, and
+# the image 404s in production — the only thing wrong is that the file was
+# never in the commit.
+#
+#   scratched-metal-background.jpg — /contact's banner, above the fold.
+#   pexels-masoodaslami-29585706.jpg — the Vision half of /vision-mission.
+#
+# `git status` will NOT warn you: an ignored file is not untracked, it is
+# invisible. Check against this list before putting a picture on a page.
 /public/0_Fly_Silky_3840X2160.mp4
 /public/hero.jpg
 /public/about-1.png
@@ -73,4 +80,3 @@ create-a-new-section-functional-kite.md
 /public/logo-space.png
 /public/white-staircase-with-shadows-wall.jpg
 /public/pexels-antonio-sokic-1901950-3839430.jpg
-/public/pexels-masoodaslami-29585706.jpg
