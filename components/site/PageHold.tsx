@@ -19,7 +19,7 @@ import { hasEnquiryBand } from "@/lib/paths";
  * so it cannot be asked to pin itself. This wraps it and does it from outside.
  *
  * `top: min(0px, 100lvh - height)` is the FOOT-PIN, the same expression
- * Stats.tsx uses and /our-story's frame after it. Read it in two cases:
+ * Stats.tsx uses and /our-profile's frame after it. Read it in two cases:
  *
  *   - The page is taller than the screen, which is the normal one. The
  *     expression is a large negative number, so the wrapper sticks only once it

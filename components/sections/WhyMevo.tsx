@@ -304,7 +304,7 @@ export function WhyMevo() {
    * wherever the content fits, and taller where it does not. A taller frame
    * pinned at `top: 0` would hold with its own foot below the fold and the last
    * two panels would never be reachable, so it pins by the foot instead - the
-   * same `min(0px, 100lvh - height)` Stats and the /our-story frame use. The
+   * same `min(0px, 100lvh - height)` Stats and the /our-profile frame use. The
    * only way to express that is a measured height, because CSS cannot ask an
    * element how tall it is.
    *
@@ -598,7 +598,7 @@ export function WhyMevo() {
                    The drawing puts #f2f2f2 panels on white. This is the same
                    step in tone taken the other way — white panels on the site's
                    own #f4f5f6 — because a pure white ground was ruled out once
-                   already on /our-story, and every other light section on this
+                   already on /our-profile, and every other light section on this
                    site is that grey. The hairline is what gives a panel its edge
                    at a step this small; swap the two colours and it can come
                    off.

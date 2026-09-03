@@ -57,7 +57,7 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
         {/* WhyChoose stood here and Services stood between Stats and Projects.
             Background stood between ProductGrid and Stats. All three are out of
             the home page; all three still exist, and Background is still the
-            whole of /our-story, where it renders its `standalone` branch.
+            whole of /our-profile, where it renders its `standalone` branch.
 
             THE CURTAIN CHAIN SURVIVED THE CUT, and it is worth writing down
             why, because it is the thing a change like this quietly breaks.

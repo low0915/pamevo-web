@@ -17,7 +17,7 @@ import { PageBanner } from "@/components/sections/PageBanner";
  * below this banner; nothing structural has to move for it.
  *
  * A server component, so the copy arrives as a prop rather than through the
- * locale context, the same shape ContactBody, VisionBody and ServicesBody take.
+ * locale context, the same shape ContactBody and ServicesBody take.
  */
 export function DirectorsBody({ locale = "EN" }: { locale?: Locale }) {
   /* Keyed off a table rather than a chain of ternaries, so a language added to
@@ -35,7 +35,7 @@ export function DirectorsBody({ locale = "EN" }: { locale?: Locale }) {
       <PageBanner
         heading={copy.banner.heading}
         subheading={copy.banner.lede}
-        /* /contact's banner exactly, as on /services and /vision-mission. */
+        /* /contact's banner exactly, as on /services and the profile page. */
         overlay={{ src: "/pa mevo_up.png", position: "50% 15%" }}
         figure={{
           src: "/Camada 1.png",

@@ -15,9 +15,8 @@ export type NavItem = {
 };
 
 export const NAV: NavItem[] = [
-  { label: "Our Story", href: "/our-story" },
+  { label: "Our Profile", href: "/our-profile" },
   { label: "Director's Profile", href: "/directors-profile" },
-  { label: "Vision & Mission", href: "/vision-mission" },
   { label: "Services & Features", href: "/services" },
   {
     label: "Our Products",
@@ -57,7 +56,12 @@ export const NAV: NavItem[] = [
  * The sub-labels are translated here too, which the note this replaces asked
  * for when the first `children` appeared. They are positional — index i of this
  * list is index i of NAV, and the children line up the same way — so an item
- * added to NAV needs a line adding here or it renders in English.
+ * added to NAV needs a line adding here or it renders in English, and an item
+ * REMOVED from NAV needs removing from both of these or every label below it
+ * shifts up one and the nav silently mislabels itself. That is not
+ * hypothetical: Vision & Mission came out of the middle of this list when its
+ * page was folded into the profile page, and taking it out of NAV alone would
+ * have left Services reading "Visi & Misi".
  *
  * FOR THE CLIENT TO CONFIRM: five of these six are new and are not the client's
  * own words, unlike the section copy elsewhere in this file. 服务与特色 in
@@ -66,9 +70,8 @@ export const NAV: NavItem[] = [
  * four unbuilt pages exist, which is the moment to have them checked.
  */
 const NAV_ZH_LABELS: { label: string; children?: string[] }[] = [
-  { label: "我们的故事" },
+  { label: "公司简介" },
   { label: "董事简介" },
-  { label: "愿景与使命" },
   { label: "服务与特色" },
   { label: "我们的产品", children: ["窗系统", "门系统"] },
   { label: "我们的项目" },
@@ -100,9 +103,8 @@ export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
  * projects strip ends on.
  */
 const NAV_BM_LABELS: { label: string; children?: string[] }[] = [
-  { label: "Kisah Kami" },
+  { label: "Profil Kami" },
   { label: "Profil Pengarah" },
-  { label: "Visi & Misi" },
   { label: "Perkhidmatan & Ciri" },
   { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu"] },
   { label: "Projek Kami" },
@@ -242,10 +244,10 @@ export const SEO = {
       "Speak to MEVO Malaysia about aluminium windows and doors: send an enquiry, call 014 - 879 7371, or visit the Shah Alam showroom.",
   },
   story: {
-    path: "/our-story",
-    title: "Our Story",
+    path: "/our-profile",
+    title: "Our Profile",
     description:
-      "Established 2004, listed on Bursa Malaysia 2006: how P.A. Group grew from an aluminium extruder into the group behind MEVO Malaysia's window and door systems.",
+      "Established 2004, listed on Bursa Malaysia 2006: how P.A. Group grew from an aluminium extruder into the group behind MEVO Malaysia, and the vision behind it.",
   },
   directors: {
     path: "/directors-profile",
@@ -258,12 +260,6 @@ export const SEO = {
     title: "Services & Features",
     description:
       "Architectural consultation, custom system selection, supply, certified installation and after-sales service for aluminium windows and doors in Malaysia.",
-  },
-  vision: {
-    path: "/vision-mission",
-    title: "Vision & Mission",
-    description:
-      "The vision and mission of MEVO Malaysia: premium aluminium window and door systems made affordable, backed by a 15-year product warranty, lifetime maintenance and local installation and after-sales service.",
   },
   projects: {
     path: "/our-projects",
@@ -320,10 +316,10 @@ export const SEO_ZH = {
       "就铝合金门窗事宜联系 MEVO 马来西亚：在线咨询、致电 014 - 879 7371，或莅临莎阿南展厅。",
   },
   story: {
-    path: "/zh/our-story",
-    title: "我们的故事",
+    path: "/zh/our-profile",
+    title: "公司简介",
     description:
-      "2004 年成立，2006 年于马来西亚交易所主板上市：P.A. Group 如何从铝型材挤压商成长为 MEVO 马来西亚门窗业务背后的集团。",
+      "2004 年成立，2006 年于马来西亚交易所主板上市：P.A. Group 如何从铝型材挤压商成长为 MEVO 马来西亚门窗业务背后的集团，以及支撑这一切的愿景与使命。",
   },
   directors: {
     path: "/zh/directors-profile",
@@ -336,12 +332,6 @@ export const SEO_ZH = {
     title: "我们的服务",
     description:
       "建筑咨询、定制设计与系统选型、供应与项目协调、持证安装及售后服务 —— 马来西亚铝合金门窗的全流程服务。",
-  },
-  vision: {
-    path: "/zh/vision-mission",
-    title: "愿景与使命",
-    description:
-      "MEVO 马来西亚的愿景与使命：以可负担的价格提供高端铝合金门窗系统，并以 15 年产品保固、终身维护及本地安装与售后服务作为支撑。",
   },
   projects: {
     path: "/zh/our-projects",
@@ -389,10 +379,10 @@ export const SEO_BM = {
       "Hubungi MEVO Malaysia tentang tingkap dan pintu aluminium: hantar pertanyaan, telefon 014 - 879 7371, atau kunjungi bilik pameran kami di Shah Alam.",
   },
   story: {
-    path: "/bm/our-story",
-    title: "Kisah Kami",
+    path: "/bm/our-profile",
+    title: "Profil Kami",
     description:
-      "Ditubuhkan 2004, tersenarai di Bursa Malaysia 2006: bagaimana P.A. Group berkembang daripada pengekstrud aluminium kepada kumpulan di sebalik MEVO Malaysia.",
+      "Ditubuhkan 2004, tersenarai di Bursa Malaysia 2006: bagaimana P.A. Group berkembang daripada pengekstrud aluminium kepada kumpulan di sebalik MEVO Malaysia, serta visi dan misi di sebaliknya.",
   },
   directors: {
     path: "/bm/directors-profile",
@@ -405,12 +395,6 @@ export const SEO_BM = {
     title: "Perkhidmatan Kami",
     description:
       "Perundingan seni bina, pemilihan sistem tersuai, pembekalan, pemasangan bertauliah dan perkhidmatan selepas jualan untuk tingkap dan pintu aluminium di Malaysia.",
-  },
-  vision: {
-    path: "/bm/vision-mission",
-    title: "Visi & Misi",
-    description:
-      "Visi dan misi MEVO Malaysia: sistem tingkap dan pintu aluminium premium pada harga berpatutan, disokong jaminan produk 15 tahun, penyelenggaraan sepanjang hayat serta pemasangan dan perkhidmatan selepas jualan tempatan.",
   },
   projects: {
     path: "/bm/our-projects",
@@ -507,7 +491,7 @@ export const BACKGROUND = {
   /**
    * The same showroom as images[0], cut out of its sky.
    *
-   * Used only by /our-story, where the design lays the building over a light
+   * Used only by /our-profile, where the design lays the building over a light
    * ground and a blue bar rather than using it as a full-bleed backdrop — so it
    * has to be a cut-out, and the alpha is the whole point of the file. Exported
    * from Figma (node 123:113, "pa mevo_isolated 1"); about a fifth of the
@@ -988,7 +972,7 @@ export const STATS_BM: typeof STATS = STATS.map((stat, i) => ({
     fragment where /contact uses it as an <h2>. */
 
 /**
- * /vision-mission.
+ * Vision and mission, shown as the closing section of the profile page.
  *
  * The client supplied both statements. They are transcribed here with four
  * small corrections, all of them mechanical rather than editorial, and all
@@ -1018,9 +1002,6 @@ export const VISION = {
     heading: "Vision & Mission",
     lede: "Premium window and door systems that more people in Malaysia can actually own — and the local service that keeps them working long after handover.",
   },
-  /** The section's own heading, carried for structure. The two blocks below
-      print their own labels, so showing this as well would say it twice. */
-  heading: "Our vision and mission",
   blocks: [
     {
       label: "Vision",
@@ -1060,7 +1041,6 @@ export const VISION_ZH: Partial<typeof VISION> = {
     heading: "愿景与使命",
     lede: "让更多马来西亚家庭真正负担得起的高端门窗系统 —— 以及交付之后依然在场的本地服务。",
   },
-  heading: "我们的愿景与使命",
   blocks: VISION.blocks.map((block, i) => ({ ...block, ...VISION_TEXT_ZH[i] })),
 };
 
@@ -1082,7 +1062,6 @@ export const VISION_BM: Partial<typeof VISION> = {
     heading: "Visi & Misi",
     lede: "Sistem tingkap dan pintu premium yang benar-benar mampu dimiliki lebih ramai rakyat Malaysia — dan perkhidmatan tempatan yang mengekalkannya lama selepas serahan.",
   },
-  heading: "Visi dan misi kami",
   blocks: VISION.blocks.map((block, i) => ({ ...block, ...VISION_TEXT_BM[i] })),
 };
 
@@ -1097,7 +1076,7 @@ export const VISION_BM: Partial<typeof VISION> = {
  * notices it is wrong.
  *
  * What the route does carry is real: the heading, a lede that claims nothing
- * beyond what /our-story already establishes, its own metadata, its hreflang
+ * beyond what /our-profile already establishes, its own metadata, its hreflang
  * set and its place in the sitemap. Adding the profiles is a `people` array
  * here and a block in DirectorsBody; nothing structural has to move.
  *

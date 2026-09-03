@@ -426,7 +426,7 @@ export function Header() {
                                  same glass as the island and floats over the
                                  same near-black sections, where ink-2 measures
                                  2.7:1 against a 4.5 bar. Measured over the
-                                 /our-story showroom photograph, not assumed. */
+                                 /our-profile showroom photograph, not assumed. */
                               <a
                                 key={child.label}
                                 href={child.href}

@@ -9,7 +9,7 @@ import { WhyChoose } from "@/components/sections/WhyChoose";
  *
  * The page was the services stack on its own, opening cold on a dark panel.
  * It now opens on the shared `PageBanner` — the same band /contact,
- * /our-products and /vision-mission use — and closes on the feature bands,
+ * /our-products and /contact use — and closes on the feature bands,
  * which until now only existed on the home page.
  *
  * Those bands no longer print "Why Choose MEVO Malaysia" and its four claims:

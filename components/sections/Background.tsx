@@ -59,7 +59,7 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
   /**
    * The held frame's own height, written back as a variable.
    *
-   * /our-story only. The frame is a floor rather than a fixed screen, so on a
+   * /our-profile only. The frame is a floor rather than a fixed screen, so on a
    * laptop it can end up taller than the viewport, and a frame taller than the
    * viewport pinned at `top: 0` holds with its foot below the fold — the base
    * of the building would never come into view. The pin is therefore
@@ -88,7 +88,7 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
   useEffect(() => {
     const section = rootRef.current;
     if (!section) return;
-    // Nothing below exists on /our-story: no pin, no scrub, no crossfade, and
+    // Nothing below exists on /our-profile: no pin, no scrub, no crossfade, and
     // none of the elements the timeline reaches for. Guarded here rather than
     // by not calling the hook, because the number of hooks a component runs
     // cannot change between renders.
@@ -161,7 +161,7 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
   }, [standalone]);
 
   /**
-   * The lead's entry on /our-story, and the bar coming out from behind the
+   * The lead's entry on /our-profile, and the bar coming out from behind the
    * building.
    *
    * The wipe is a `clip-path: inset()` whose LEFT inset runs 100% to 0. That
@@ -230,12 +230,12 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
   }, [standalone]);
 
   /**
-   * /our-story: the same words, told as a page instead of as a mechanism.
+   * /our-profile: the same words, told as a page instead of as a mechanism.
    *
    * The home page's version is one pinned frame that holds still while 370svh
    * of runway scrolls past it, crossfading photograph and paragraph at the
    * halfway mark. That is a good band in a stack of bands and a bad page: a
-   * reader who came to /our-story from the nav wants to READ two paragraphs,
+   * reader who came to /our-profile from the nav wants to READ two paragraphs,
    * and the scrubbed version hides the second one behind a scroll gesture, puts
    * both inside a frame that clips, and reports progress through a rule that
    * has nothing to be progress through when the section is the whole document.
@@ -525,7 +525,7 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
       // full-bleed photograph reads as a cut rather than as a curtain.
       //
       // All of which is the home page's arrangement, and none of it applies on
-      // /our-story — see `standalone`.
+      // /our-profile — see `standalone`.
       className={`relative h-[370svh] motion-reduce:h-auto ${
         standalone ? "" : "sheet -mt-[110svh] motion-reduce:mt-0"
       }`}

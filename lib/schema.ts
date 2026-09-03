@@ -174,7 +174,7 @@ export function homeGraph(locale: Locale = "EN") {
 }
 
 /**
- * The three sections that are also pages — /our-story, /services and
+ * The three sections that are also pages — /our-profile, /services and
  * /our-projects — carry a breadcrumb and nothing else.
  *
  * Nothing else is honest. There is no `AboutPage` or `Service` node here
@@ -184,7 +184,7 @@ export function homeGraph(locale: Locale = "EN") {
  * pages genuinely sit one level under the home page of their language.
  */
 export function pageGraph(
-  key: "story" | "directors" | "vision" | "services" | "projects",
+  key: "story" | "directors" | "services" | "projects",
   locale: Locale = "EN",
 ) {
   const copy = seo(locale);

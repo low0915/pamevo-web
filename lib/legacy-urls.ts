@@ -49,19 +49,26 @@ const aliases = [
 const pages = [
   // Pages whose content survives, folded into the home page's sections.
   //
-  // /our-story, /services and /our-projects ARE NOT HERE, and must not be.
-  // They were on this list — folded onto the home page, because at the time
-  // this build had nowhere else to put them — and they are now real routes
-  // built from the sections that had absorbed them. A redirect takes
-  // precedence over a page, so leaving them here did not merely waste the new
-  // pages: it made them unreachable, and the nav linked to three URLs that
-  // bounced straight back to the home page. Same trap the /zh block below
-  // warns about, walked into from the other direction.
+  // /services and /our-projects ARE NOT HERE, and must not be. They were on
+  // this list — folded onto the home page, because at the time this build had
+  // nowhere else to put them — and they are now real routes built from the
+  // sections that had absorbed them. A redirect takes precedence over a page,
+  // so leaving them here did not merely waste the new pages: it made them
+  // unreachable, and the nav linked to URLs that bounced straight back to the
+  // home page. Same trap the /zh block below warns about, walked into from the
+  // other direction.
   //
-  // Reclaiming the old URLs rather than inventing new ones is also the better
-  // outcome: /our-story and /services are what the WordPress site published,
-  // so whatever equity those URLs carry now lands on a page about the same
-  // subject instead of on a redirect to the home page.
+  // Reclaiming the old URLs rather than inventing new ones is the better
+  // outcome: /services is what the WordPress site published, so whatever equity
+  // that URL carries now lands on a page about the same subject instead of on a
+  // redirect to the home page.
+  //
+  // /our-story USED TO BE ON THAT SAME FOOTING and is now a source below
+  // instead, which is the one case this rule bends for. It is no longer a route
+  // — the page is /our-profile — so there is nothing for a redirect to shadow,
+  // and the equity it carries is passed forward one hop rather than dropped.
+  // The test is not "was this a WordPress URL", it is "is there a page at this
+  // path today"; when the answer changes, the rule changes with it.
   { source: "/about", destination: "/", permanent: true },
   // The page exists now. The source keeps the WordPress spelling because that
   // is the URL that was published; the destination is the new route.
@@ -74,8 +81,30 @@ const pages = [
   // Note the source spelling: the WordPress slug had "mision" with one S, and
   // it stays misspelt here because that is the URL that was published and the
   // one that has links pointing at it. The destination is spelt correctly.
-  { source: "/about/vision-mision", destination: "/vision-mission", permanent: true },
+  //
+  // The destination is /our-profile, not /vision-mission. That page was folded
+  // into the profile page, and pointing this at it would have made a two-hop
+  // chain out of a one-hop redirect — /about/vision-mision to /vision-mission
+  // to /our-profile. Chains are followed but they leak, and the fix is to
+  // repoint the source rather than to rely on the second hop.
+  { source: "/about/vision-mision", destination: "/our-profile", permanent: true },
   { source: "/our-10-core-usp", destination: "/", permanent: true },
+
+  // THE PROFILE RENAME. /our-story became /our-profile and /vision-mission was
+  // folded into it, in all three languages. Six sources, all 308, all landing
+  // on the page that now holds what they held.
+  //
+  // /our-story is the one that carries real weight: it is a URL the WordPress
+  // site published, so it has whatever the old site accumulated plus whatever
+  // this build has since earned. /vision-mission and the two /bm paths were
+  // only ever published by this build; they are here because a live URL that
+  // starts 404ing is a live URL that starts 404ing, however young it is.
+  { source: "/our-story", destination: "/our-profile", permanent: true },
+  { source: "/zh/our-story", destination: "/zh/our-profile", permanent: true },
+  { source: "/bm/our-story", destination: "/bm/our-profile", permanent: true },
+  { source: "/vision-mission", destination: "/our-profile", permanent: true },
+  { source: "/zh/vision-mission", destination: "/zh/our-profile", permanent: true },
+  { source: "/bm/vision-mission", destination: "/bm/our-profile", permanent: true },
 
   // The blog index was a product archive, and so was WooCommerce's shop
   // archive. Both were genuinely about products, so both consolidate onto the
@@ -100,16 +129,17 @@ const pages = [
 
   // The Chinese tree.
   //
-  // /zh, /zh/contact, /zh/our-products, /zh/our-story, /zh/services and
+  // /zh, /zh/contact, /zh/our-products, /zh/our-profile, /zh/services and
   // /zh/our-projects are REAL ROUTES in this build and are deliberately absent
   // from this list — a redirect here would take precedence over the page and
-  // that page would never render. The live WordPress site published several of
+  // that page would never render. /zh/our-story is NOT on that list any more:
+  // it is a source above, pointing at /zh/our-profile. The live WordPress site published several of
   // those same paths, so they need no redirect at all: they carry straight
   // over onto a page about the same subject.
   //
   // What does need handling is everything else the old /zh tree published —
-  // /zh/our-story, /zh/blog/<product>, /zh/about and the rest — which has no
-  // Chinese page here. Those go to the Chinese home page rather than to their
+  // /zh/blog/<product>, /zh/about and the rest — which has no Chinese page
+  // here. Those go to the Chinese home page rather than to their
   // English equivalent: a reader who asked for Chinese should land somewhere
   // Chinese, and /zh is the page most likely to answer them.
   //

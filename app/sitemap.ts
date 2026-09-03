@@ -85,7 +85,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { key: "products", en: SEO.products, bm: SEO_BM.products, zh: SEO_ZH.products },
     { key: "contact", en: SEO.contact, bm: SEO_BM.contact, zh: SEO_ZH.contact },
     { key: "story", en: SEO.story, bm: SEO_BM.story, zh: SEO_ZH.story },
-    { key: "vision", en: SEO.vision, bm: SEO_BM.vision, zh: SEO_ZH.vision },
     {
       key: "directors",
       en: SEO.directors,
