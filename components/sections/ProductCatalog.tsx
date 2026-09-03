@@ -9,6 +9,7 @@ import { CaretDown, Rows, SquaresFour } from "@phosphor-icons/react/dist/ssr";
 import {
   PRODUCTS,
   inSystem,
+  productFromHash,
   systemFromHash,
   systemHash,
   type Product,
@@ -178,15 +179,61 @@ export function ProductCatalog() {
    * filter would sit unchanged while the URL said otherwise. See the note in
    * components/site/Header.tsx.
    */
+  /**
+   * Opening the catalogue ON a product, from its slug in the fragment.
+   *
+   * This is where the home page's product grid now sends a reader. A pane there
+   * used to open that product's own page, which is a dead end with one product
+   * on it, and someone who has just picked one pane out of six is browsing
+   * rather than deciding. `/our-products#dm80-biofold-door` puts them in the
+   * catalogue with that row open and the other nineteen underneath it.
+   *
+   * The filter is cleared rather than left alone. A slug says nothing about a
+   * system, and if the reader had filtered to Door System a link to a window
+   * would land on a row that is not rendered — no element, nothing to scroll
+   * to, and the selection sitting on a product they cannot see.
+   *
+   * TWO FRAMES BEFORE SCROLLING, and both are needed. The first lets React
+   * commit the newly opened row; the second lets the layout that follows it
+   * settle. The row that WAS open closes in the same commit, and when it sits
+   * above this one the list shortens underneath — scrolling before that lands
+   * short by the height of a whole panel. `scroll-mt-28` on the row is what
+   * keeps the result clear of the header and the pinned photograph.
+   */
+  const openBySlug = useCallback(
+    (p: Product) => {
+      setSystem("all");
+      preload(p);
+      setOpen(p.no);
+      setShown(`${p.slug}-0`);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() =>
+          document.getElementById(p.slug)?.scrollIntoView({ block: "start" }),
+        ),
+      );
+    },
+    [preload],
+  );
+
   useEffect(() => {
     const apply = () => {
-      if (!window.location.hash) return;
-      filter(systemFromHash(window.location.hash));
+      const hash = window.location.hash;
+      if (!hash) return;
+      /* A product first, a filter second. The two share one fragment and
+         cannot collide — no product is called "window" or "door" — and a
+         fragment matching neither falls through to the unfiltered catalogue
+         rather than to an empty list. */
+      const product = productFromHash(hash);
+      if (product) {
+        openBySlug(product);
+        return;
+      }
+      filter(systemFromHash(hash));
     };
     apply();
     window.addEventListener("hashchange", apply);
     return () => window.removeEventListener("hashchange", apply);
-  }, [filter]);
+  }, [filter, openBySlug]);
 
   return (
     <section className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12">

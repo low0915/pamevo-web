@@ -53,7 +53,14 @@ const SETTLE_ALPHA = 0.5;
  */
 export function Services({ standalone = false }: { standalone?: boolean }) {
   /* See the note on Background: lowercase would be a literal element. */
-  const Heading = standalone ? "h1" : "h2";
+  /* Always `h2`, where this used to become the page's `h1` when standalone.
+     /services now opens on a PageBanner, and a banner's heading IS an `h1` —
+     two of them on one page is a document with two titles, and the second one
+     silently outranks nothing. The banner owns the page, this owns the
+     section. Kept as a variable rather than written inline because the JSX
+     below reads it, and because the day a page uses this section WITHOUT a
+     banner the choice comes back here rather than being hunted for. */
+  const Heading = "h2";
   const rootRef = useRef<HTMLElement>(null);
   const services = useCopy(SERVICES, { ZH: SERVICES_ZH, BM: SERVICES_BM });
 

@@ -16,6 +16,7 @@ export type NavItem = {
 
 export const NAV: NavItem[] = [
   { label: "Our Story", href: "/our-story" },
+  { label: "Director's Profile", href: "/directors-profile" },
   { label: "Vision & Mission", href: "/vision-mission" },
   { label: "Services & Features", href: "/services" },
   {
@@ -66,6 +67,7 @@ export const NAV: NavItem[] = [
  */
 const NAV_ZH_LABELS: { label: string; children?: string[] }[] = [
   { label: "我们的故事" },
+  { label: "董事简介" },
   { label: "愿景与使命" },
   { label: "服务与特色" },
   { label: "我们的产品", children: ["窗系统", "门系统"] },
@@ -99,6 +101,7 @@ export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
  */
 const NAV_BM_LABELS: { label: string; children?: string[] }[] = [
   { label: "Kisah Kami" },
+  { label: "Profil Pengarah" },
   { label: "Visi & Misi" },
   { label: "Perkhidmatan & Ciri" },
   { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu"] },
@@ -244,6 +247,12 @@ export const SEO = {
     description:
       "Established 2004, listed on Bursa Malaysia 2006: how P.A. Group grew from an aluminium extruder into the group behind MEVO Malaysia's window and door systems.",
   },
+  directors: {
+    path: "/directors-profile",
+    title: "Director's Profile",
+    description:
+      "The leadership behind P.A. Resources Berhad and MEVO Malaysia, the group supplying aluminium window and door systems across the country.",
+  },
   services: {
     path: "/services",
     title: "Services & Features",
@@ -316,6 +325,12 @@ export const SEO_ZH = {
     description:
       "2004 年成立，2006 年于马来西亚交易所主板上市：P.A. Group 如何从铝型材挤压商成长为 MEVO 马来西亚门窗业务背后的集团。",
   },
+  directors: {
+    path: "/zh/directors-profile",
+    title: "董事简介",
+    description:
+      "P.A. Resources Berhad 与 MEVO 马来西亚背后的领导团队 —— 为全国供应铝合金门窗系统的集团。",
+  },
   services: {
     path: "/zh/services",
     title: "我们的服务",
@@ -378,6 +393,12 @@ export const SEO_BM = {
     title: "Kisah Kami",
     description:
       "Ditubuhkan 2004, tersenarai di Bursa Malaysia 2006: bagaimana P.A. Group berkembang daripada pengekstrud aluminium kepada kumpulan di sebalik MEVO Malaysia.",
+  },
+  directors: {
+    path: "/bm/directors-profile",
+    title: "Profil Pengarah",
+    description:
+      "Kepimpinan di sebalik P.A. Resources Berhad dan MEVO Malaysia, kumpulan yang membekalkan sistem tingkap dan pintu aluminium di seluruh negara.",
   },
   services: {
     path: "/bm/services",
@@ -565,21 +586,38 @@ export const PRODUCT_GRID = {
   /** Names each pane. The visible text is the product name alone, which reads
       as a heading rather than as a link; this says where it goes. */
   aria: (product: string) => `View ${product}`,
-  href: (slug: string) => `/our-products/${slug}`,
+  /**
+   * The catalogue, opened ON that product — not the product's own page.
+   *
+   * It was `/our-products/${slug}`, which is a real route and still is. The
+   * difference is where it leaves the reader: a per-product page is a dead end
+   * with one product on it, and someone who has just picked a pane out of a
+   * grid of six is browsing rather than deciding. The fragment puts them in the
+   * catalogue with that row open and the other nineteen underneath it.
+   *
+   * The slug is the row's `id`, so this is an ordinary anchor as far as the
+   * browser is concerned, and `scroll-mt-28` on the row is what stops it
+   * landing behind the header. See `productFromHash` in lib/products.ts.
+   */
+  href: (slug: string) => `/our-products#${slug}`,
 };
 
 export const PRODUCT_GRID_ZH: Partial<typeof PRODUCT_GRID> = {
   heading: "我们的产品",
   aria: (product: string) => `查看 ${product}`,
-  href: () => "/zh/our-products",
+  /* Now takes the slug, where it used to throw it away. There are still no
+     per-product routes in Chinese, but the catalogue is translated and the row
+     is addressable in it, so a Chinese reader lands on the same product an
+     English one does rather than at the top of the list. */
+  href: (slug: string) => `/zh/our-products#${slug}`,
 };
 
 /** Same rule as the Chinese overlay: there are no /bm product pages, so a pane
-    goes to the Malay catalogue rather than out of the reader's language. */
+    goes to the Malay catalogue — but to the row itself, not to the top of it. */
 export const PRODUCT_GRID_BM: Partial<typeof PRODUCT_GRID> = {
   heading: "Produk Kami",
   aria: (product: string) => `Lihat ${product}`,
-  href: () => "/bm/our-products",
+  href: (slug: string) => `/bm/our-products#${slug}`,
 };
 
 /**
@@ -635,6 +673,35 @@ export const WHY_CHOOSE = {
     "Our commitment is simple:",
     "Innovation Meets Performance. Premium Living Made Affordable.",
   ],
+  /**
+   * Copy that exists only for the home page's WhyMevo band, where each of the
+   * four claims in `parts[0]` is given a card of its own and a card needs more
+   * than a title on it.
+   *
+   * NOTHING HERE IS A NEW CLAIM. Every line restates something the site already
+   * says somewhere else, and the source is named against each one, because a
+   * sentence on the home page about warranty terms or where the metal is
+   * extruded is a statement about the business and not a piece of layout:
+   *
+   *   lede      VISION.banner.lede and VISION.blocks[1].body
+   *   notes[0]  SEO.story.description - founded 2004, listed on Bursa
+   *             Malaysia 2006, an aluminium extruder
+   *   notes[1]  VISION.blocks[1].body and SERVICES.items[4].body
+   *   notes[2]  SEO.contact.description - the Shah Alam showroom
+   *   notes[3]  VISION.blocks[0].body - 15-year warranty, lifetime maintenance
+   *
+   * `notes` is parallel to `parts[0].items` and is read by index, so the two
+   * lists have to stay the same length and the same order.
+   */
+  home: {
+    lede: "Premium window and door systems that more people in Malaysia can actually own - designed, supplied, installed and serviced by one local team.",
+    notes: [
+      "Extruded, supplied and backed here: P.A. Group has been an aluminium extruder in Malaysia since 2004, and listed on Bursa Malaysia since 2006.",
+      "Delivery, installation and maintenance are handled locally, by the same team that supplied the system.",
+      "See the systems working at our Shah Alam showroom - open them, close them, handle the profile before you decide.",
+      "Up to fifteen years of product warranty, with lifetime maintenance behind it.",
+    ],
+  },
 };
 
 /** All three parts and the closing commitment. The performance grades keep
@@ -682,6 +749,21 @@ export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
     },
   ],
   tagline: ["我们的承诺很简单：", "创新与性能交融。尊贵生活，触手可及。"],
+  /** The home page's card copy. Translated here rather than left to fall
+      through, because these four lines carry the concrete facts on the band -
+      the founding year, the listing, the showroom, the warranty term - and a
+      Chinese reader landing on an English paragraph under a Chinese heading
+      would be reading the one part of the section that is not decoration.
+      NEEDS THE CLIENT'S SIGN-OFF: see the note on WHY_CHOOSE.home. */
+  home: {
+    lede: "让更多马来西亚人真正拥有得起的优质门窗系统 —— 由同一支本地团队负责设计、供应、安装与售后。",
+    notes: [
+      "在本地挤压、供应与承担：P.A. Group 自 2004 年起在马来西亚从事铝材挤压，并于 2006 年在马来西亚证券交易所上市。",
+      "交付、安装与维护均由本地负责，而且是供应该系统的同一支团队。",
+      "到莎阿南展厅亲自试用 —— 开启、关闭、触摸型材，然后再做决定。",
+      "最高十五年产品保固，并有终身维护作为支撑。",
+    ],
+  },
 };
 
 /**
@@ -736,6 +818,20 @@ export const WHY_CHOOSE_BM: Partial<typeof WHY_CHOOSE> = {
     "Komitmen kami mudah:",
     "Inovasi Bertemu Prestasi. Kehidupan Premium yang Mampu Milik.",
   ],
+  /** The home page's card copy, in Malay. Same reason as the Chinese overlay:
+      these four lines carry the concrete facts on the band and are the last
+      place on it that should fall through to English.
+      NEEDS A NATIVE-SPEAKER REVIEW, along with the rest of the Malay on this
+      site - see the note on WHY_CHOOSE.home for what each line restates. */
+  home: {
+    lede: "Sistem tingkap dan pintu premium yang lebih ramai rakyat Malaysia mampu miliki - direka, dibekal, dipasang dan diselenggara oleh satu pasukan tempatan.",
+    notes: [
+      "Diekstrud, dibekal dan disokong di sini: P.A. Group ialah pengekstrud aluminium di Malaysia sejak 2004, dan tersenarai di Bursa Malaysia sejak 2006.",
+      "Penghantaran, pemasangan dan penyelenggaraan dikendalikan secara tempatan, oleh pasukan yang sama yang membekalkan sistem tersebut.",
+      "Lihat sistem berfungsi di bilik pameran kami di Shah Alam - buka, tutup dan pegang profilnya sebelum anda membuat keputusan.",
+      "Jaminan produk sehingga lima belas tahun, disokong penyelenggaraan sepanjang hayat.",
+    ],
+  },
 };
 
 /** Product shot that overlaps the stat band. Exported from the Figma layout,
@@ -948,6 +1044,48 @@ export const VISION_BM: Partial<typeof VISION> = {
   blocks: VISION.blocks.map((block, i) => ({ ...block, ...VISION_TEXT_BM[i] })),
 };
 
+
+/**
+ * /directors-profile.
+ *
+ * THE BANNER ONLY. There are no profiles here yet because none were supplied,
+ * and a director's name, title or biography is not something to invent — it is
+ * a statement about a real person, published under the company's name, and a
+ * plausible-sounding placeholder is worse than an empty page because nobody
+ * notices it is wrong.
+ *
+ * What the route does carry is real: the heading, a lede that claims nothing
+ * beyond what /our-story already establishes, its own metadata, its hreflang
+ * set and its place in the sitemap. Adding the profiles is a `people` array
+ * here and a block in DirectorsBody; nothing structural has to move.
+ *
+ * The slug keeps the WordPress spelling, `directors-profile`, because that is
+ * the URL the old site published and the one links point at — see
+ * lib/legacy-urls.ts, where the redirect now lands here instead of on the home
+ * page.
+ */
+export const DIRECTORS = {
+  banner: {
+    heading: "Director's Profile",
+    lede: "The leadership behind P.A. Resources Berhad and MEVO Malaysia, the group supplying aluminium window and door systems across the country.",
+  },
+};
+
+export const DIRECTORS_ZH: Partial<typeof DIRECTORS> = {
+  banner: {
+    heading: "董事简介",
+    lede: "P.A. Resources Berhad 与 MEVO 马来西亚背后的领导团队 —— 为全国供应铝合金门窗系统的集团。",
+  },
+};
+
+/** Mine rather than the client's, like every other Malay string here. */
+export const DIRECTORS_BM: Partial<typeof DIRECTORS> = {
+  banner: {
+    heading: "Profil Pengarah",
+    lede: "Kepimpinan di sebalik P.A. Resources Berhad dan MEVO Malaysia, kumpulan yang membekalkan sistem tingkap dan pintu aluminium di seluruh negara.",
+  },
+};
+
 export const CTA = "Speak to our team";
 export const CTA_ZH = "联系我们的团队";
 export const CTA_BM = "Hubungi pasukan kami";
@@ -993,7 +1131,7 @@ export const ENQUIRY = {
   secondary: WHATSAPP.label,
   /** Set into the break in the dimension line above the elevation, where a
       drawing carries its title. */
-  systemMark: "MEVO Aluminium Systems",
+  systemMark: "MEVO Aluminium Window and Door Systems",
 };
 
 /** The Chinese band. The heading keeps its two lines and its order — the
@@ -1247,6 +1385,13 @@ export const CONTACT_BM: Partial<typeof CONTACT> = {
 };
 
 export const SERVICES = {
+  /** The page's banner. `heading` below is the SECTION's own heading, which the
+      stack prints on every panel; this is the page's, and it is the nav's
+      wording rather than the section's so the two agree. */
+  banner: {
+    heading: "Services & Features",
+    lede: "From the first consultation to the last service visit: the drawings, the system selection, the supply, the installation and everything after, handled by one team.",
+  },
   heading: "Our Services",
   /** One photograph per service. The pinned runway shows exactly one pair at a
       time, so each image has to carry its service on its own. */
@@ -1322,6 +1467,10 @@ const SERVICES_ITEMS_ZH = [
 ];
 
 export const SERVICES_ZH: Partial<typeof SERVICES> = {
+  banner: {
+    heading: "服务与特色",
+    lede: "从最初的咨询到最后一次售后上门：图纸、系统选型、供应、安装及其后的一切，由同一支团队负责。",
+  },
   /* Was untranslated, so the ZH panel labels read "Our Services [01]". */
   heading: "我们的服务",
   items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_ZH[i] })),
@@ -1354,6 +1503,10 @@ const SERVICES_ITEMS_BM = [
 ];
 
 export const SERVICES_BM: Partial<typeof SERVICES> = {
+  banner: {
+    heading: "Perkhidmatan & Ciri",
+    lede: "Daripada perundingan pertama hingga lawatan servis terakhir: lukisan, pemilihan sistem, pembekalan, pemasangan dan segala yang selepasnya, diuruskan oleh satu pasukan.",
+  },
   heading: "Perkhidmatan Kami",
   items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_BM[i] })),
 };

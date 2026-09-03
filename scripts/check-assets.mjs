@@ -10,8 +10,8 @@
 // is not untracked — it is invisible. The first anyone knows is a 404 in
 // production: /contact's banner, and then the Vision half of /vision-mission.
 //
-// So the check is: every `/something.ext` string in the source must exist in
-// public/ AND be a file git will actually carry.
+// So the check is: every `/something.ext` path in the source — quoted, or inside
+// a CSS url() — must exist in public/ AND be a file git will actually carry.
 //
 // Runs from `prebuild`, so it fails before the build rather than after the
 // deploy. Where git is unavailable — a build from a tarball rather than a clone
@@ -25,14 +25,27 @@ import { execFileSync } from "node:child_process";
 const ROOT = process.cwd();
 const SKIP = new Set(["node_modules", ".next", ".git", "backups", "out", "build"]);
 const SOURCE = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".css"]);
-const ASSET = /["'`](\/[^"'`\s]+\.(?:png|jpg|jpeg|webp|avif|gif|svg|mp4|webm|woff2?))["'`]/g;
+// The delimiters include parentheses as well as quotes, and that is not
+// cosmetic: a path inside a CSS `url(...)` — including a Tailwind arbitrary
+// value like `bg-[url(/some-file.svg)]` — has parens either side of it, not
+// quotes, so a quote-only pattern walks straight past it. This check missed
+// exactly that on the home page's Why Choose band, which is the third time this
+// class of bug has reached a build.
+const ASSET = /["'`(](\/[^"'`)\s]+\.(?:png|jpg|jpeg|webp|avif|gif|svg|mp4|webm|woff2?))["'`)]/g;
+
+/* This file, which is the one file in the tree that writes asset paths without
+   meaning them: the comment above ASSET has to show the shape it is matching,
+   and the moment the pattern learned about url() it started reporting its own
+   example as a missing file. A checker should not audit its own
+   documentation. */
+const SELF = join(ROOT, "scripts", "check-assets.mjs");
 
 function sources(dir, out = []) {
   for (const entry of readdirSync(dir)) {
     if (SKIP.has(entry)) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) sources(full, out);
-    else if (SOURCE.has(extname(entry))) out.push(full);
+    else if (full !== SELF && SOURCE.has(extname(entry))) out.push(full);
   }
   return out;
 }

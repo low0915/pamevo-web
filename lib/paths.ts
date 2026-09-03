@@ -72,6 +72,7 @@ export const PAIRED_PATHS = [
   "/contact",
   "/our-products",
   "/our-story",
+  "/directors-profile",
   "/vision-mission",
   "/services",
   "/our-projects",

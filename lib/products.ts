@@ -822,6 +822,23 @@ export function systemHash(system: System) {
   return system === "all" ? "" : `#${system}`;
 }
 
+/**
+ * The product a fragment names, if it names one.
+ *
+ * Every catalogue row already carries `id={p.slug}`, so a slug is an address
+ * the page can be sent to — the same vocabulary `systemFromHash` gives the two
+ * filters, in the same fragment. The two cannot collide: no product is called
+ * "window" or "door", and anything matching neither falls through to the
+ * unfiltered catalogue rather than to an empty list.
+ *
+ * Declared above PRODUCTS and referring to it, which is legal because the body
+ * only runs long after the module has finished evaluating.
+ */
+export function productFromHash(hash: string): Product | undefined {
+  const slug = hash.replace(/^#/, "").toLowerCase();
+  return PRODUCTS.find((p) => p.slug === slug);
+}
+
 export function inSystem(product: Product, system: System) {
   if (system === "all") return true;
   if (BOTH.has(product.slug)) return true;

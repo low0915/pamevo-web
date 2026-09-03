@@ -190,7 +190,30 @@ export function ProductGrid() {
     <section
       ref={rootRef}
       aria-labelledby="product-grid-heading"
-      className="relative h-[250svh] motion-reduce:h-auto"
+      /**
+       * THE CURTAIN, AND THE RUNWAY THAT LETS THE NEXT ONE HAPPEN.
+       *
+       * `-mt-[110svh]` pulls this band up over the frame WhyMevo is holding
+       * above it, and `sheet` is the lip of shadow that sells it as a panel
+       * lifting over rather than a hard cut. Same pull-up, same class and the
+       * same arithmetic as the curtain Background already draws over this
+       * section — one gesture, used three times down the page.
+       *
+       * The 110 is one full screen plus 10svh, so the cover completes before
+       * the pin above lets go rather than exactly with it. WhyMevo's runway is
+       * 250svh holding a 100lvh frame, so that frame pins for 150 and this
+       * section's top edge reaches the top of the screen at 140.
+       *
+       * The runway is unchanged at 250svh and is what Background is pulled up
+       * over in turn: 100 for the frame, 40 of hold, 110 for the curtain. This
+       * band is now both ends of a handover, which is why the two numbers have
+       * to stay in step — shortening either one strands the curtain on the
+       * other side of it.
+       *
+       * `motion-reduce:mt-0` puts it back in flow with the pins: none of this
+       * exists when the frames do not stick.
+       */
+      className="sheet relative -mt-[110svh] h-[250svh] motion-reduce:mt-0 motion-reduce:h-auto"
     >
       {/* `lvh`, where the runway around it is `svh`, for the reason the two
           sections either side of this one give at length: the runway is a

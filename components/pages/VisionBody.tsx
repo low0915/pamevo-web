@@ -45,13 +45,27 @@ export function VisionBody({ locale = "EN" }: { locale?: Locale }) {
       <PageBanner
         heading={copy.banner.heading}
         subheading={copy.banner.lede}
-        /* Brushed aluminium rather than a building, and that is the one
-           deliberate difference from the other two banners. PageBanner blends
-           its overlay at soft-light, which modulates the field's luminance and
-           leaves the hue alone, so a DARK source reads as shadow falling across
-           the blue rather than as a photograph behind it. The other two pages
-           open on architecture; this one opens on the material. */
-        overlay={{ src: "/scratched-metal-background.jpg" }}
+        /* The showroom and the window-corner cut-out, which is /contact's
+           banner exactly. It was the brushed-aluminium texture and no figure;
+           the pages now open the same way as each other on purpose, so the
+           difference between them is the words rather than the picture.
+
+           The second number in `position` is the one that moves the showroom up
+           or down inside the band — 0% is the top of the photograph, 100% the
+           bottom. See BannerOverlay in PageBanner. */
+        overlay={{ src: "/pa mevo_up.png", position: "50% 15%" }}
+        /* Portrait where the extrusions on /our-products are landscape, so it
+           takes neither of that one's framing settings: centred rather than
+           pushed right, because the figure box deliberately runs past the
+           band's edge and a narrow subject pushed into that corner is clipped
+           instead of bleeding off it; and not mirrored, because unlike the
+           extrusions it already faces the way the band wants. */
+        figure={{
+          src: "/Camada 1.png",
+          position: "55% 50%",
+          scale: 1.1,
+          offsetY: "5%",
+        }}
       />
 
       <section className="px-4 pt-20 pb-24 md:px-8 md:pt-24 md:pb-32 lg:px-12">

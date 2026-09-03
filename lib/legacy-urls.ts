@@ -63,7 +63,13 @@ const pages = [
   // so whatever equity those URLs carry now lands on a page about the same
   // subject instead of on a redirect to the home page.
   { source: "/about", destination: "/", permanent: true },
-  { source: "/about/directors-profile", destination: "/", permanent: true },
+  // The page exists now. The source keeps the WordPress spelling because that
+  // is the URL that was published; the destination is the new route.
+  {
+    source: "/about/directors-profile",
+    destination: "/directors-profile",
+    permanent: true,
+  },
   // The page exists now, so this points at it rather than at the home page.
   // Note the source spelling: the WordPress slug had "mision" with one S, and
   // it stays misspelt here because that is the URL that was published and the

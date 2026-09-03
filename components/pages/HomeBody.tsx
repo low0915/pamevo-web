@@ -1,4 +1,5 @@
 import { Hero } from "@/components/sections/Hero";
+import { WhyMevo } from "@/components/sections/WhyMevo";
 import { ProductGrid } from "@/components/sections/ProductGrid";
 import { Background } from "@/components/sections/Background";
 import { Stats } from "@/components/sections/Stats";
@@ -37,11 +38,22 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
         className="relative -mt-[200svh] flow-root bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
         style={{ zIndex: Z.raised }}
       >
-        {/* The band the sheet opens on, and the only section between the
-            hero and the scrubbed pair that carries no runway of its own: the
-            reader scrolls it themselves. It rides over the hero's pinned frame
-            as the sheet rises, and has a photograph of its own to cover it
-            with. */}
+        {/* The band the sheet opens on, and so the one that covers the hero
+            while it is still pinned. The sheet is pulled up 200svh and the hero
+            holds until 400svh, which leaves 100svh of rise to cover — hence a
+            frame the full height of the viewport, and an opaque one.
+
+            WhyMevo now holds a runway of its own as well, which it did not
+            before: 250svh around a 100lvh sticky frame, so ProductGrid can be
+            pulled up 110svh and drawn over it the way Background is drawn over
+            ProductGrid and Stats over Background. That makes the whole page one
+            unbroken chain of curtains from the hero down — every section from
+            here on rides over a frame that is still pinned.
+
+            The two runways are the same 250svh on purpose: this pair is the
+            only place on the page where one section is both ends of a handover,
+            and matching them is what keeps that legible. */}
+        <WhyMevo />
         <ProductGrid />
         <Background />
         {/* WhyChoose stood here and Services stood between Stats and Projects.

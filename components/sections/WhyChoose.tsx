@@ -49,7 +49,7 @@ const DRIFT_TRAVEL = 22;
  * than a fixed inset, which keeps it tight to the copy instead of leaving an
  * empty band under the shorter parts.
  */
-export function WhyChoose() {
+export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
   const rootRef = useRef<HTMLElement>(null);
   /* Only the closing commitment has Chinese copy; the three panel parts fall
      through to the English originals. See WHY_CHOOSE_ZH. */
@@ -158,12 +158,20 @@ export function WhyChoose() {
       ref={rootRef}
       data-autoplay={SEQUENCE}
       data-autoplay-speed={SPEED}
-      // Rises over Background's pinned frame. -60dvh puts the first sight of it
-      // at 90dvh into Background's 150dvh of travel, which is just after that
-      // section's paragraph swap finishes, and lands it flush as the frame
+      // Rises over Background's pinned frame. -110svh puts the first sight of
+      // it well into that section's travel and lands it flush as the frame
       // releases. bg-bg because the runway outside the frame is transparent and
       // would otherwise show the section beneath.
-      className="sheet relative -mt-[110svh] h-[460svh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
+      //
+      // All of which is the home page's arrangement. On /services this follows
+      // the services stack in ordinary flow, with nothing above it to ride
+      // over, so the pull-up and the shadow come off — a curtain drawn over a
+      // section that is not pinned covers content instead of crossing it. The
+      // runway and the frame inside it stay: the scrubbed sequence is the
+      // section, not the transition into it.
+      className={`relative h-[460svh] bg-bg motion-reduce:h-auto ${
+        standalone ? "" : "sheet -mt-[110svh] motion-reduce:mt-0"
+      }`}
     >
       <div
         data-frame

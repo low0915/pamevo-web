@@ -22,6 +22,7 @@ const UPDATED = {
   privacy: "2026-08-27",
   story: "2026-09-01",
   vision: "2026-09-02",
+  directors: "2026-09-03",
   services: "2026-09-01",
   projects: "2026-09-01",
 } as const;
@@ -85,6 +86,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { key: "contact", en: SEO.contact, bm: SEO_BM.contact, zh: SEO_ZH.contact },
     { key: "story", en: SEO.story, bm: SEO_BM.story, zh: SEO_ZH.story },
     { key: "vision", en: SEO.vision, bm: SEO_BM.vision, zh: SEO_ZH.vision },
+    {
+      key: "directors",
+      en: SEO.directors,
+      bm: SEO_BM.directors,
+      zh: SEO_ZH.directors,
+    },
     { key: "services", en: SEO.services, bm: SEO_BM.services, zh: SEO_ZH.services },
     { key: "projects", en: SEO.projects, bm: SEO_BM.projects, zh: SEO_ZH.projects },
   ] as const;
