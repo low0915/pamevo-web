@@ -82,10 +82,10 @@ const PANE_TOP_THEN_CLEAR = "pt-4 sm:pt-6 md:pt-28 lg:pt-32";
  * The composition is the subject: the section is a window, and the company
  * makes windows.
  *
- * The glass is sharp rather than light: 12px of blur, which is barely frosting
+ * The glass is sharp rather than light: 8px of blur, which is barely frosting
  * at all and leaves the frame, the sill and the shadow across it reading as
  * themselves through the panes. That is a choice against the other one — blur
- * and tint are a single contrast budget, and buying the picture back costs 0.58
+ * and tint are a single contrast budget, and buying the picture back costs 0.60
  * of tint where 110px of blur would have cost 0.26. The panes are darker than
  * any other glass on this site, and the picture is worth seeing.
  *
@@ -95,16 +95,23 @@ const PANE_TOP_THEN_CLEAR = "pt-4 sm:pt-6 md:pt-28 lg:pt-32";
  * `object-cover` puts it under a product name at some viewport whatever the
  * crop. Worst backdrop a name lands on, per viewport:
  *
- *   390x844    2x3   name 18px, needs 4.5:1  4.75:1   <- the tight one
- *   360x640    2x3   name 18px, needs 4.5:1  4.84:1
- *   2560x1080  3x2   name 28px, needs 3:1    4.82:1
- *   1920x1080  3x2   name 28px, needs 3:1    4.86:1
- *   1440x900   3x2   name 28px, needs 3:1    4.90:1
- *   1112x834   3x2   name 28px, needs 3:1    4.90:1
- *   834x1112   3x2   name 24px, needs 3:1    5.28:1
+ *   360x640    2x3   name 18px, needs 4.5:1  5.08:1   <- the tight one
+ *   390x844    2x3   name 18px, needs 4.5:1  5.21:1
+ *   2560x1080  3x2   name 28px, needs 3:1    5.11:1
+ *   1920x1080  3x2   name 28px, needs 3:1    5.13:1
+ *   1440x900   3x2   name 28px, needs 3:1    5.21:1
+ *   1112x834   3x2   name 28px, needs 3:1    5.22:1
+ *   834x1112   3x2   name 24px, needs 3:1    5.36:1
  *
  * A phone is the only width where the name is small enough for WCAG to ask 4.5
  * of it rather than 3, which is what makes it the binding case at this blur.
+ *
+ * THE TABLE ABOVE WAS RE-MEASURED, and it had to be. The figures it replaces
+ * were taken against the previous `landing-product-bg.png`; that file was
+ * swapped for a lighter one, and at the shipping 24px/0.52 the tight case had
+ * already fallen from 4.84:1 to 4.27:1 - under the bar, silently, because
+ * nothing re-runs this measurement when a picture changes. Replacing the
+ * photograph again means measuring again.
  * The top row is measured from its cleared padding down rather than from its
  * own edge — see CLEAR_HEADER. That clearance is not free: it lands those three
  * names on a brighter part of the picture and cost two hundredths of tint.

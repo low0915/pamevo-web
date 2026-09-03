@@ -11,28 +11,55 @@ gsap.registerPlugin(ScrollTrigger);
 
 /* Shared drawing conventions for the four marks below.
 
-   One stroke weight for everything, scaled by the card rather than by the
-   drawing: 1.1 in a 168-wide viewBox, shown at up to 220, lands at about 1.4
-   device pixels - a shade above the site's own hairlines, which is right for a
-   line that is the subject rather than a division between two things. Round
-   caps and joins because every other line on the site is a border, and a butt
-   cap on a diagonal reads as a chipped edge next to one.
+   ONE INK, THREE WEIGHTS. The marks used to be two colours - brand blue for
+   the subject, grey for the context around it. They are one colour now, and
+   the hierarchy is carried by line weight instead: 0.7 for construction,
+   context and anything ghosted, 1.25 for the object the card is about. That is
+   how a drawing office actually separates primary from secondary, and it is
+   the reason a real elevation reads at a glance without any colour in it at
+   all. Two inks were doing a job that weight does better.
 
-   Two inks only. Blue is the thing the card is about; grey is the context it
-   happens in, at the site's own `ink-3`. Dashed grey is the third state and it
-   always means the same thing - where something WAS, or where it is going. */
-const STROKE = {
+   `#033392` on the white card is 10.4:1, so the thin weight is legible on its
+   own terms rather than surviving on the thick one's coat-tails.
+
+   Round caps and joins because every other line on the site is a border, and a
+   butt cap on a diagonal reads as a chipped edge next to one. Dashed always
+   means the same thing: where something was, or where it is going.
+
+   The weights are ratios rather than pixel values - the viewBox is 168 wide
+   and the mark is drawn anywhere from 40px to 200px, so 0.7 lands between 0.17
+   and 0.83 device pixels and 1.25 between 0.3 and 1.5. Sub-pixel strokes are
+   drawn, not dropped: the browser antialiases them to a paler line, which is
+   exactly the hierarchy the weights are there to express. */
+const HAIR = {
   fill: "none",
-  strokeWidth: 1.1,
+  strokeWidth: 0.7,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+
+const LINE = {
+  fill: "none",
+  strokeWidth: 1.25,
   strokeLinecap: "round",
   strokeLinejoin: "round",
 } as const;
 
 /** A closed arrowhead, drawn rather than marker-referenced: markers inherit
-    their own stroke context and would need the same two inks declared twice. */
-function Arrow({ x, y, back = false }: { x: number; y: number; back?: boolean }) {
+    their own stroke context, and these are drawn at two different weights. */
+function Arrow({
+  x,
+  y,
+  back = false,
+  w = LINE,
+}: {
+  x: number;
+  y: number;
+  back?: boolean;
+  w?: typeof LINE | typeof HAIR;
+}) {
   const d = back ? -1 : 1;
-  return <path d={`M${x - 4 * d} ${y - 4} L${x} ${y} L${x - 4 * d} ${y + 4}`} {...STROKE} />;
+  return <path d={`M${x - 4 * d} ${y - 3.5} L${x} ${y} L${x - 4 * d} ${y + 3.5}`} {...w} />;
 }
 
 /**
@@ -44,76 +71,164 @@ function Arrow({ x, y, back = false }: { x: number; y: number; back?: boolean })
  * this company works from, which is the one the enquiry band and the product
  * band are already speaking.
  *
+ * REDRAWN FROM GENERATED CONCEPTS, and authored rather than embedded. Four
+ * reference images were generated for these four claims and the useful part of
+ * each was taken into SVG by hand: the isometric billet, the die drawn as a
+ * section with an aperture, the glazing rebate in the profile, the doubled
+ * outlines that make a frame read as a frame, the tall return sweep, and the
+ * two-height tick scale. Nothing is a traced import - the references informed
+ * the drawing, they are not in the build.
+ *
+ * Vector, and staying vector: the marks are one flat colour each at any size,
+ * they take their inks from the same tokens the rest of the section does, they
+ * cost no request, and a raster illustration on a white card would have been
+ * the one pictorial thing in a section made entirely of ruled lines.
+ *
  * `aria-hidden` on every one of them: the claim is set as text directly
  * underneath, and a description here would say it a second time.
  */
 const MARKS: ReactNode[] = [
-  /* Manufacture. Billet, die, profile - the extrusion line left to right, which
-     is the sentence "first local manufacturer" drawn. The chambers in the
-     section at the right are what makes it aluminium rather than a bar. */
-  <>
-    <g className="text-ink-3" stroke="currentColor">
-      <rect x="2" y="17" width="24" height="22" rx="2" {...STROKE} />
-      <path d="M31 28 H55" {...STROKE} />
-      <Arrow x={57} y={28} />
-    </g>
-    <g className="text-brand" stroke="currentColor">
-      <rect x="64" y="10" width="20" height="36" rx="2" {...STROKE} />
-      <rect x="70" y="21" width="8" height="14" rx="1" {...STROKE} />
-      <path d="M89 28 H113" {...STROKE} />
-      <Arrow x={115} y={28} />
-      <path d="M124 12 H166 V44 H124 Z M124 22 H150 M150 12 V44 M150 34 H166" {...STROKE} />
-    </g>
-  </>,
+  /* Manufacture: billet, die, profile — the extrusion line, left to right.
+     Extents 4-166 x 8-48: no dead quadrant.
 
-  /* After-sales. The window goes out along the lower line and the service comes
-     back over the top of it - one loop, closing on the same frame it started
-     from, which is the whole of what "after-sales" means. */
-  <>
-    <g className="text-ink-3" stroke="currentColor">
-      <rect x="2" y="14" width="40" height="30" rx="1.5" {...STROKE} />
-      <path d="M22 14 V44 M31 25 V33" {...STROKE} />
-      <path d="M50 40 H150" strokeDasharray="3 4" {...STROKE} />
-      <Arrow x={152} y={40} />
+     The billet is isometric with its hidden edges dashed, which is the one
+     solid object in the sequence and the only place three dimensions appear.
+     The die is drawn as a section and hatched at 45 degrees on both jambs,
+     because that is what a section through solid material is; the aperture
+     through it is the shape the third step comes out as. The profile carries
+     two chambers, the web between them, a thermal break dashed across it and a
+     glazing rebate cut into its right edge with the glass drawn in. */
+  <g key="manufacture" className="text-brand" stroke="currentColor">
+    <g data-step>
+      <path d="M4 18 H24 V38 H4 Z" {...HAIR} />
+      <path d="M4 18 L9 13 H29 L24 18" {...HAIR} />
+      <path d="M24 18 L29 13 V33 L24 38" {...HAIR} />
+      <path d="M9 13 V33 M9 33 H24" strokeDasharray="1.5 2" {...HAIR} />
+      <path d="M32 28 H42" {...HAIR} />
+      <Arrow x={44} y={28} w={HAIR} />
     </g>
-    <g className="text-brand" stroke="currentColor">
-      <path d="M150 22 C150 6, 60 6, 52 20" {...STROKE} />
-      <Arrow x={50} y={22} back />
-    </g>
-  </>,
 
-  /* Try before you buy. A casement on its hinge, drawn open, with the closed
-     position dashed behind it and the swing arced between them - the standard
-     elevation symbol, and the one the enquiry band already uses. The apex of
-     the swing marks the hinge, which is the part of the convention that has to
-     be right. */
-  <>
-    <g className="text-ink-3" stroke="currentColor">
-      <rect x="2" y="8" width="52" height="40" rx="1.5" {...STROKE} />
-      <path d="M62 8 L106 8 L106 48 L62 48" strokeDasharray="3 4" {...STROKE} />
+    <g data-step>
+      <path d="M50 8 H72 V48 H50 Z" {...LINE} />
+      <path d="M56 20 H66 V36 H56 Z" {...LINE} />
+      <g className="max-sm:hidden">
+        <path
+          d="M50 14 L56 8 M50 22 L56 16 M50 30 L56 24 M50 38 L56 32 M50 46 L56 40"
+          {...HAIR}
+        />
+        <path
+          d="M66 14 L72 8 M66 22 L72 16 M66 30 L72 24 M66 38 L72 32 M66 46 L72 40"
+          {...HAIR}
+        />
+      </g>
+      <path d="M78 28 H88" {...HAIR} />
+      <Arrow x={90} y={28} w={HAIR} />
     </g>
-    <g className="text-brand" stroke="currentColor">
-      <path d="M62 8 L106 18 L106 38 L62 48 Z" {...STROKE} />
-      <path d="M116 14 A 22 22 0 0 1 116 42" strokeDasharray="3 4" {...STROKE} />
-      <Arrow x={116} y={42} back />
-    </g>
-  </>,
 
-  /* Warranty. A dimension line: terminators at both ends, the span ticked off
-     between them, arrows turned inward the way a measured length is written on
-     a drawing. It is duration drawn as extent, which is the one thing a
-     fifteen-year term actually is. */
-  <>
-    <g className="text-ink-3" stroke="currentColor">
-      <path d="M4 12 V44 M164 12 V44" {...STROKE} />
-      <path d="M30 24 V32 M56 24 V32 M82 24 V32 M108 24 V32 M134 24 V32" {...STROKE} />
+    <g data-step>
+      <path d="M98 8 H166 V18 H150 V26 H166 V48 H98 Z" {...LINE} />
+      <path d="M104 14 H126 V42 H104 Z" {...LINE} />
+      <path d="M132 30 H144 V42 H132 Z" {...LINE} />
+      <path d="M132 14 H144 V24 H132 Z" {...LINE} />
+      <path d="M126 28 H132" {...LINE} />
+      <g className="max-sm:hidden">
+        <path d="M126 22 H132" strokeDasharray="1.5 2" {...HAIR} />
+        <path d="M155 19 V25 M159 19 V25" {...HAIR} />
+      </g>
     </g>
-    <g className="text-brand" stroke="currentColor">
-      <path d="M4 28 H164" {...STROKE} />
-      <Arrow x={22} y={28} back />
-      <Arrow x={146} y={28} />
+  </g>,
+
+  /* After-sales: the unit goes out along the lower line, past two stations, and
+     the service comes back over the top of it to the same frame it started
+     from. Extents 4-152 x 4-46.
+
+     The window is doubled with a mullion between the lights so it reads as a
+     frame rather than a square. The outgoing path is dashed and ticked at the
+     points along it where somebody does something; the return is the one solid
+     sweep in the drawing, which is what makes it the subject. */
+  <g key="after-sales" className="text-brand" stroke="currentColor">
+    <g data-step>
+      <path d="M4 14 H40 V46 H4 Z" {...LINE} />
+      <path d="M8 18 H36 V42 H8 Z" {...HAIR} />
+      <path d="M22 18 V42" {...HAIR} />
     </g>
-  </>,
+
+    <g data-step>
+      <path d="M46 42 H138" strokeDasharray="3 4" {...HAIR} />
+      <g className="max-sm:hidden">
+        <path d="M76 38 V46 M108 38 V46" {...HAIR} />
+      </g>
+      <Arrow x={140} y={42} w={HAIR} />
+    </g>
+
+    <g data-step>
+      <path d="M146 34 C 146 6, 64 2, 46 20" {...LINE} />
+      <Arrow x={45} y={21} back />
+    </g>
+  </g>,
+
+  /* Try before you buy: closed, half open, open — the swing drawn as three
+     positions rather than two, which is what turns a symbol into a sequence.
+     Extents 4-164 x 6-50.
+
+     Only the last position carries the heavy weight and the doubled outline:
+     the first two are where the sash HAS been, and dashed hairline is what this
+     drawing has always used to say that. The arc and its arrowhead close the
+     movement past the open position. */
+  <g key="try" className="text-brand" stroke="currentColor">
+    <g data-step>
+      <path d="M4 6 H40 V50 H4 Z" strokeDasharray="3 3" {...HAIR} />
+      <path d="M8 10 H36 V46 H8 Z" strokeDasharray="3 3" {...HAIR} />
+    </g>
+
+    <g data-step>
+      <path d="M48 6 L82 12 V44 L48 50 Z" strokeDasharray="3 3" {...HAIR} />
+    </g>
+
+    <g data-step>
+      <path d="M90 6 L132 17 V39 L90 50 Z" {...LINE} />
+      <path d="M94 11 L128 21 V35 L94 45 Z" {...HAIR} />
+      <path d="M88 24 V32" {...LINE} />
+      <path d="M140 14 A 18 18 0 0 1 140 42" strokeDasharray="3 3" {...HAIR} />
+      <Arrow x={140} y={42} back w={HAIR} />
+    </g>
+  </g>,
+
+  /* Warranty: a measured span, read left to right like every other mark here.
+     Extents 6-162 x 8-48.
+
+     Extension lines at both ends, arrowheads turned outward against them, and
+     the span ticked off between at two heights — majors every 26 units with
+     minors between. An evenly spaced row of identical marks is a pattern; a
+     scale is what makes the line a measurement, and duration is the one thing
+     a fifteen-year term actually is. The minors come off below `sm`, where the
+     mark is 40px wide and 24 of them would be a grey band rather than a
+     scale. */
+  <g key="warranty" className="text-brand" stroke="currentColor">
+    <g data-step>
+      <path d="M6 8 V48 M162 8 V48" {...HAIR} />
+    </g>
+
+    <g data-step>
+      <path d="M6 28 H162" {...LINE} />
+      <Arrow x={11} y={28} back />
+      <Arrow x={157} y={28} />
+    </g>
+
+    <g data-step>
+      <path d="M32 20 V36 M58 20 V36 M84 20 V36 M110 20 V36 M136 20 V36" {...LINE} />
+      <g className="max-sm:hidden">
+        <path
+          d="M19 24 V32 M45 24 V32 M71 24 V32 M97 24 V32 M123 24 V32 M149 24 V32"
+          {...HAIR}
+        />
+        <path
+          d="M25.5 25.5 V30.5 M38.5 25.5 V30.5 M51.5 25.5 V30.5 M64.5 25.5 V30.5 M77.5 25.5 V30.5 M90.5 25.5 V30.5 M103.5 25.5 V30.5 M116.5 25.5 V30.5 M129.5 25.5 V30.5 M142.5 25.5 V30.5 M155.5 25.5 V30.5"
+          {...HAIR}
+        />
+      </g>
+    </g>
+  </g>,
 ];
 
 /**
@@ -228,17 +343,27 @@ export function WhyMevo() {
       const cards = gsap.utils.toArray<HTMLElement>("[data-card]", root);
       const notesEls = gsap.utils.toArray<HTMLElement>("[data-note]", root);
       const rules = gsap.utils.toArray<HTMLElement>("[data-rule]", root);
-      const marks = gsap.utils.toArray<HTMLElement>("[data-mark]", root);
+      const marks = gsap.utils.toArray<SVGElement>("[data-mark]", root);
+      const steps = gsap.utils.toArray<SVGElement>("[data-step]", root);
 
       if (reduced) {
-        gsap.set([heading, ...ledes, ...cards, ...marks, ...notesEls], { autoAlpha: 1, y: 0 });
+        gsap.set([heading, ...ledes, ...cards, ...marks, ...steps, ...notesEls], {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+        });
         gsap.set(rules, { scaleX: 1 });
         return;
       }
 
       gsap.set([heading, ...ledes], { autoAlpha: 0, y: 20 });
       gsap.set(cards, { autoAlpha: 0, y: 26 });
-      gsap.set(marks, { autoAlpha: 0 });
+      // The mark arrives as one object and then assembles inside itself.
+      // `transformOrigin` is set explicitly because an SVG element's default
+      // origin is its user-space zero, not its middle, so a scale without it
+      // swings the drawing in from the top left instead of growing in place.
+      gsap.set(marks, { autoAlpha: 0, scale: 0.8, transformOrigin: "50% 50%" });
+      gsap.set(steps, { autoAlpha: 0 });
       gsap.set(notesEls, { autoAlpha: 0, y: 8 });
       // Scaled on the axis it runs along, never on the one carrying its
       // hairline, so it stays exactly as thin the whole way across.
@@ -285,7 +410,19 @@ export function WhyMevo() {
         const at = 0.34 + i * 0.15;
         timeline.to(card, { autoAlpha: 1, y: 0, duration: 0.3, ease: "power2.out" }, at);
         timeline.to(rules[i], { scaleX: 1, duration: 0.24, ease: "none" }, at + 0.06);
-        timeline.to(marks[i], { autoAlpha: 1, duration: 0.24, ease: "power1.out" }, at + 0.1);
+        // Two beats, and they overlap on purpose: the sheet grows into place
+        // while the drawing on it is still being made, which is the difference
+        // between a picture appearing and something being drawn.
+        timeline.to(
+          marks[i],
+          { autoAlpha: 1, scale: 1, duration: 0.42, ease: "power2.out" },
+          at + 0.08,
+        );
+        timeline.to(
+          Array.from(marks[i].querySelectorAll("[data-step]")),
+          { autoAlpha: 1, duration: 0.16, stagger: 0.08, ease: "none" },
+          at + 0.12,
+        );
         timeline.to(notesEls[i], { autoAlpha: 1, y: 0, duration: 0.24, ease: "power1.out" }, at + 0.13);
       });
     }, root);

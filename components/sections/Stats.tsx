@@ -39,7 +39,26 @@ const LABEL = "text-[1.25rem] leading-[1.15] tracking-[-0.01em] lg:text-[clamp(1
 const BODY = "text-base leading-[1.45] lg:leading-[1.4]";
 
 /** Inset from a box's own rule to its content: 34px of the 1920 drawing. */
-const CELL = "lg:pt-[max(1rem,2.2dvh)] lg:pr-[1.77vw] lg:pb-[max(1.25rem,3dvh)] lg:pl-[1.77vw]";
+const CELL = "lg:pt-[max(1rem,2.2dvh)] lg:pr-[1.77vw] lg:pb-[max(1.25rem,3dvh)]";
+
+/**
+ * The left inset, which is not the same for every box.
+ *
+ * An inner box is measured from the rule down its left side - 34px of the 1920
+ * drawing, the same 1.77vw as the inset on its right. The box in the first
+ * column has no rule there: its left edge is the frame's, and the thing it has
+ * to line up with is the heading directly above it, which sits on the plan's
+ * outer margin of 4.22vw. At the inner inset its figure stood 35px to the left
+ * of the heading at 1440, which on a layout made of ruled alignments is the one
+ * mistake there is no hiding.
+ *
+ * Held as two separate constants rather than one plus an override, so a box
+ * gets exactly one `padding-left`: `lg:pl-*` twice in one class string is two
+ * utilities for the same property at the same variant, and which of them wins
+ * is decided by the order Tailwind emits them, not the order they are written.
+ */
+const PAD_INNER = "lg:pl-[1.77vw]";
+const PAD_EDGE = "lg:pl-[4.22vw]";
 
 /** Supporting line under a figure: 350px of the drawing, held to that same
     fraction of the width so it keeps its distance from the photograph, which
@@ -300,9 +319,14 @@ export function Stats() {
               className={`${RULE_V} lg:col-start-3 lg:row-span-3 lg:row-start-1`}
             />
 
+            {/* Two across the upper row, two across the lower one, and the
+                photograph filling the cell to their right. The lower row starts
+                at the plan's outer margin, so its first box takes the heading's
+                inset rather than a box's - see PAD_EDGE. */}
             <StatCell stat={stats[0]} index={0} className="lg:col-start-2 lg:row-start-2" />
             <StatCell stat={stats[1]} index={1} className="lg:col-start-3 lg:row-start-2" />
-            <StatCell stat={stats[2]} index={2} className="lg:col-start-2 lg:row-start-3" />
+            <StatCell stat={stats[2]} index={2} edge className="lg:col-start-1 lg:row-start-3" />
+            <StatCell stat={stats[3]} index={3} className="lg:col-start-2 lg:row-start-3" />
           </div>
 
           {/* Above the rules and off the right edge, as drawn: sized off the
@@ -342,16 +366,21 @@ export function Stats() {
 function StatCell({
   stat,
   index,
+  edge = false,
   className,
 }: {
   stat: (typeof STATS)[number];
   index: number;
+  /** This box sits on the plan's outer margin rather than against a rule. */
+  edge?: boolean;
   className: string;
 }) {
   return (
     <div
       data-figure={index}
-      className={`relative flex flex-col justify-between border-t border-ink px-6 py-10 lg:border-t-0 lg:px-0 lg:py-0 ${CELL} ${className}`}
+      className={`relative flex flex-col justify-between border-t border-ink px-6 py-10 lg:border-t-0 lg:px-0 lg:py-0 ${CELL} ${
+        edge ? PAD_EDGE : PAD_INNER
+      } ${className}`}
     >
       <div>
         <p className={`${FIGURE} flex items-baseline font-normal text-ink`}>

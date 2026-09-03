@@ -479,8 +479,23 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
             quality={78}
             className="graded-soft object-cover object-[50%_35%]"
           />
-          <div className="relative mx-auto flex min-h-[110svh] w-full max-w-[1440px] flex-col justify-center px-6 py-20 md:px-8 md:py-24 lg:px-10 motion-reduce:min-h-0">
-            <div className="w-full md:w-[min(52%,644px)] md:self-start">
+          {/* NO MAX-WIDTH, which is what makes this chapter's gutter the same
+              gutter as the one above it. This box was capped at 1440 and
+              centred while the lead section has no cap at all: at 1920 that put
+              the panel 280px from the edge against the heading's 40, and at
+              2560 it was 600 against 40. Two chapters of one page, one of them
+              held to the middle — and the curtain runs straight between them,
+              which is the one place a difference in margin is impossible to
+              miss. Gutters are the home page's own at every width now: 24, 32,
+              40. */}
+          <div className="relative flex min-h-[110svh] w-full flex-col justify-center px-6 py-20 md:px-8 md:py-24 lg:px-10 motion-reduce:min-h-0">
+            {/* Right, where it was left. The building in the lead section comes
+                in from the right and the eye leaves the chapter above on that
+                side, so the panel is where the reader already is. `self-end`
+                rather than a margin, so the column's own padding stays the
+                thing that sets its distance from the edge — the same 40px the
+                heading above it sits at. */}
+            <div className="w-full md:w-[min(52%,644px)] md:self-end">
               <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:p-9">
                 <p className="text-base leading-relaxed text-bg">
                   {background.paragraphs[1]}

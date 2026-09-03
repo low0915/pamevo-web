@@ -851,10 +851,28 @@ export const STATS_INTRO = {
   body: "P.A. Group has been extruding aluminium since 2004, and our partnership with MEVO brought the window and door systems to match. That combination covers over 10,000 completed projects in Malaysia, ranging from single residential units to full building facades, backed by a service team that stays involved after handover.",
 };
 
-/** The three figures the band carries, in reading order: the layout gives the
-    first two the upper row and the third the row below, with the fourth cell
-    left to the photograph. A fourth figure - 98% customer retention - is not
-    shown here; there is no cell for it. */
+/**
+ * The four figures the band carries, in the order they are read.
+ *
+ * That order is the layout: the plan puts two across the upper row, middle and
+ * right, then drops to the row beneath for the last two — left box first, then
+ * middle, with the photograph filling the cell beside them. DOM order and
+ * reading order are the same thing here on purpose, so the count-up runs the
+ * way an eye does and a screen reader hears the figures in the order they
+ * appear on the page. Moving a figure between boxes therefore means moving it
+ * in this list as well; leaving it would put the count-up out of step with the
+ * layout and read the plan out of order.
+ *
+ * WHY THERE ARE FOUR NOW. "Successful Projects" was the third figure in the
+ * middle of the lower row and the left box was empty in both rows. It has moved
+ * out to the left box of the LOWER row, and customer retention takes the middle
+ * cell it left — so the lower row now reads across as projects, retention,
+ * photograph, and the upper row carries the two that were always there.
+ *
+ * The retention figure is the client's own, and it has been in this file's
+ * comments since the band was built: it was noted as a fourth figure with no
+ * cell to put it in. There is a cell now.
+ */
 export const STATS = [
   {
     value: 20,
@@ -874,6 +892,18 @@ export const STATS = [
     label: "Successful Projects",
     body: "Residential units, commercial buildings and high-rise facades completed across Malaysia.",
   },
+  {
+    value: 98,
+    suffix: "%",
+    /* The supporting line adds no claim of its own. "Stay after handover" is
+       the retention figure restated, and the local team that installed the
+       system is STATS_INTRO's own "a service team that stays involved after
+       handover" and the Mission's localised delivery, installation and
+       after-sales. Written in the same register as the three above it: terse,
+       factual, and never in the first person. */
+    label: "Customer Retention",
+    body: "Owners who stay after handover, looked after by the same local team that installed the system.",
+  },
 ];
 
 /** The heading keeps its two-line break: the comma is where the layout draws
@@ -885,9 +915,11 @@ export const STATS_INTRO_ZH: Partial<typeof STATS_INTRO> = {
   body: "P.A. Group 自 2004 年起从事铝型材挤压生产，与 MEVO 的合作则带来了与之匹配的门窗系统。这一组合已在马来西亚完成超过 10,000 个项目，小至单栋住宅，大至整幢建筑幕墙，并由一支在交付后仍持续跟进的服务团队提供支持。",
 };
 
-/** Label and supporting line only. `value` and `suffix` are carried over from
-    STATS rather than repeated: the figures are the same figures, and the
-    counter in Stats.tsx animates to them in either language. "10k+" is left as
+/** Label and supporting line only, in the same order as STATS. `value` and
+    `suffix` are carried over from STATS rather than repeated: the figures are
+    the same figures, and the counter in Stats.tsx animates to them in either
+    language. Reordering STATS means reordering this too - it is merged by
+    index, so a mismatch swaps labels silently rather than failing. "10k+" is left as
     it is - "1万+" would be the idiomatic form, but it would mean counting to 1,
     and a figure that ticks 0 to 1 reads as broken rather than as a count. */
 const STATS_TEXT_ZH = [
@@ -902,6 +934,10 @@ const STATS_TEXT_ZH = [
   {
     label: "成功项目",
     body: "已在马来西亚完成住宅单位、商业建筑与高层幕墙工程。",
+  },
+  {
+    label: "客户留存率",
+    body: "交付后仍持续合作的业主，由安装该系统的同一支本地团队继续跟进。",
   },
 ];
 
@@ -920,8 +956,10 @@ export const STATS_INTRO_BM: Partial<typeof STATS_INTRO> = {
   body: "P.A. Group telah mengekstrusi aluminium sejak 2004, dan kerjasama kami dengan MEVO membawa sistem tingkap dan pintu yang setanding. Gabungan itu merangkumi lebih 10,000 projek siap di Malaysia, daripada unit kediaman tunggal hinggalah fasad bangunan penuh, disokong oleh pasukan perkhidmatan yang terus terlibat selepas serahan.",
 };
 
-/** Label and supporting line only; `value` and `suffix` carry over from STATS,
-    so the counter animates to the same figures in every language. */
+/** Label and supporting line only, in the same order as STATS; `value` and
+    `suffix` carry over from STATS, so the counter animates to the same figures
+    in every language. Merged by index, so this list and STATS have to stay in
+    step - see the note on STATS_TEXT_ZH. */
 const STATS_TEXT_BM = [
   {
     label: "Tahun Pengalaman",
@@ -934,6 +972,10 @@ const STATS_TEXT_BM = [
   {
     label: "Projek Berjaya",
     body: "Unit kediaman, bangunan komersial dan fasad bangunan tinggi disiapkan di seluruh Malaysia.",
+  },
+  {
+    label: "Pengekalan Pelanggan",
+    body: "Pemilik yang kekal selepas serahan, dijaga oleh pasukan tempatan yang sama yang memasang sistem tersebut.",
   },
 ];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -9,14 +9,41 @@ import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/**
+ * The first part of WHY_CHOOSE is not shown here.
+ *
+ * `parts[0]` is "Why Choose MEVO Malaysia" and its four claims, and the home
+ * page now gives that its own band — see WhyMevo — so printing it here as well
+ * would be the same four sentences twice on one site. What is left is the two
+ * parts that exist nowhere else, which is also the better fit for a page called
+ * Services & Features: ten USPs and six engineering figures rather than a pitch.
+ *
+ * Everything below counts off this rather than off `parts.length`, so the
+ * runway, the timeline shares and the progress bars all follow automatically if
+ * the content changes again.
+ */
+const FIRST = 1;
+const PARTS = WHY_CHOOSE.parts.length - FIRST;
+
 /** Each part owns an equal share of the runway; the handover sits at its end. */
-const PARTS = WHY_CHOOSE.parts.length;
 const SWAP_LEN = 0.12;
 
-/** The scrubbed sequence, in viewport heights. The runway is 460dvh; this is
- *  the part of it the timeline is mapped across, and the part the autoplay
- *  carries. */
-const SEQUENCE = 2.4;
+/**
+ * The runway, in viewport heights, and the three lengths it is made of.
+ *
+ * It was written down as 460svh and 2.4 while there were three parts to show.
+ * Both are derived now, because they were never independent numbers: 0.8 of a
+ * screen of scrub per part is the reading pace, the frame is one screen, and
+ * the tail is the pinned hold the closing sheet is drawn over. Dropping a part
+ * without shortening the runway would have left each remaining one holding half
+ * as long again as it was paced for.
+ *
+ * At two parts: 100 + 160 + 120 = 380svh, against 460 at three.
+ */
+const PER_PART = 0.8;
+const TAIL = 120;
+const SEQUENCE = PER_PART * PARTS;
+const RUNWAY = 100 + SEQUENCE * 100 + TAIL;
 
 /** How much of that the autoplay plays per second, once the frame has snapped
  *  to the top. The same pace as the sections above, so the page keeps one
@@ -32,9 +59,9 @@ const DRIFT_SCALE = 1.5;
 const DRIFT_TRAVEL = 22;
 
 /**
- * Why Choose MEVO Malaysia: one photograph, three panel parts, internal scroll.
+ * The feature bands: one photograph, two panel parts, internal scroll.
  *
- * A 460vh runway with a sticky frame, so the section advances through its own
+ * A runway with a sticky frame, so the section advances through its own
  * parts before the page moves on. The background never changes, it only drifts.
  * That drift is in percent rather than pixels so it can never exceed the scale
  * bleed and expose an edge at any viewport height. See DRIFT_SCALE.
@@ -62,7 +89,7 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const ctx = gsap.context(() => {
-      const parts = gsap.utils.toArray<HTMLElement>("[data-part]");
+      const parts = gsap.utils.toArray<HTMLElement>("[data-part]", section);
       const frame = section.querySelector<HTMLElement>("[data-frame]");
       const marker = section.querySelector<HTMLElement>("[data-marker]");
       const panel = section.querySelector<HTMLElement>("[data-panel]");
@@ -169,9 +196,18 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
       // section that is not pinned covers content instead of crossing it. The
       // runway and the frame inside it stay: the scrubbed sequence is the
       // section, not the transition into it.
-      className={`relative h-[460svh] bg-bg motion-reduce:h-auto ${
+      className={`relative h-[var(--runway)] bg-bg motion-reduce:h-auto ${
         standalone ? "" : "sheet -mt-[110svh] motion-reduce:mt-0"
       }`}
+      /* The runway is derived from the number of parts shown — see RUNWAY — so
+         Tailwind cannot know it, and it arrives as a variable rather than as an
+         inline `height`. That is not a style preference: an inline height beats
+         every class, so it would have overridden `motion-reduce:h-auto` and
+         left a 380svh gap under the section for readers who ask for reduced
+         motion, where the frame is static and the parts are simply stacked.
+         Handed over as a custom property, both heights are classes again and
+         the variant wins on source order the way it is meant to. */
+      style={{ "--runway": `${RUNWAY}svh` } as CSSProperties}
     >
       <div
         data-frame
@@ -225,7 +261,7 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
         >
           {/* Scroll progress, one segment per part. */}
           <div aria-hidden className="mb-7 flex gap-3">
-            {whyChoose.parts.map((_part, segment) => (
+            {whyChoose.parts.slice(FIRST).map((_part, segment) => (
               <span
                 key={segment}
                 className="h-px flex-1 overflow-hidden bg-[rgb(16_18_21/0.18)]"
@@ -242,7 +278,7 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
             {/* Keyed by position, not by title: the locale toggle rewrites
                 every title, and remounting these would throw away the inline
                 opacity the scrubbed timeline is holding them at. */}
-            {whyChoose.parts.map((part, i) => (
+            {whyChoose.parts.slice(FIRST).map((part, i) => (
               <div
                 key={i}
                 data-part={i}

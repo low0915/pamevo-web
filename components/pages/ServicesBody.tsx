@@ -9,8 +9,14 @@ import { WhyChoose } from "@/components/sections/WhyChoose";
  *
  * The page was the services stack on its own, opening cold on a dark panel.
  * It now opens on the shared `PageBanner` — the same band /contact,
- * /our-products and /vision-mission use — and closes on WhyChoose, which until
- * now only existed on the home page.
+ * /our-products and /vision-mission use — and closes on the feature bands,
+ * which until now only existed on the home page.
+ *
+ * Those bands no longer print "Why Choose MEVO Malaysia" and its four claims:
+ * the home page gives that its own section now, and the same four sentences on
+ * two pages is once too many. What closes this page is the ten USPs and the six
+ * engineering figures, which is the half of that section that is actually about
+ * features. See FIRST in WhyChoose.tsx.
  *
  * A server component, so the copy arrives as a prop rather than through the
  * locale context: context is a client mechanism and this renders on the server,

@@ -1,7 +1,6 @@
 import { Hero } from "@/components/sections/Hero";
 import { WhyMevo } from "@/components/sections/WhyMevo";
 import { ProductGrid } from "@/components/sections/ProductGrid";
-import { Background } from "@/components/sections/Background";
 import { Stats } from "@/components/sections/Stats";
 import { Projects } from "@/components/sections/Projects";
 import { JsonLd } from "@/components/site/JsonLd";
@@ -55,9 +54,10 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             and matching them is what keeps that legible. */}
         <WhyMevo />
         <ProductGrid />
-        <Background />
         {/* WhyChoose stood here and Services stood between Stats and Projects.
-            Both are out of the home page.
+            Background stood between ProductGrid and Stats. All three are out of
+            the home page; all three still exist, and Background is still the
+            whole of /our-story, where it renders its `standalone` branch.
 
             THE CURTAIN CHAIN SURVIVED THE CUT, and it is worth writing down
             why, because it is the thing a change like this quietly breaks.
@@ -65,11 +65,17 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             has to land on a frame that is still pinned; take a link out and the
             next curtain lands on whatever it now finds.
 
-            Stats pulls up 110svh and used to land on WhyChoose. It now lands on
-            Background, whose runway is 370svh holding a 100svh sticky frame —
-            so the frame stays pinned for 270svh and the overlap starts at 260.
-            Ten svh of slack, which is the same margin it had before and the
-            same one the rest of the stack is built on.
+            Stats pulls up 110svh. It landed on WhyChoose, then on Background,
+            and now on ProductGrid — whose runway is 250svh holding a 100lvh
+            sticky frame, so that frame is pinned for 150svh and Stats' top edge
+            reaches the top of the screen at 140. Ten svh of slack: the same
+            margin it had over Background's much longer 370svh runway, and the
+            same one every other handover on this page is built on.
+
+            Losing Background cost the page 370svh of runway and nothing else.
+            The band it used to ride over is the same band Stats rides over now,
+            and ProductGrid's own 250svh was already sized to be ridden over —
+            it is what Background itself was landing on.
 
             Projects pulls up `svc-curtain` and used to land on Services. It now
             lands on Stats, which is what that class was written against in the

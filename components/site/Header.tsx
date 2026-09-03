@@ -179,7 +179,46 @@ export function Header() {
     { clamp: true },
   );
   const blur = useTransform(scrollY, range, [12, 28], { clamp: true });
-  const backdropFilter = useTransform(blur, (b) => `blur(${b}px) saturate(180%)`);
+
+  /**
+   * BRIGHTNESS, AND WHY IT IS NOT MORE TINT.
+   *
+   * The island was legible everywhere - `text-ink` never fell below 8.8:1 - but
+   * over the dark bands it measured rgb(171,178,188) against rgb(248) on the
+   * page's own ground, and read as a grey slab rather than as glass. That is a
+   * tone problem, and the tints above are not the lever for it: they are a
+   * measured floor for the reading, and raising them is how this island got to
+   * 0.85 once before and stopped being glass at all.
+   *
+   * `brightness()` raises what is BEHIND the sheet instead of covering it, and
+   * it is self-limiting in exactly the way this needs. Over the near-white page
+   * ground the backdrop is already at the ceiling, so the multiplier does
+   * nothing and the unscrolled island is unchanged; over the dark bands it does
+   * all of the work. The tints are untouched, so every contrast figure in the
+   * note above still holds - brightening the backdrop can only lighten the
+   * result, so `text-ink` can only improve on it.
+   *
+   * Saturation comes DOWN as brightness goes up, and that is not a separate
+   * opinion. A multiplier scales colour as well as level, so at 1.8 the old
+   * 180% pushed a visible cyan cast over the dark sections and a heavy
+   * periwinkle over the enquiry band - the island took the colour of whatever
+   * it crossed. 140% is where it stops staining.
+   *
+   * Measured at 1440x900, scrolled, sampling a clean patch of the island:
+   *
+   *   ground                  before              after
+   *   dark section    rgb(171,178,188)    rgb(200,216,221)
+   *   enquiry band    rgb(158,180,243)    rgb(158,197,254)
+   *   page ground     rgb(247,248,248)    unchanged
+   *
+   * 1.8 rather than 2.1, which was brighter still: past about 1.9 a green cast
+   * comes up off the dark sections, and the point of the change was to stop the
+   * island taking on colour.
+   */
+  const backdropFilter = useTransform(
+    blur,
+    (b) => `blur(${b}px) saturate(140%) brightness(1.8)`,
+  );
   const shadow = useTransform(
     scrollY,
     range,
@@ -196,7 +235,19 @@ export function Header() {
      the same ceiling the unscrolled end above carries - it was left at the old
      1344 when that moved, which is 250px short of the six-item row. */
   const staticStyle = reduce
-    ? { maxWidth: 1600, borderRadius: 22 }
+    ? {
+        maxWidth: 1600,
+        borderRadius: 22,
+        /* The material as well as the shape. Without these the reduced-motion
+           island falls back to `.glass`, which is the shared light-glass
+           material and knows nothing about the grounds this thing floats over -
+           so the one reader who cannot have the morph got the dark island the
+           brightness above exists to fix. The unscrolled end, since that is
+           what "at rest" means here. */
+        background: "rgba(255,255,255,0.48)",
+        backdropFilter: "blur(12px) saturate(140%) brightness(1.8)",
+        WebkitBackdropFilter: "blur(12px) saturate(140%) brightness(1.8)",
+      }
     : {
         maxWidth,
         borderRadius: radius,
