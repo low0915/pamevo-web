@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-import { hasEnquiryBand } from "@/lib/paths";
+import { hasClosingCurtain } from "@/lib/paths";
 
 /**
  * Holds the page's last screen so the closing sheet can be drawn over it.
@@ -30,12 +30,20 @@ import { hasEnquiryBand } from "@/lib/paths";
  *     the top, and the sheet covers it from below. There is barely any scroll
  *     on such a page and nothing to watch either way.
  *
- * NOT ON /contact. The sheet that rides up is the enquiry band plus the footer,
- * and /contact is the one page the band takes itself off — so the sheet there
- * is a footer on its own, half the height, unable to cover the screen, drawing
- * a curtain over a form for no reason. `hasEnquiryBand` is the single predicate
- * both this and the band read, so the two can never end up disagreeing about
- * which pages close this way.
+ * THE HOME PAGE ONLY, and not /contact even there. `hasClosingCurtain` is the
+ * single predicate this and ClosingSheet both read, so the two can never end up
+ * disagreeing about which pages close this way — half a curtain is worse than
+ * none, and it is the failure this arrangement has actually had: a page pinned
+ * by its foot with nothing rising to cover it is a dead screen the reader
+ * scrolls against, and a sheet with nothing held under it never crosses
+ * anything at all.
+ *
+ * Why the home page alone: there the curtain is a chain rather than an effect.
+ * The hero pins, every band rides up over the one above it, and this is the
+ * last link — the page closing the way it has been closing over itself the
+ * whole way down. On every other route the sections simply stack, so this was
+ * one lone overlap at the very end with nothing before it to belong to, which
+ * reads as the footer coming loose rather than as the page finishing.
  *
  * CSS cannot ask an element for its own height, so it is measured here and
  * written back as a variable. Observed rather than measured once: the page
@@ -47,7 +55,7 @@ import { hasEnquiryBand } from "@/lib/paths";
 export function PageHold({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const held = hasEnquiryBand(pathname);
+  const held = hasClosingCurtain(pathname);
 
   useEffect(() => {
     const el = ref.current;

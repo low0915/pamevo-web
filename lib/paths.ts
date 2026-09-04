@@ -139,6 +139,36 @@ export function hasEnquiryBand(pathname: string) {
 }
 
 /**
+ * Whether a page closes with the CURTAIN — the sheet drawn up over a held page.
+ *
+ * Two conditions, and both have to hold.
+ *
+ * The band, because the sheet that rides up IS the enquiry band plus the
+ * footer. On /contact the band takes itself off, leaving a footer on its own -
+ * half the height, unable to cover the screen, drawing a curtain over a form
+ * for no reason. See `hasEnquiryBand`.
+ *
+ * And the home page, because the curtain is now the home page's alone. It is
+ * one continuous chain there: the hero pins, every band rides over the one
+ * above it, and the closing sheet is the last link in that chain rather than a
+ * flourish bolted to the end. Everywhere else the page simply ends, and the
+ * closing sheet was the only curtain left on those routes - a single overlap
+ * with nothing before it to belong to, which reads as the footer coming loose
+ * rather than as the page closing.
+ *
+ * ONE PREDICATE FOR BOTH HALVES OF THE EFFECT, which is the same rule
+ * `hasEnquiryBand` was written for and for the same reason. A curtain needs a
+ * pull-up AND something pinned underneath it; those live in two different
+ * components (ClosingSheet and PageHold), and when they were separate checks
+ * they drifted. Either both read this or the page gets half a curtain: a sheet
+ * with nothing held under it, or a page pinned by its foot with nothing coming
+ * up to cover it - a dead screen the reader scrolls against.
+ */
+export function hasClosingCurtain(pathname: string) {
+  return isHome(pathname) && hasEnquiryBand(pathname);
+}
+
+/**
  * Whether a nav link points at the page being read.
  *
  * A PREFIX match rather than an equality one, which is the whole point of it
@@ -157,6 +187,32 @@ export function hasEnquiryBand(pathname: string) {
 export function isCurrentPath(pathname: string, href: string) {
   if (enPath(href) === "/") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * Whether a nav ITEM — not just one href — points at the page being read.
+ *
+ * An item with a dropdown is current when the reader is on the item's own page
+ * OR on any page its children lead to. Our Products has always marked itself on
+ * /our-products because its children are only ever fragments of that same page,
+ * so `isCurrentPath` on the parent href was enough. Our Profile breaks that
+ * assumption: one of its children, Director's Profile, is a separate route, and
+ * without this the parent would go unmarked while a reader sat on that page —
+ * leaving it with no nav indication at all, which is exactly what it had as a
+ * top-level item before it moved into the dropdown.
+ *
+ * Child hrefs are stripped of their fragment first: a fragment is a position on
+ * a page, not a page, and `isCurrentPath` matches paths. Works in every locale
+ * because the hrefs handed in are already localised — see NAV_ZH / NAV_BM.
+ */
+export function isNavItemCurrent(
+  pathname: string,
+  item: { href?: string; children?: { href?: string }[] },
+) {
+  const targets = [item.href, ...(item.children ?? []).map((c) => c.href)]
+    .filter((href): href is string => Boolean(href))
+    .map((href) => href.split("#")[0]);
+  return targets.some((target) => isCurrentPath(pathname, target));
 }
 
 /** The EN path for any URL, whatever language it is in. Inverse of

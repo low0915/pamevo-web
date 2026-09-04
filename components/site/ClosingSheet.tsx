@@ -1,5 +1,9 @@
-import type { ReactNode } from "react";
+"use client";
 
+import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
+
+import { hasClosingCurtain } from "@/lib/paths";
 import { Z } from "@/lib/z";
 
 /**
@@ -21,11 +25,32 @@ import { Z } from "@/lib/z";
  * page's own scrolling against a held backdrop, which is why it costs nothing
  * and cannot fall out of step on a short page the way a scrubbed range can.
  *
- * `sheet` is the shadow the leading edge carries — the same class Background,
- * Stats, Services and Projects use where they overlap. `Z.raised` is what puts
- * this in front of the held page, including the home page's own raised stack.
+ * THE CURTAIN IS THE HOME PAGE'S ALONE NOW, and this reads the same predicate
+ * PageHold does — see `hasClosingCurtain`. Off the home page the pin above is
+ * gone, so there is nothing held for this to cross, and what is left has to
+ * come off with it:
+ *
+ *   `sheet` is the lip of shadow the LEADING EDGE of a curtain carries. With
+ *   nothing to travel over it is a dark line permanently ruled above the
+ *   footer, which reads as a seam in the page rather than as depth.
+ *
+ *   `Z.raised` exists to put this in front of the held page. With nothing
+ *   holding, raising it lifts the footer out of the normal flow order for no
+ *   reason, and a raised box that overlaps nothing is only a way for a later
+ *   change to end up painted underneath it.
+ *
+ * Which leaves a plain wrapper: the band and the footer, in flow, scrolling up
+ * from the bottom of the page like anything else. The pair stays grouped — that
+ * was never about the curtain.
  */
 export function ClosingSheet({ children }: { children: ReactNode }) {
+  const curtained = hasClosingCurtain(usePathname());
+
+  /* A bare fragment rather than the same div without its classes: an
+     unpositioned wrapper with no styles of its own is a box the layout has to
+     account for and nothing needs. */
+  if (!curtained) return <>{children}</>;
+
   return (
     <div className="sheet relative" style={{ zIndex: Z.raised }}>
       {children}

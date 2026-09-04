@@ -14,6 +14,7 @@ export {
   localePath,
   isPaired,
   isCurrentPath,
+  isNavItemCurrent,
   hasEnquiryBand,
   HTML_LANG,
   LOCALE_PREFIX,

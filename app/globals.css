@@ -410,64 +410,25 @@ body {
   filter: saturate(0.6) contrast(1.05);
 }
 
-/* Services: the pinned stack of full-bleed service panels.
-   Gated on one media query rather than on Tailwind variants, so the pin, the
-   stack box and the GSAP timeline all switch on under exactly the same
-   condition. Below md, or with reduced motion, none of this applies: the
-   panels are in flow and the section reads top to bottom, one after another.
+/* The Services curtain, and the stat band it is pulled up over.
 
-   The runway is sized by the same rule the hero uses for its own sheet: a
-   pinned section must outlast its timeline by two screens plus the gap below
-   it, or the curtain arrives before the section is done or leaves before it is
-   covered. The timeline here is `4 x (100svh - band)`, so the runway is
-   `400svh - 4 x band` plus 200svh, 20svh of buffer and the 4em bottom margin.
-   The buffer is split: half of it sits ahead of the curtain and half behind,
-   so neither condition lands exactly on its limit.
-   The band is in px because it clears the fixed header island, which is why
-   this needs calc where the other sections do not. */
+   THE SERVICES STACK USED TO LIVE HERE: a `.svc-runway` several screens tall
+   holding a sticky `.svc-frame`, with `.svc-card` panels absolutely stacked
+   inside it and a `.svc-progress` bar across its foot. Services is a static
+   grid now and owns none of those boxes, so all seven rules are gone with it.
+   See the note at the top of Services.tsx for why the stack was replaced.
+
+   `.svc-curtain` and `.svc-curtain-floor` stayed, and they are not vestigial:
+   Projects wears both on the home page to ride up over the stat band, which is
+   the only handover either is still part of. The names are historical - this is
+   the curtain Services introduced, not a curtain over Services.
+
+   Still gated on one media query rather than on Tailwind variants, so the
+   pull-up and the pin it rides over switch on under exactly the same
+   condition. */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
-  .svc-runway {
-    /* 400svh - 448 (timeline) + 220svh + 64 (two screens, buffer, gap). */
-    height: calc(620svh - 384px);
-  }
-  .svc-frame {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
-  }
-  /* Every panel leaves the flow and fills the frame, so a panel rising into it
-     covers the one before instead of pushing it down the page. Stacking order
-     is DOM order: none of these carry a z value, so the later panel paints over
-     the earlier one on its own.
-
-     The panels start below the frame's top rather than at it. That band of
-     section ground is what the fixed header island sits over, and holding it on
-     the frame rather than inside each panel is the whole point: a panel carries
-     no dead space above its content, so the first thing that rises into view is
-     its top edge and then the photograph, not a screenful of black. */
-  .svc-card {
-    position: absolute;
-    inset: 7rem 0 0 0;
-  }
-  .svc-grid {
-    padding-top: 0;
-  }
-  /* In flow the figure is a 4:5 block; in the frame it fills whatever its
-     padded box leaves it, which is why the height is passed down rather than
-     set on the figure alone. */
-  .svc-figure-frame,
-  .svc-figure {
-    height: 100%;
-  }
-  .svc-figure {
-    aspect-ratio: auto;
-  }
-  .svc-progress {
-    display: block;
-  }
-  /* The curtain that rides up over this stack. Declared inside the same query
-     that creates the pin, not as a `md:` utility: Tailwind emits responsive
+  /* The curtain Projects rides up on. Declared inside the same query that
+     creates the pin it lands on, not as a `md:` utility: Tailwind emits responsive
      variants after `motion-reduce:` ones, so a `md:-mt-*` would outlive the
      very pin it depends on and eat into the last panel.
 
@@ -504,19 +465,6 @@ body {
   }
 }
 
-/* The band grows with the breakpoint, in step with the photograph's own inset,
-   so the content lands where it did before this was moved off the panels. */
-@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
-  .svc-card {
-    top: 8rem;
-  }
-  /* The band is 16px deeper here, so the timeline is 64px shorter and the
-     runway follows it down. */
-  .svc-runway {
-    height: calc(620svh - 448px);
-  }
-}
-
 /* The same two curtains, below `md`.
 
    Every height here is `svh`, not `dvh`, and that is load-bearing rather than
@@ -528,10 +476,10 @@ body {
    and the page jumps under the thumb. `svh` is the height with the browser
    chrome showing and never changes, so the chain is measured once and holds.
    It is also the safer of the two for a sticky panel: `svh` can never exceed
-   the visible viewport, which is the condition `.svc-card` relies on below.
+   the visible viewport.
 
    Everything above is gated at 768 because it is built on pinned 100svh
-   frames, and neither a service panel nor the stat band fits one screen on a
+   frames, and the stat band does not fit one screen on a
    phone as it is written for the wide layout. So the reading is rebuilt from
    sticky boxes instead of from a pin: a box holds still, and the section after
    it scrolls up over it.
@@ -566,35 +514,29 @@ body {
    build emits Level 4 `(not (min-width: 48rem))` and Safari drops the whole
    block before 16.4. That is a phone, and this is the phone layout. */
 @media (max-width: 47.999rem) and (prefers-reduced-motion: no-preference) {
-  .band-runway::after,
-  .svc-frame::after {
+  .band-runway::after {
     content: "";
     display: block;
   }
 
-  /* The two runways are not the same length, and that is the whole of it.
+  /* The runway the stat band grows so Projects has something to pull up over.
 
      A section can never be shorter than its own pull-up: it would seat the
-     section after it over the panel still being held behind it. Services is
-     several screens of panels, so it can pull the full 110svh and close over
-     the stat band completely. Projects is one screen of content on a phone,
-     and asking it for 110svh means asking it to stand 110svh tall - which it
-     does by growing a floor it has nothing to put in, leaving a band of empty
-     ground above the footer that no amount of trimming its padding can reach,
-     because under a binding floor every pixel taken off the padding goes
-     straight back into the slack. So its curtain is cut to 80svh, which is
-     under what the section already measures on any phone: the floor stops
-     binding, the section is its own content again, and the curtain still
-     closes over four fifths of the screen before the page carries on. */
+     section after it over the band still being held behind it. Projects is one
+     screen of content on a phone, and asking it for the full 110svh means
+     asking it to stand 110svh tall - which it does by growing a floor it has
+     nothing to put in, leaving a band of empty ground above the footer that no
+     amount of trimming its padding can reach, because under a binding floor
+     every pixel taken off the padding goes straight back into the slack. So
+     its curtain is cut to 80svh below (`.svc-curtain-floor`), which is under
+     what the section already measures on any phone: the floor stops binding,
+     the section is its own content again, and the curtain still closes over
+     four fifths of the screen before the page carries on. */
   .band-runway::after {
     height: 110svh;
   }
 
-  .svc-frame::after {
-    height: 80svh;
-  }
-
-  /* The stat band holds its last screenful while Services rides over it. It
+  /* The stat band holds its last screenful while Projects rides over it. It
      is pinned by its foot rather than its head, because the band is several
      screens tall on a phone and pinning its head would strand everything
      below the first screen: the page would simply stop scrolling with two
@@ -610,20 +552,6 @@ body {
 
   .svc-curtain {
     margin-top: calc(-110svh - 4em);
-  }
-
-  /* One panel per screen, each holding at the top while the next scrolls up
-     over it. The panels are sized to the screen rather than to their content
-     precisely so that `top` is safe here: a panel taller than the viewport
-     would hold with its own foot below the fold and the copy there would
-     never be reachable. The photograph absorbs the difference instead - see
-     the flex column in Services.tsx - so the copy always fits whatever the
-     phone leaves it. */
-  .svc-card {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
   }
 
   /* Projects only, and later than `.svc-curtain` on purpose: same specificity,

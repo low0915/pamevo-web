@@ -36,7 +36,12 @@ export function VisionMission({ locale = "EN" }: { locale?: Locale }) {
   const copy = { ...VISION, ...TRANSLATIONS[locale] };
 
   return (
-    <section className="px-6 pt-20 pb-24 md:px-8 md:pt-24 md:pb-32 lg:px-10">
+    /* `id`/`scroll-mt-24` are the target for the "Vision & Mission" dropdown
+       link (/our-profile#vision); the margin clears the 80px header island. */
+    <section
+      id="vision"
+      className="scroll-mt-24 px-6 pt-20 pb-24 md:px-8 md:pt-24 md:pb-32 lg:px-10"
+    >
       <div className="mx-auto w-full max-w-[1440px]">
         {/* An `h2`, and visible where the page version's was `sr-only`. On its
             own page the banner had already said this and printing it again

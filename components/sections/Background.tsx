@@ -9,6 +9,28 @@ import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/**
+ * WHICH PARAGRAPH IS WHICH, named rather than counted.
+ *
+ * BACKGROUND.paragraphs is four entries covering two chapters, two apiece: the
+ * Group's history, split so /our-profile's lead can stack it in two brand bars,
+ * then the MEVO partnership, split so that chapter can stack two glass panels.
+ *
+ * NOTHING MAY WORK THIS OUT BY COUNTING. The home page's pinned band is two
+ * paragraphs against two photographs, and what it wants is the OPENING of each
+ * chapter - [0] and [2]. Taking the first two would put both halves of the
+ * history in the band and drop the partnership; taking the last two would lose
+ * the opening. Mapping the array straight through, which is what it did before
+ * the first split, gives four panels to two swap slots. All three failures are
+ * silent - the page renders, it just says the wrong thing - which is why every
+ * call site reads these names and no index is ever written as a literal.
+ *
+ * `[0]` of each is the opening, so `CHAPTER_ONE[0]` and `CHAPTER_TWO[0]` are
+ * what the band takes and the full arrays are what /our-profile stacks.
+ */
+const CHAPTER_ONE = [0, 1] as const;
+const CHAPTER_TWO = [2, 3] as const;
+
 /** Where in the scrubbed runway the two steps hand over. */
 const SWAP_AT = 0.42;
 const SWAP_LEN = 0.16;
@@ -49,41 +71,11 @@ const SPEED = 0.25;
  */
 export function Background({ standalone = false }: { standalone?: boolean }) {
   const rootRef = useRef<HTMLElement>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
   /* Capitalised because JSX reads a lowercase tag name as a literal element and
      an uppercase one as a component; this has to be the former, held in a
      variable, so the case is doing work rather than following a convention. */
   const Heading = standalone ? "h1" : "h2";
   const background = useCopy(BACKGROUND, { ZH: BACKGROUND_ZH, BM: BACKGROUND_BM });
-
-  /**
-   * The held frame's own height, written back as a variable.
-   *
-   * /our-profile only. The frame is a floor rather than a fixed screen, so on a
-   * laptop it can end up taller than the viewport, and a frame taller than the
-   * viewport pinned at `top: 0` holds with its foot below the fold — the base
-   * of the building would never come into view. The pin is therefore
-   * `min(0px, 100lvh - height)`, which is 0 while it fits and negative once it
-   * does not, and CSS has no way to ask for the element's own height, so it is
-   * measured here.
-   *
-   * Observed rather than measured once: the frame reflows with the URL bar, a
-   * rotation, and a font swap, and a stale height leaves the pin either short
-   * of the foot or past it. Stats.tsx does the same thing for the same reason.
-   */
-  useEffect(() => {
-    if (!standalone) return;
-    const frame = frameRef.current;
-    if (!frame) return;
-
-    const measure = () =>
-      frame.style.setProperty("--frame-h", `${Math.round(frame.offsetHeight)}px`);
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(frame);
-    return () => observer.disconnect();
-  }, [standalone]);
 
   useEffect(() => {
     const section = rootRef.current;
@@ -192,19 +184,25 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const ctx = gsap.context(() => {
-      const bar = section.querySelector<HTMLElement>("[data-lead='bar']");
-      const para = section.querySelector<HTMLElement>("[data-lead='para']");
+      /* PLURAL, and that is the change the second bar forced. These were
+         `querySelector`, which returns the first match and silently ignores the
+         rest - so the lead would have wiped its clip open on bar one and left
+         bar two clipped to nothing for the life of the page. A selector that
+         returns one node reads identically whether there is one of something or
+         five, which is exactly why it survives a change like this unnoticed. */
+      const bars = gsap.utils.toArray<HTMLElement>("[data-lead='bar']", section);
+      const paras = gsap.utils.toArray<HTMLElement>("[data-lead='para']", section);
       const photo = section.querySelector<HTMLElement>("[data-lead='photo']");
       const heading = section.querySelector<HTMLElement>("[data-lead='heading']");
 
       if (reduced) {
-        gsap.set(bar, { clipPath: "inset(0% 0% 0% 0%)" });
-        gsap.set([para, photo, heading], { autoAlpha: 1, y: 0 });
+        gsap.set(bars, { clipPath: "inset(0% 0% 0% 0%)" });
+        gsap.set([...paras, photo, heading], { autoAlpha: 1, y: 0 });
         return;
       }
 
-      gsap.set(bar, { clipPath: "inset(0% 0% 0% 100%)" });
-      gsap.set(para, { autoAlpha: 0 });
+      gsap.set(bars, { clipPath: "inset(0% 0% 0% 100%)" });
+      gsap.set(paras, { autoAlpha: 0 });
       gsap.set(heading, { autoAlpha: 0, y: 18 });
       gsap.set(photo, { autoAlpha: 0, y: 24 });
 
@@ -218,12 +216,26 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
         { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out" },
         0.1,
       );
+      /* The bars wipe in sequence rather than together, and the paragraph
+         inside each follows its own bar. `stagger` is short next to the 1.1s
+         wipe, so the second is well under way before the first has finished -
+         they read as one gesture opening across the page rather than as two
+         panels taking turns, which at this size would be a slideshow. */
       timeline.to(
-        bar,
-        { clipPath: "inset(0% 0% 0% 0%)", duration: 1.1, ease: "power2.inOut" },
+        bars,
+        {
+          clipPath: "inset(0% 0% 0% 0%)",
+          duration: 1.1,
+          ease: "power2.inOut",
+          stagger: 0.18,
+        },
         0.45,
       );
-      timeline.to(para, { autoAlpha: 1, duration: 0.5, ease: "power2.out" }, 1.25);
+      timeline.to(
+        paras,
+        { autoAlpha: 1, duration: 0.5, ease: "power2.out", stagger: 0.18 },
+        1.25,
+      );
     }, section);
 
     return () => ctx.revert();
@@ -273,14 +285,26 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
             ------------------------------------------------------------------ */}
         <section
           ref={rootRef}
-          /* 230svh, forced by the curtain arithmetic rather than chosen. The
-             frame is 100lvh and the next section is pulled up 110svh, so that
-             section's top edge enters the viewport at `runway - 210`. Anything
-             under 210 and the curtain is already on screen at scroll zero — the
-             page would open half-covered. 230 leaves 20svh of the composition
-             held on its own before the rise begins, then a screen of travel,
-             then the standard 10svh of slack before the pin lets go. */
-          className="relative h-[230svh] motion-reduce:h-auto"
+          id="story"
+          /* `scroll-mt-24` clears the 80px header island for the "Our Story"
+             dropdown link that targets #story. It is the top section, so the
+             margin mostly clamps away at the top of the page; it earns its keep
+             when a reader clicks it from further down /our-profile. */
+          /* NO RUNWAY, WHERE THIS WAS 230svh.
+
+             That number was never chosen; it was forced by the curtain, and
+             the comment here used to derive it: the frame is one screen, the
+             chapter below was pulled up 110svh over it, so the runway had to
+             clear 210 or the curtain was already on screen at scroll zero.
+             The curtain is gone from every page but the home page now, and
+             the arithmetic went with it — leaving 230svh of scrolling that
+             held a composition which does not change while it is held.
+
+             That hold is the "snap": two and a bit screens of thumb travel in
+             which the page does not answer, which reads as broken on a phone
+             rather than as deliberate. The section is its own height now, so
+             it scrolls like the two below it. */
+          className="relative scroll-mt-24"
         >
           {/* `min-h`, NOT `h`, and that distinction is the whole fix.
 
@@ -292,23 +316,32 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
               full-size building need more than 100lvh between them. Nothing
               inside has to move or resize for it.
 
-              `lvh`, where the runway is `svh`, for the reason the home page's
-              frames give: the runway is a length in the scroll chain and must
-              hold still, but this frame has to COVER, and a box sized to the
-              viewport-with-chrome leaves a strip showing the moment the URL bar
-              slides away.
+              It was `lvh` while the frame was pinned and had to COVER — a box
+              sized to the viewport-with-chrome leaves a strip showing the
+              moment the URL bar slides away. Unpinned it covers nothing, so it
+              takes `svh` like every other standing box on the site. */}
+          {/* NOT STICKY ANY MORE, and so no foot-pin and no measured height.
 
-              `top` is not 0 but the foot-pin from Stats.tsx: a frame TALLER
-              than the screen pinned at the top would hold with its own bottom
-              below the fold, and the base of the building would never be
-              reachable. `min(0px, 100lvh - height)` is 0 while it fits and
-              negative once it does not, which pins it by the foot instead. The
-              height is measured into `--frame-h` below, because only the DOM
-              knows it. */}
+              The `top: min(0px, 100lvh - height)` this carried is the foot-pin
+              from Stats.tsx, and it only ever existed to hold a frame TALLER
+              than the screen without stranding its base below the fold. With
+              nothing pinning there is nothing to strand: the section is as tall
+              as its content and the reader simply scrolls to the bottom of it.
+
+              That expression needed the element's own height, which CSS cannot
+              ask for, so a ResizeObserver measured it into `--frame-h` on every
+              reflow. Nothing reads that variable now, so the observer, the ref
+              and the effect that ran it are all gone rather than left running
+              to write a property no rule consumes.
+
+              `min-h-[100svh]` stays. The composition is a full-bleed ground
+              with a heading, two bars and a cut-out building on it, and it
+              wants a screen to sit in; it may grow past that on a laptop where
+              the three need more room, which is what `min-h` allows and a fixed
+              height would have clipped. `svh` not `lvh` now that it is not
+              covering anything — see the note in globals.css. */}
           <div
-            ref={frameRef}
-            className="sticky flex min-h-[100lvh] w-full items-center overflow-hidden bg-bg motion-reduce:static motion-reduce:min-h-0 motion-reduce:py-20"
-            style={{ top: "min(0px, calc(100lvh - var(--frame-h, 100lvh)))" }}
+            className="relative flex min-h-[100svh] w-full items-center overflow-hidden bg-bg motion-reduce:min-h-0 motion-reduce:py-20"
           >
             {/* The ground: the showroom again, blurred, behind the sharp
                 cut-out of the same building.
@@ -407,24 +440,57 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
                   1360 the base `mt-10` carries this instead, which is one rule
                   with nothing to lose to. */}
               <div className="relative mt-10 flex flex-col lg:block min-[1360px]:mt-[calc(4rem_-_13.6%)]">
-                <div
-                  data-lead="bar"
-                  className="order-2 bg-brand px-6 py-8 sm:px-8 sm:py-10 lg:absolute lg:inset-x-0 lg:top-[54%] lg:-translate-y-1/2 lg:px-12 lg:py-12 lg:pr-[58%]"
-                >
-                  {/* #f4f5f6 on the brand field is 10.2:1 — the same pale ink
-                      the footer and the enquiry band use on this blue.
+                {/* TWO BARS, one per half of the history.
 
-                      The bar's right padding is 58% where the design has 55%.
-                      The cut-out's far left is NOT transparent — the pavement
-                      and the tree reach the edge of the canvas — so text set to
-                      the design's measure ran under the building and lost a
-                      word off six lines. */}
-                  <p
-                    data-lead="para"
-                    className="max-w-[66ch] text-base leading-relaxed text-bg"
-                  >
-                    {background.paragraphs[0]}
-                  </p>
+                    They are two boxes rather than two paragraphs inside one,
+                    because the bar IS the brand field: a second paragraph added
+                    to the single bar would have grown that field taller and
+                    pushed the building, where two fields stacked with a gap
+                    between them read as the design does - a band, a breath,
+                    another band.
+
+                    THE PAIR IS TOP-ANCHORED WHERE THE SINGLE BAR WAS
+                    CENTRED, and that is the one number this change forced.
+                    `top-[54%] -translate-y-1/2` put a box's MIDDLE just below
+                    the middle of the frame, which is right while the box is one
+                    bar tall and wrong the moment it is two: the stack grew in
+                    both directions from its centre and its top edge climbed
+                    over the heading - measured, it crossed "Our Story" and cut
+                    the descenders off it.
+
+                    Anchoring the top instead means the stack grows downward
+                    only, into the empty half of the frame it was always sitting
+                    in, so the heading above it is untouched however many bars
+                    there are. 30% is where the first bar's top edge already
+                    was, so the composition against the cut-out is the one that
+                    was designed rather than a new one.
+
+                    Both carry `data-lead="bar"` and both paragraphs carry
+                    `data-lead="para"`, which is what the entry timeline
+                    collects - see the note on `querySelectorAll` there. */}
+                <div className="order-2 flex flex-col gap-3 lg:absolute lg:inset-x-0 lg:top-[30%] lg:gap-4">
+                  {CHAPTER_ONE.map((index) => (
+                    <div
+                      key={index}
+                      data-lead="bar"
+                      className="bg-brand px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-10 lg:pr-[58%]"
+                    >
+                      {/* #f4f5f6 on the brand field is 10.2:1 — the same pale
+                          ink the footer and the enquiry band use on this blue.
+
+                          The bar's right padding is 58% where the design has
+                          55%. The cut-out's far left is NOT transparent — the
+                          pavement and the tree reach the edge of the canvas —
+                          so text set to the design's measure ran under the
+                          building and lost a word off six lines. */}
+                      <p
+                        data-lead="para"
+                        className="max-w-[66ch] text-base leading-relaxed text-bg"
+                      >
+                        {background.paragraphs[index]}
+                      </p>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Pulled out through the frame's gutter so the building meets
@@ -436,7 +502,26 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
                     left in the frame, which made the building visibly smaller
                     on every laptop — solving the frame's problem by damaging
                     the composition. The frame gives way instead: see `min-h`
-                    on it rather than a fixed height. */}
+                    on it rather than a fixed height.
+
+                    DROPPED 6% OF ITS OWN HEIGHT, and the offset is on a WRAPPER
+                    rather than on the picture's own box. That is the same trap
+                    the heading's nudge is written around a few lines up: the
+                    entry timeline does `gsap.set(photo, { y: 24 })` and tweens
+                    it to 0, which writes an inline `transform` on this element
+                    and beats any `translate-y` utility sitting on it outright —
+                    the class would be there, computing to the identity matrix,
+                    doing nothing. GSAP keeps this element's transform to
+                    itself; the offset lives one level out where nothing
+                    competes for it.
+
+                    A translate and not a margin, so the drop is a share of the
+                    PICTURE rather than of the container's width, and so it
+                    moves the building without pushing the frame taller or
+                    disturbing the bars it overlaps. Gated at `lg`, where the
+                    picture is beside the bars; below that it is stacked above
+                    them in flow and there is nothing to drop it against. */}
+                <div className="contents lg:block lg:translate-y-[6%]">
                 <div
                   data-lead="photo"
                   className="relative order-1 -mr-6 w-auto md:-mr-8 lg:-mr-10 lg:ml-auto lg:w-[56%]"
@@ -450,27 +535,55 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
                     className="h-auto w-full"
                   />
                 </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ------------------------------------------------------------------
-            The second chapter, and the curtain.
+            The second chapter.
 
-            `-mt-[110svh]` pulls it up over the held frame above, and `sheet` is
-            the shadow its rising edge carries — without it a full-bleed
-            photograph sliding over a full-bleed ground reads as a cut rather
-            than as a curtain. Both are the values the home page's sections
-            already use between each other, so this inherits a transition that
-            is tuned rather than inventing one.
+            IT USED TO RIDE UP OVER THE FIRST. `-mt-[110svh]` pulled it over the
+            held frame above with `sheet` as the shadow on its rising edge, both
+            borrowed from the home page's sections so the transition was tuned
+            rather than invented.
 
-            `min-h-[110svh]` is not decoration: a curtain has to be at least as
-            tall as its own pull-up, or it stops covering partway and whatever
-            follows starts inside the frame's runway. The photograph behind it
-            is opaque and full-bleed, which is what it covers WITH.
+            That was the LAST curtain left outside the home page, and it is now
+            gated with the rest of them. The distinction the gate draws is worth
+            keeping straight: this section still PINS — the frame above still
+            holds and its sequence still scrubs, on every page — because a pin
+            is how the section reads itself. What has gone is only the overlap,
+            one chapter crossing over another, which is the part that made this
+            page behave like the home page rather than like the rest of the
+            site.
+
+            `standalone` is /our-profile, which is the only route that renders
+            this section that way, so this is the one flag both curtains in this
+            file now hang off. It is not a second condition for the same thing:
+            the section-level curtain below is this section riding over what
+            precedes it on the home page, and this one is the chapter break
+            inside it.
+
+            THE TWO FLOORS ARE NOT THE SAME NUMBER AND NOT THE SAME JOB.
+            `110svh` belongs to the pull-up: a curtain has to be at least as
+            tall as the distance it is pulled over or it stops covering
+            partway, so that floor only exists where the curtain does.
+
+            `100svh` is this chapter standing on its own, which is what it does
+            on /our-profile now that the curtain is gone. It is a full-bleed
+            photograph with a panel on it, and a band like that either fills the
+            screen or looks like a mistake - so the floor is one screen exactly,
+            and the section grows past it when the copy needs more. `svh` and
+            not `vh` for the reason the rest of the file gives: `vh` on a phone
+            is the height WITHOUT browser chrome, so a section sized to it is
+            always a strip taller than what the reader can see.
             ------------------------------------------------------------------ */}
-        <section className="sheet relative -mt-[110svh] w-full overflow-hidden motion-reduce:mt-0">
+        <section
+          className={`relative w-full overflow-hidden ${
+            standalone ? "" : "sheet -mt-[110svh] motion-reduce:mt-0"
+          }`}
+        >
           <Image
             src={background.images[1].src}
             alt={background.images[1].alt}
@@ -488,19 +601,37 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
               which is the one place a difference in margin is impossible to
               miss. Gutters are the home page's own at every width now: 24, 32,
               40. */}
-          <div className="relative flex min-h-[110svh] w-full flex-col justify-center px-6 py-20 md:px-8 md:py-24 lg:px-10 motion-reduce:min-h-0">
+          <div
+            className={`relative flex w-full flex-col justify-center px-6 py-20 md:px-8 md:py-24 lg:px-10 motion-reduce:min-h-0 ${
+              standalone ? "min-h-[100svh]" : "min-h-[110svh]"
+            }`}
+          >
             {/* Right, where it was left. The building in the lead section comes
                 in from the right and the eye leaves the chapter above on that
                 side, so the panel is where the reader already is. `self-end`
                 rather than a margin, so the column's own padding stays the
                 thing that sets its distance from the edge — the same 40px the
                 heading above it sits at. */}
-            <div className="w-full md:w-[min(52%,644px)] md:self-end">
-              <div className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:p-9">
-                <p className="text-base leading-relaxed text-bg">
-                  {background.paragraphs[1]}
-                </p>
-              </div>
+            {/* TWO PANELS, one per half of the partnership, stacked in the
+                same column the single panel occupied.
+
+                Two boxes rather than two paragraphs in one, for the reason the
+                lead's two bars are two boxes: the glass IS the panel, so a
+                second paragraph inside would have grown one pane taller where
+                two panes with a gap read as the material repeating. `gap-4` is
+                the lead's own spacing between its bars at this breakpoint, so
+                the two chapters stack on the same rhythm. */}
+            <div className="flex w-full flex-col gap-4 md:w-[min(52%,644px)] md:self-end">
+              {CHAPTER_TWO.map((index) => (
+                <div
+                  key={index}
+                  className="glass-dark glass-rim relative overflow-hidden rounded-[4px] p-6 md:p-9"
+                >
+                  <p className="text-base leading-relaxed text-bg">
+                    {background.paragraphs[index]}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -613,7 +744,7 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
               {/* Both paragraphs occupy one cell, so the panel keeps a fixed
                   height and does not resize as the text swaps. */}
               <div className="grid">
-                {background.paragraphs.map((paragraph, i) => (
+                {[background.paragraphs[CHAPTER_ONE[0]], background.paragraphs[CHAPTER_TWO[0]]].map((paragraph, i) => (
                   <p
                     key={i}
                     data-para={i}

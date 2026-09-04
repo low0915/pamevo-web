@@ -5,24 +5,35 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
+import { USP_PART } from "@/components/sections/CoreUsps";
 import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * The first part of WHY_CHOOSE is not shown here.
+ * The first two parts of WHY_CHOOSE are not shown here.
  *
  * `parts[0]` is "Why Choose MEVO Malaysia" and its four claims, and the home
- * page now gives that its own band — see WhyMevo — so printing it here as well
- * would be the same four sentences twice on one site. What is left is the two
- * parts that exist nowhere else, which is also the better fit for a page called
- * Services & Features: ten USPs and six engineering figures rather than a pitch.
+ * page gives that its own band — see WhyMevo — so printing it here as well
+ * would be the same four sentences twice on one site.
  *
- * Everything below counts off this rather than off `parts.length`, so the
- * runway, the timeline shares and the progress bars all follow automatically if
- * the content changes again.
+ * `parts[1]` is the ten USPs, and they are now a section of their own: see
+ * CoreUsps, which is the band directly above this one on /services. They were
+ * swapped through this panel by the timeline below, which meant nine of the ten
+ * were behind a scroll at any moment. `FIRST` is imported from there rather
+ * than written as a second `1` here, so the two cannot drift apart and start
+ * printing the same list twice.
+ *
+ * What is left is the six engineering figures. That is one part, so the swap
+ * has nothing to swap and the timeline below is down to the drift, the marker
+ * and a single progress bar — all of which it handles without special-casing,
+ * because every length here is derived from PARTS rather than assumed.
+ *
+ * Everything counts off this rather than off `parts.length`, so the runway, the
+ * timeline shares and the progress bars all follow automatically if the content
+ * changes again.
  */
-const FIRST = 1;
+const FIRST = USP_PART + 1;
 const PARTS = WHY_CHOOSE.parts.length - FIRST;
 
 /** Each part owns an equal share of the runway; the handover sits at its end. */
@@ -115,7 +126,20 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
         leader.setAttribute("y2", String(p.top - f.top + 18));
       };
 
-      if (reduced) {
+      /* STANDALONE TAKES THE SAME EXIT AS REDUCED MOTION, and it has to.
+         The scrub below is written against a pinned frame - it measures its
+         range in screen heights from `top top` and moves the photograph
+         against a frame that is holding still. Off the pin there is nothing
+         holding, so that range maps onto a section already scrolling past at
+         the same speed: the drift would slide the photograph inside its own
+         box for no visible reason and the leader line would chase it.
+
+         Everything the sequence would have revealed is simply shown instead -
+         one part, visible, which is all this section has had since the USPs
+         became CoreUsps. The annotation goes for the same reason it goes under
+         reduced motion: it points from a marker on a drifting photograph to a
+         panel, and neither is moving now. */
+      if (reduced || standalone) {
         gsap.set(parts, { autoAlpha: 1, y: 0 });
         gsap.set("[data-annotation]", { autoAlpha: 0 });
         return;
@@ -165,20 +189,13 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
           );
         }
 
-        // One progress segment per part, each filling across its own share.
-        timeline.fromTo(
-          `[data-bar='${i}']`,
-          { scaleX: 0 },
-          { scaleX: 1, duration: share },
-          share * i,
-        );
       });
 
       drawLeader();
     }, section);
 
     return () => ctx.revert();
-  }, []);
+  }, [standalone]);
 
   return (
     <section
@@ -196,8 +213,10 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
       // section that is not pinned covers content instead of crossing it. The
       // runway and the frame inside it stay: the scrubbed sequence is the
       // section, not the transition into it.
-      className={`relative h-[var(--runway)] bg-bg motion-reduce:h-auto ${
-        standalone ? "" : "sheet -mt-[110svh] motion-reduce:mt-0"
+      className={`relative bg-bg motion-reduce:h-auto ${
+        standalone
+          ? ""
+          : "sheet h-[var(--runway)] -mt-[110svh] motion-reduce:mt-0"
       }`}
       /* The runway is derived from the number of parts shown — see RUNWAY — so
          Tailwind cannot know it, and it arrives as a variable rather than as an
@@ -209,9 +228,27 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
          the variant wins on source order the way it is meant to. */
       style={{ "--runway": `${RUNWAY}svh` } as CSSProperties}
     >
+      {/* THE FRAME IS ONLY PINNED ON THE HOME PAGE NOW.
+
+          It was `sticky top-0 h-[100lvh]` everywhere, and on /services that had
+          stopped earning it. A pinned frame is how a section holds still while
+          its own sequence scrubs past, and this section has one part left to
+          show - so the pin held a static panel on the screen for 300svh of
+          scrolling in which nothing changed. That is the "snap" a reader feels
+          on a phone: the page stops answering the thumb, and the only way out
+          is to keep scrolling through three screens of nothing.
+
+          Standalone it is an ordinary block that scrolls like the two sections
+          above it. `min-h` rather than `h`, so the panel can grow past a screen
+          on a phone instead of being clipped by it - which is the same choice
+          Background's lead makes and for the same reason. */}
       <div
         data-frame
-        className="sticky top-0 h-[100lvh] w-full overflow-hidden motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]"
+        className={`w-full overflow-hidden ${
+          standalone
+            ? "relative flex min-h-[100svh] items-center"
+            : "sticky top-0 h-[100lvh] motion-reduce:static motion-reduce:h-auto motion-reduce:min-h-[86vh]"
+        }`}
       >
         <div
           data-drift
@@ -259,21 +296,6 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
           data-panel
           className="glass absolute top-1/2 right-[6%] left-6 flex max-h-[86svh] -translate-y-1/2 flex-col rounded-[4px] p-6 max-md:top-auto max-md:bottom-6 max-md:translate-y-0 md:left-auto md:w-[min(36%,470px)] md:p-8 motion-reduce:static motion-reduce:mx-6 motion-reduce:my-10 motion-reduce:max-h-none motion-reduce:translate-y-0"
         >
-          {/* Scroll progress, one segment per part. */}
-          <div aria-hidden className="mb-7 flex gap-3">
-            {whyChoose.parts.slice(FIRST).map((_part, segment) => (
-              <span
-                key={segment}
-                className="h-px flex-1 overflow-hidden bg-[rgb(16_18_21/0.18)]"
-              >
-                <span
-                  data-bar={segment}
-                  className="block h-full w-full origin-left scale-x-0 bg-[rgb(16_18_21/0.75)]"
-                />
-              </span>
-            ))}
-          </div>
-
           <div className="grid">
             {/* Keyed by position, not by title: the locale toggle rewrites
                 every title, and remounting these would throw away the inline

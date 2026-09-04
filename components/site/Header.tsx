@@ -21,7 +21,12 @@ import {
   LOGO_ALT,
   WHATSAPP,
 } from "@/lib/content";
-import { counterpart, isCurrentPath, useLocale } from "@/lib/locale";
+import {
+  counterpart,
+  isCurrentPath,
+  isNavItemCurrent,
+  useLocale,
+} from "@/lib/locale";
 import { Z } from "@/lib/z";
 import { replayHero } from "@/lib/autoplay";
 import { Flag } from "@/components/ui/Flag";
@@ -40,24 +45,50 @@ const NAV_LINK =
   "relative block rounded-full px-2 py-1.5 text-sm whitespace-nowrap text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink";
 
 /**
- * The mark under the item for the page being read.
+ * How the item for the page being read is marked: WEIGHT, where this was a rule
+ * drawn under the label.
  *
- * A rule rather than a filled pill or a colour change, and the reason is
- * contrast rather than taste. The obvious way to say "not current" is to take
- * the other items down to `text-ink-2`, and on this island that fails outright:
- * the header floats over near-black sections, where ink-2 through the glass
- * sits at about 1.7:1. Every item has to stay `text-ink`, so the current one is
- * marked by something added rather than by the others being dimmed.
+ * The constraint that shaped the underline still holds and still rules out the
+ * obvious alternative. The way most navs say "not current" is to take the other
+ * items down to `text-ink-2`, and on this island that fails outright: the header
+ * floats over near-black sections, where ink-2 through the glass sits at about
+ * 1.7:1. Every item stays `text-ink`, so the current one is marked by something
+ * ADDED rather than by the others being dimmed — a rule before, weight now.
  *
- * An element rather than an `after:` pseudo-class, which is how the rest of
- * this file draws things it needs to position.
+ * BOLDING RE-WRAPS THE ROW, WHICH IS THE PART THAT NEEDS SOLVING. Six items in
+ * an island already tight enough that its horizontal padding was cut from 2.5 to
+ * 2 to fit them (see NAV_LINK): letting the current one grow by the width of its
+ * own bold would shove every item beside it sideways, and it would move again on
+ * the next navigation. So the label is laid out at its BOLD width on every item,
+ * always, and only the visible weight changes.
+ *
+ * `grid` with both copies in one cell does that. The hidden copy is bold and
+ * sets the width; the visible one sits on top of it and switches weight freely
+ * underneath. It costs one wasted text node per item and buys a row that cannot
+ * move — no `ch` estimate, no font metrics, nothing to re-tune when the copy is
+ * translated, and it is the same trick the panel in WhyChoose uses to stop its
+ * parts resizing as they swap.
+ *
+ * `aria-hidden` on the sizer, so a screen reader is not read every label twice;
+ * the visible copy carries the text and the `aria-current` sits on the link.
  */
-const CURRENT_MARK = (
-  <span
-    aria-hidden
-    className="pointer-events-none absolute inset-x-2 bottom-1 h-px bg-ink"
-  />
-);
+function NavLabel({ label, current }: { label: string; current: boolean }) {
+  return (
+    <span className="grid">
+      <span
+        aria-hidden
+        className="col-start-1 row-start-1 font-semibold opacity-0"
+      >
+        {label}
+      </span>
+      <span
+        className={`col-start-1 row-start-1 ${current ? "font-semibold" : ""}`}
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
 
 /**
  * A dropdown, shared by the products submenu and the language switch.
@@ -351,20 +382,25 @@ export function Header() {
                         /* `isCurrentPath`, not an equality check: this is the
                            item with twenty pages under it, and on every one of
                            them an exact match would mark nothing. */
+                        /* The item, not the href: this parent lights on its own
+                           page AND on any page its children lead to — Our
+                           Profile stays marked while a reader is on
+                           /directors-profile. See isNavItemCurrent. */
                         aria-current={
-                          isCurrentPath(pathname, item.href) ? "page" : undefined
+                          isNavItemCurrent(pathname, item) ? "page" : undefined
                         }
                         aria-haspopup="true"
                         onFocus={() => setOpenNav(item.label)}
                         className={`${NAV_LINK} flex items-center gap-1`}
                       >
-                        {item.label}
-                        <CaretDown
-                          size={11}
-                          weight="bold"
-                          className="text-ink-3"
+                        <NavLabel
+                          label={item.label}
+                          current={isNavItemCurrent(pathname, item)}
                         />
-                        {isCurrentPath(pathname, item.href) && CURRENT_MARK}
+                        {/* `text-ink`, where this was `text-ink-3`. The caret is
+                            part of the control it sits in and now reads at the
+                            same weight as the label beside it. */}
+                        <CaretDown size={11} weight="bold" className="text-ink" />
                       </Link>
                     ) : (
                       <button
@@ -373,12 +409,8 @@ export function Header() {
                         onFocus={() => setOpenNav(item.label)}
                         className="flex items-center gap-1 rounded-full px-2 py-1.5 text-sm text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97]"
                       >
-                        {item.label}
-                        <CaretDown
-                          size={11}
-                          weight="bold"
-                          className="text-ink-3"
-                        />
+                        <NavLabel label={item.label} current={false} />
+                        <CaretDown size={11} weight="bold" className="text-ink" />
                       </button>
                     )}
 
@@ -454,12 +486,14 @@ export function Header() {
                         }
                         className={NAV_LINK}
                       >
-                        {item.label}
-                        {isCurrentPath(pathname, item.href) && CURRENT_MARK}
+                        <NavLabel
+                          label={item.label}
+                          current={isCurrentPath(pathname, item.href)}
+                        />
                       </Link>
                     ) : (
                       <a href="#" aria-disabled="true" className={NAV_LINK}>
-                        {item.label}
+                        <NavLabel label={item.label} current={false} />
                       </a>
                     )}
                   </li>
@@ -502,7 +536,10 @@ export function Header() {
                   button is what names this control; the flag is decoration over
                   the top of it and is hidden from anything reading the page. */}
               <Flag code={active} />
-              <CaretDown size={10} weight="bold" className="text-ink-3" />
+              {/* `text-ink` like the nav's two carets: all three dropdown
+                  arrows on the island are one control affordance and reading
+                  one of them lighter than the others said nothing. */}
+              <CaretDown size={10} weight="bold" className="text-ink" />
             </button>
 
             <AnimatePresence>

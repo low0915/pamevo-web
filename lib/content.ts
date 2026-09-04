@@ -15,8 +15,27 @@ export type NavItem = {
 };
 
 export const NAV: NavItem[] = [
-  { label: "Our Profile", href: "/our-profile" },
-  { label: "Director's Profile", href: "/directors-profile" },
+  {
+    label: "Our Profile",
+    href: "/our-profile",
+    /* Our Story and Vision & Mission are the two sections OF /our-profile, so
+       the first two children are fragments of that one page; Director's Profile
+       is a page of its own and the third child is a real route. Same shape as
+       Our Products below, with one difference that matters for the current-mark:
+       a child here can be a different page, so the parent's active state is
+       `isNavItemCurrent` (which also lights on /directors-profile) rather than a
+       plain path check — see lib/paths.ts.
+
+       The fragment children need a target id with scroll-margin on the page:
+       #story on the lead section in Background.tsx, #vision on VisionMission.tsx.
+       They are rendered as plain anchors, not next/link — the reason is in the
+       submenu note in Header.tsx. */
+    children: [
+      { label: "Our Story", href: "/our-profile#story" },
+      { label: "Vision & Mission", href: "/our-profile#vision" },
+      { label: "Director's Profile", href: "/directors-profile" },
+    ],
+  },
   { label: "Services & Features", href: "/services" },
   {
     label: "Our Products",
@@ -70,8 +89,7 @@ export const NAV: NavItem[] = [
  * four unbuilt pages exist, which is the moment to have them checked.
  */
 const NAV_ZH_LABELS: { label: string; children?: string[] }[] = [
-  { label: "公司简介" },
-  { label: "董事简介" },
+  { label: "公司简介", children: ["我们的故事", "愿景与使命", "董事简介"] },
   { label: "服务与特色" },
   { label: "我们的产品", children: ["窗系统", "门系统"] },
   { label: "我们的项目" },
@@ -103,8 +121,7 @@ export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
  * projects strip ends on.
  */
 const NAV_BM_LABELS: { label: string; children?: string[] }[] = [
-  { label: "Profil Kami" },
-  { label: "Profil Pengarah" },
+  { label: "Profil Kami", children: ["Kisah Kami", "Visi & Misi", "Profil Pengarah"] },
   { label: "Perkhidmatan & Ciri" },
   { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu"] },
   { label: "Projek Kami" },
@@ -476,8 +493,15 @@ export const HERO_BM: Partial<typeof HERO> = {
 };
 
 export const BACKGROUND = {
-  heading: "Industry Leadership & Background",
-  /** One photograph per paragraph, swapped as the pinned section scrolls. */
+  heading: "Our Story",
+  /**
+   * One photograph per CHAPTER, swapped as the pinned section scrolls.
+   *
+   * There are four paragraphs now and still two images, and that is right
+   * rather than an oversight: the home page's swap is driven by the two
+   * chapters this section has always had, and splitting each of them in two for
+   * /our-profile's panels did not add a third chapter. See `paragraphs`.
+   */
   images: [
     {
       src: "/pa mevo_up.png",
@@ -519,9 +543,28 @@ export const BACKGROUND = {
    * founders rather than the company, and needs saying that way — flagged for
    * the client rather than guessed at here.
    */
+  /**
+   * THREE PARAGRAPHS FOR TWO CHAPTERS, which the two consumers read
+   * differently and neither of them by counting.
+   *
+   * [0] and [1] are the Group's history, split where /our-profile's lead
+   * stacks it in two brand bars. [2] and [3] are the MEVO partnership, split
+   * the same way for that chapter's two glass panels.
+   *
+   * So it is FOUR paragraphs across TWO chapters, two apiece, and no consumer
+   * may assume that by counting. The home page's pinned swap is still two
+   * paragraphs against two photographs and reads [0] and [2] by name - the
+   * opening of each chapter. Taking the first two would put both halves of the
+   * history in the band and drop the partnership entirely; taking the last two
+   * would lose the opening. Both failures are silent, which is why the indices
+   * are named in CHAPTER_ONE / CHAPTER_TWO in Background.tsx and never spelled
+   * as literals at a call site.
+   */
   paragraphs: [
-    "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over two decades of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group. Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
-    "In addition, P.A. Group has established an in-depth strategic partnership with MEVO Doors & Windows, a renowned Chinese window and door brand, which serves as our key overseas supplier for window and door products. Specialised in the R&D and manufacturing of energy-saving and low-carbon windows and doors, MEVO operates two major operational centres in East China and South China, providing strong support for the Group's global window and door business.",
+    "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over two decades of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group.",
+    "Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
+    "In addition, P.A. Group has established an in-depth strategic partnership with MEVO Doors & Windows, a renowned Chinese window and door brand, which serves as our key overseas supplier for window and door products.",
+    "Specialised in the R&D and manufacturing of energy-saving and low-carbon windows and doors, MEVO operates two major operational centres in East China and South China, providing strong support for the Group's global window and door business.",
   ],
 };
 
@@ -529,10 +572,30 @@ export const BACKGROUND = {
     English paragraphs above: it makes the brand case rather than reciting the
     corporate history. Same two steps, so the pinned swap is unchanged. */
 export const BACKGROUND_ZH: Partial<typeof BACKGROUND> = {
-  heading: "行业领导地位与背景",
+  heading: "我们的故事",
+  /**
+   * SPLIT AT ITS OWN SENTENCE, not at the English one.
+   *
+   * The Chinese [0] is not a translation of the English [0]: it is MEVO
+   * Malaysia's philosophy where the English is the P.A. Group's history, and it
+   * carries none of the operations or headquarters copy the English second bar
+   * prints. So there was nothing here to split at the same place, and writing
+   * it would have meant inventing Chinese claims about smelting, extrusion and
+   * a head office that no one has approved.
+   *
+   * What it does instead is give the two bars this language's own two
+   * sentences, split where the copy already turns - the belief, then what
+   * follows from it. Same composition on every locale, no new assertions.
+   *
+   * FLAGGED FOR THE CLIENT: the Chinese lead is about a different subject from
+   * the English and Malay ones. That predates this change, and it is a content
+   * decision rather than a layout one.
+   */
   paragraphs: [
     "在 MEVO 马来西亚，我们坚信门窗不仅仅是建筑构件——它们塑造着人们的生活、工作以及体验环境的方式。",
-    "作为 MEVO 优质系统的独家总经销商和战略合作伙伴，我们提供集美观、舒适、耐用、节能和长期价值于一体的综合解决方案。结合先进的工程技术、现代建筑美学与可靠的性能，MEVO 通过专为现代生活方式设计的创新门窗和建筑解决方案，打造舒适、节能且时尚的居住空间。",
+    "作为 MEVO 优质系统的独家总经销商和战略合作伙伴，我们提供集美观、舒适、耐用、节能和长期价值于一体的综合解决方案。",
+    "结合先进的工程技术、现代建筑美学与可靠的性能。",
+    "MEVO 通过专为现代生活方式设计的创新门窗和建筑解决方案，打造舒适、节能且时尚的居住空间。",
   ],
 };
 
@@ -543,10 +606,12 @@ export const BACKGROUND_ZH: Partial<typeof BACKGROUND> = {
  * is the checkable one, so it is what the third language carries.
  */
 export const BACKGROUND_BM: Partial<typeof BACKGROUND> = {
-  heading: "Kepimpinan Industri & Latar Belakang",
+  heading: "Kisah Kami",
   paragraphs: [
-    "Ditubuhkan pada 2004 dan tersenarai di Pasaran Utama Bursa Malaysia pada 2006; P.A. Resources Berhad (P.A. Group) ialah sebuah syarikat Malaysia yang terkemuka dalam aplikasi aluminium seni bina dan perindustrian. Dengan lebih dua dekad kepakaran yang terbukti, Kumpulan ini telah berkembang daripada pengeluar ekstrusi aluminium khusus kepada sebuah kumpulan perindustrian bersepadu menegak. Operasi kami merangkumi peleburan bilet, reka bentuk alat dan acuan, ekstrusi berpresisi, rawatan permukaan dan penyelesaian tenaga solar. Beribu pejabat di Kuala Selangor, P.A. Group diiktiraf secara meluas di rantau ini kerana kualiti, kepimpinan dan kepakarannya dalam industri aluminium.",
-    "Selain itu, P.A. Group telah menjalin kerjasama strategik yang mendalam dengan MEVO Doors & Windows, sebuah jenama tingkap dan pintu terkemuka dari China, yang menjadi pembekal luar negara utama kami bagi produk tingkap dan pintu. Mengkhusus dalam penyelidikan dan pembangunan serta pembuatan tingkap dan pintu jimat tenaga dan rendah karbon, MEVO mengendalikan dua pusat operasi utama di Timur dan Selatan China, yang memberikan sokongan kukuh kepada perniagaan tingkap dan pintu global Kumpulan.",
+    "Ditubuhkan pada 2004 dan tersenarai di Pasaran Utama Bursa Malaysia pada 2006; P.A. Resources Berhad (P.A. Group) ialah sebuah syarikat Malaysia yang terkemuka dalam aplikasi aluminium seni bina dan perindustrian. Dengan lebih dua dekad kepakaran yang terbukti, Kumpulan ini telah berkembang daripada pengeluar ekstrusi aluminium khusus kepada sebuah kumpulan perindustrian bersepadu menegak.",
+    "Operasi kami merangkumi peleburan bilet, reka bentuk alat dan acuan, ekstrusi berpresisi, rawatan permukaan dan penyelesaian tenaga solar. Beribu pejabat di Kuala Selangor, P.A. Group diiktiraf secara meluas di rantau ini kerana kualiti, kepimpinan dan kepakarannya dalam industri aluminium.",
+    "Selain itu, P.A. Group telah menjalin kerjasama strategik yang mendalam dengan MEVO Doors & Windows, sebuah jenama tingkap dan pintu terkemuka dari China, yang menjadi pembekal luar negara utama kami bagi produk tingkap dan pintu.",
+    "Mengkhusus dalam penyelidikan dan pembangunan serta pembuatan tingkap dan pintu jimat tenaga dan rendah karbon, MEVO mengendalikan dua pusat operasi utama di Timur dan Selatan China, yang memberikan sokongan kukuh kepada perniagaan tingkap dan pintu global Kumpulan.",
   ],
 };
 

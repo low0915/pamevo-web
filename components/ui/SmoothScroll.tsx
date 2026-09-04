@@ -383,18 +383,116 @@ export function SmoothScroll() {
      * shortcut. Reading the window back is a race - Next resets it, Lenis
      * scrolls it back, and which of those has happened when this runs decides
      * the answer. There is no need to ask: `history.scrollRestoration` is
-     * `"manual"` for the whole site (see components/site/Shell.tsx), no link
-     * carries a fragment or `scroll={false}`, and nothing here routes
-     * imperatively - so on this site every arrival, forward or back, means the
-     * top of the page. `force`, so a dialog holding the scroll lock cannot also
+     * `"manual"` for the whole site (see components/site/Shell.tsx), nothing
+     * carries `scroll={false}`, and nothing here routes imperatively - so every
+     * arrival, forward or back, means the top of the page, WITH ONE EXCEPTION:
+     * a link that carries a fragment naming an element on the destination. The
+     * Our Profile dropdown added those (/our-profile#story, #vision); `arrive`
+     * honours them and the top is the default for everything else. See
+     * `hashTarget` below. `force`, so a dialog holding the scroll lock cannot also
      * block the correction that keeps the page scrollable once it closes.
      *
      * `home` additionally arms the runs, which is what makes the opening
      * sequence play again rather than count as already sat through.
      */
+    /**
+     * The one exception to "every arrival is the top of the page".
+     *
+     * A fragment that names an element on the page just loaded is a real
+     * destination, not noise: /our-profile#vision is the Vision & Mission
+     * section, reached from the Our Profile dropdown. Lenis owns the scroll, so
+     * the browser's own jump to the fragment does not stick — the manual scroll
+     * restoration and `arrive`'s scrollTo(0) below would put the reader at the
+     * top regardless. This hands Lenis the target instead.
+     *
+     * `-96` clears the 80px header island, and matches the `scroll-mt-24` the
+     * targets carry for the reduced-motion path, where Lenis is not running and
+     * the browser's native fragment scroll honours that margin instead. So both
+     * paths land the element the same 96px below the top.
+     *
+     * A hash that names nothing — /our-products#window is a filter keyword, not
+     * an element id — falls through to the top, which is the unchanged
+     * behaviour and what the catalogue's own handler then acts on.
+     */
+    /* No JS offset: Lenis honours the target's CSS `scroll-mt-24` (96px) on its
+       own, the same 96 the browser's native scroll uses under reduced motion —
+       measured, an added `-96` here stacked on top of it and cleared the header
+       twice over (the section landed 192px down, not 96). One clearance, in the
+       CSS, for both paths. */
+    const hashTarget = () => {
+      const id = window.location.hash.slice(1);
+      if (!id) return null;
+      let el: HTMLElement | null;
+      try {
+        el = document.getElementById(decodeURIComponent(id));
+      } catch {
+        el = document.getElementById(id);
+      }
+      // A section that manages its own fragment scrolling opts out with
+      // `data-hash-managed` — the product catalogue, which opens the row named
+      // by the slug and then scrolls, and has to own that timing. Returning
+      // null hands the arrival back to the ordinary top-of-page path, which is
+      // exactly what happened before this handler existed, so that page is
+      // unchanged.
+      if (el?.closest("[data-hash-managed]")) return null;
+      return el;
+    };
+
+    /**
+     * Scroll to the fragment target once the page has finished loading — NOT
+     * on mount.
+     *
+     * A fresh load of /our-profile#vision has the 230svh Background runway above
+     * the target, and the height of that runway is not final until its images
+     * and web fonts have resolved: measured, the target sits at document
+     * position 2426 during the first ~500ms and then collapses 356px to its
+     * real 2070 as the load settles. Scrolling on mount — immediately, or after
+     * a couple of frames, or when the position merely holds still for a moment —
+     * lands on the transient and leaves the section ~356px past the header. The
+     * only honest signal that the height above the target is final is `load`,
+     * which waits for exactly those images, so this waits for it and scrolls
+     * once. `fonts.ready` covers a font that settles after `load` and shifts the
+     * text; both resolve to the same target, so the second is a no-op when the
+     * first already landed it.
+     *
+     * ONE scroll per arrival, never a re-assert on a timer — a repeated scroll
+     * would yank a reader who had already started scrolling away. The cost is
+     * that the section is reached a beat after the page paints rather than
+     * instantly, which is how a heavy anchored page behaves natively anyway (the
+     * reduced-motion path, where the browser owns the scroll, does the same).
+     *
+     * Cross-page only, which is all there is: the dropdown's fragment links are
+     * plain anchors (full document loads, so `load` fires), and a same-page hash
+     * change goes through `onHashChange` below, where the layout is long settled.
+     */
+    let hashRaf = 0;
+    const scrollToHash = () => {
+      const el = hashTarget();
+      if (el) lenis.scrollTo(el, { immediate: true, force: true });
+    };
+    const scrollToHashAfterLoad = () => {
+      cancelAnimationFrame(hashRaf);
+      if (!hashTarget()) return;
+      const run = () => {
+        // A frame after load so the final layout is painted, not just parsed.
+        hashRaf = requestAnimationFrame(scrollToHash);
+      };
+      if (document.readyState === "complete") run();
+      else window.addEventListener("load", run, { once: true });
+      // A font that resolves after `load` shifts the text above the target; the
+      // same scroll re-runs against the now-final height. It resolves to the
+      // same place once fonts are already in, so on the common path it moves
+      // nothing.
+      document.fonts?.ready.then(scrollToHash).catch(() => {});
+    };
+
     const arrive = (home: boolean) => {
       lenis.resize();
-      lenis.scrollTo(0, { immediate: true, force: true });
+      if (hashTarget()) {
+        scrollToHashAfterLoad();
+      } else {
+        lenis.scrollTo(0, { immediate: true, force: true });
+      }
       if (home) {
         played = new WeakMap();
         hold = 0;
@@ -403,6 +501,17 @@ export function SmoothScroll() {
     };
 
     arriveRef.current = arrive;
+
+    // Same-page fragment clicks. A dropdown link to /our-profile#vision, chosen
+    // while already on /our-profile, changes only the hash — `pathname` is
+    // unchanged, so the effect that calls `arrive` never fires. This is the
+    // reader gliding from one section to another, so it animates rather than
+    // jumping. Cross-page arrivals go through `arrive` above and jump.
+    const onHashChange = () => {
+      const target = hashTarget();
+      if (target) lenis.scrollTo(target, { force: true });
+    };
+    window.addEventListener("hashchange", onHashChange);
 
 
     const raf = (time: number, deltaTime: number) => {
@@ -448,6 +557,8 @@ export function SmoothScroll() {
 
     return () => {
       arriveRef.current = null;
+      cancelAnimationFrame(hashRaf);
+      window.removeEventListener("hashchange", onHashChange);
       lenis.off("scroll", onScroll);
       contentObserver.disconnect();
       gsap.ticker.remove(raf);

@@ -1,229 +1,257 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Image from "next/image";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SERVICES, SERVICES_ZH, SERVICES_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 
-gsap.registerPlugin(ScrollTrigger);
-
-const CARDS = SERVICES.items.length;
-/** Panels move one fewer time than there are panels: the first is already there. */
-const ENTRANCES = CARDS - 1;
-const SHARE = 1 / ENTRANCES;
-
-/** How far the covered panel dims while the next one rides over it. */
-const SETTLE_ALPHA = 0.5;
-
 /**
- * Our Services, as a pinned stack of full-bleed panels.
+ * Our Services, as one static index of five cards.
  *
- * The section is a 530vh runway with a `sticky` frame inside, so it holds still
- * while the runway scrolls past. All five panels fill that frame, and each one
- * rises from below over the panel before it. Nothing is crossfaded and nothing
- * scrolls away: the stack only ever grows, so the last panel is the one left
- * standing.
+ * THIS SECTION USED TO BE A PINNED STACK: a 620svh runway holding a sticky
+ * frame, with five full-bleed panels scrubbed up over one another by a GSAP
+ * timeline. It was replaced deliberately. The stack showed exactly one service
+ * at a time and cost five screens of scrolling to read five short paragraphs,
+ * so a reader could not compare the services, or even count them, without
+ * committing to the whole runway. The brief for this rewrite was the opposite:
+ * every service legible at a glance, and no scroll choreography at all.
  *
- * The travel is 1:1 with the scroll and linear. Each entrance is given one
- * screen of runway and moves the panel exactly one screen, with `ease: "none"`
- * and `scrub: true`, so the panel tracks the wheel rather than easing between
- * resting places: it reads as the next service simply scrolling up over the
- * one before, not as a slideshow advancing. This is why the timeline ends at
- * `innerHeight * ENTRANCES` and not at some looser multiple — any other number
- * makes the panel drift faster or slower than the page and gives the movement
- * away. Lenis already smooths the scroll itself, so a scrub lag on top of it
- * would only add a second lerp.
+ * So there is no timeline here, no ScrollTrigger, no pin, and nothing that
+ * animates on scroll. That last point is why this does not use `Reveal` either
+ * - that component is a `whileInView` fade, and dressing the cards in it would
+ * reintroduce exactly the behaviour this rewrite exists to remove.
  *
- * Stacking order is DOM order. Absolutely positioned siblings paint in document
- * order, so panel 5 covers panel 4 without a single z value, which keeps this
- * section out of the documented scale in `lib/z.ts`.
+ * THE LAYOUT IS SIZED TO A CLAIM, WHICH IS WHAT MAKES IT TESTABLE. "Everything
+ * at a glance" means the section fits one screen, so the cards are equal and
+ * small rather than large and ranked: five across on a laptop comes to roughly
+ * 700px tall at 1440x900, where the two-up arrangement this replaced measured
+ * 1609. Anything that grows a card - a taller crop, a bigger body size, another
+ * line of padding - is spending that margin, so measure before adding.
  *
- * The covered panel dims as it goes under, which keeps the two readable as two
- * during the overlap. It is not scaled: these panels are full-bleed, and any
- * scale would pull their edges off the frame and show the page behind. It casts
- * no shadow either — panel and section carry the same ground, and a shadow on
- * the band above would separate them into two tones.
+ * Below `lg` five columns would be thumbnails, so the grid drops to six columns
+ * and splits 2+2+2 / 3+3. That is the only other arrangement that divides five
+ * cards with no empty cell, and both rows come to exactly six.
+ * `grid-flow-dense` is a guard rather than load-bearing - the spans already
+ * interlock - so that a sixth service added to SERVICES.items backfills instead
+ * of leaving a hole while someone re-does the arithmetic.
  *
- * The breakpoint and the reduced-motion condition are held in globals.css
- * (`.svc-*`) under the same media query this timeline uses. Below md, or with
- * reduced motion, the panels are in flow and the section reads top to bottom
- * with no pin and no timeline.
+ * THE GROUND IS LIGHT, AND IT NO LONGER CARRIES THE SEPARATION. This band was
+ * `bg-ink`, and the dark was doing a job: it split the page between the section
+ * above and the one below. That job is already done here, because /services
+ * opens on PageBanner and PageBanner is a full field of brand blue - the page
+ * reads blue, then this, then WhyChoose. So the separation this needs is not
+ * from the banner but from WhyChoose under it, and one step of tone does it:
+ * `bg-surface` is white where WhyChoose sits on `bg-bg`, #f4f5f6.
+ *
+ * A white band that wide reads as a hole rather than as a surface, which is
+ * what the facade wash at the top is for. See the note on it below.
+ *
+ * The only motion is hover on the photographs, which is feedback rather than
+ * sequencing - it reveals nothing, and it is gated behind `motion-safe`, so a
+ * reduced-motion reader gets the same section without it.
  */
-export function Services({ standalone = false }: { standalone?: boolean }) {
-  /* See the note on Background: lowercase would be a literal element. */
-  /* Always `h2`, where this used to become the page's `h1` when standalone.
-     /services now opens on a PageBanner, and a banner's heading IS an `h1` —
-     two of them on one page is a document with two titles, and the second one
-     silently outranks nothing. The banner owns the page, this owns the
-     section. Kept as a variable rather than written inline because the JSX
-     below reads it, and because the day a page uses this section WITHOUT a
-     banner the choice comes back here rather than being hunted for. */
-  const Heading = "h2";
-  const rootRef = useRef<HTMLElement>(null);
+export function Services() {
   const services = useCopy(SERVICES, { ZH: SERVICES_ZH, BM: SERVICES_BM });
 
-  useEffect(() => {
-    const section = rootRef.current;
-    if (!section) return;
-
-    // matchMedia rather than a one-off check: crossing the breakpoint has to
-    // tear the timeline down and rebuild it, or the panels stay parked at
-    // whatever offset they held on the wide layout.
-    const mm = gsap.matchMedia(section);
-
-    mm.add(
-      "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
-      () => {
-        const cards = gsap.utils.toArray<HTMLElement>("[data-card]", section);
-        if (cards.length < 2) return;
-
-        // Every panel but the first waits below the frame. yPercent, so it is
-        // the panel's own height and a resize needs no re-measuring.
-        gsap.set(cards.slice(1), { yPercent: 100 });
-
-        const timeline = gsap.timeline({
-          defaults: { ease: "none" },
-          scrollTrigger: {
-            trigger: section,
-            start: "top top",
-            // One panel of scroll per handover, measured off the panel itself
-            // rather than off the viewport: a panel is shorter than the frame
-            // by the band above it, and scrolling a screen to move it 86% of a
-            // screen is exactly the drift that gives the travel away. The
-            // runway is longer than this, and the sticky frame holds the last
-            // panel through the rest.
-            end: () => "+=" + cards[0].offsetHeight * ENTRANCES,
-            scrub: true,
-            invalidateOnRefresh: true,
-          },
-        });
-
-        timeline.fromTo(
-          "[data-progress]",
-          { scaleX: 0 },
-          { scaleX: 1, duration: 1 },
-          0,
-        );
-
-        cards.slice(1).forEach((card, i) => {
-          // Back to back, no holds between them: the stack is in motion for the
-          // whole runway, which is what keeps it continuous rather than snappy.
-          const at = SHARE * i;
-
-          timeline.to(card, { yPercent: 0, duration: SHARE }, at);
-
-          // `cards[i]` is the panel this one is covering: the loop runs over
-          // panels 1..n, so index i in the slice is index i + 1 in the stack.
-          timeline.to(
-            cards[i],
-            { autoAlpha: SETTLE_ALPHA, duration: SHARE },
-            at,
-          );
-        });
-      },
-    );
-
-    return () => mm.revert();
-  }, []);
-
   return (
-    <section
-      ref={rootRef}
-      /* `svc-curtain` is a pull-up over the stat band and `sheet` is the shadow
-         the rising edge carries. Both belong to the home page's stack; on
-         /services there is nothing above this to ride over. */
-      className={`relative mb-[4em] bg-ink ${standalone ? "" : "svc-curtain sheet"}`}
-    >
-      {/* The heading is carried by each panel's label, so the section keeps one
-          for structure without repeating it on screen five times. It stays
-          sr-only as an `h1` too — the panels already say the words, and the
-          hero on the home page sets the same precedent. */}
-      <Heading className="sr-only">{services.heading}</Heading>
+    <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden bg-surface py-16 md:py-20 lg:py-24">
+      {/*
+        THE FACADE WASH, and it is the only thing in this section that is not
+        content. A light band needs something behind the type or it reads as a
+        gap in the page rather than a surface, and this is a section that
+        deliberately has no motion left to supply that depth.
 
-      <div className="svc-runway">
-        <div className="svc-frame relative">
-          {/* Keyed by position rather than by title: the locale toggle
-              rewrites every title, and remounting the panels would drop the
-              inline transforms the stack is being scrubbed through. */}
+        It is a photograph of an aluminium-framed curtain wall - which is to say
+        it is the product, not an abstract texture - held at 18% over white and
+        desaturated, so it registers as tone rather than as a sixth picture
+        competing with the five below it.
+
+        Mirrored, because the facade falls on the left of the frame and the sky
+        on the right, and the heading sits top-left. Flipped, the heading gets
+        the clean half.
+
+        Cropped low - `object-[50%_78%]` - and that is the difference between a
+        texture and a smudge. The top of this photograph is a roofline against
+        sky, so a band taken from there puts a hard diagonal silhouette in the
+        corner that reads as something gone wrong. Lower down the frame is
+        nothing but the repeating grid of glazing bars, which is what a wash
+        wants: pattern at the edge of visibility, with no shape in it for the
+        eye to catch on.
+
+        The gradient is what guarantees the grid lands on plain ground: whatever
+        the wash is doing at the top, it is fully `bg-surface` by the foot of
+        this box, so no card sits on a half-tone. Layered as an overlay rather
+        than a `mask-image` for the same reason PageBanner does it that way.
+
+        Source: Pexels photo 323705, https://www.pexels.com/photo/323705/ -
+        Pexels licence, commercial use, no attribution required. Downloaded into
+        public/ rather than hotlinked: the CSP in next.config.ts is `img-src
+        'self'` on purpose and the site fetches nothing third-party at runtime.
+      */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[min(60%,30rem)] select-none"
+      >
+        <Image
+          src="/services/pexels-323705-glass-facade.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          quality={70}
+          className="scale-x-[-1] object-cover object-[50%_78%] opacity-[0.16] grayscale"
+        />
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-surface/70 to-surface" />
+      </div>
+
+      {/*
+        `relative`, so the column sits over the wash rather than under it.
+
+        FULL-BLEED AT THE SITE'S BAND PADDING, where this was capped at 1440
+        with `lg:px-12`. That cap was the wrong convention borrowed: this page
+        has two, and they are not interchangeable. Hero, ProductGrid, Background
+        and Stats are bands - uncapped, `px-6 md:px-8 lg:px-10`, content
+        starting 40px from the screen edge at any width. Projects, the enquiry
+        band and the footer are the home page's closing sheet, held to 1440 at
+        `px-4 md:px-8 lg:px-12`. This section had the sheet's, and it is a band.
+
+        On /services that is visible rather than theoretical, because both of
+        its neighbours are bands: PageBanner sets its copy at `left-[1.823%]`
+        of the viewport and WhyChoose floats its panel on percentages. Capped at
+        1440 this column started 8px inside them at 1440 and 288px inside them
+        at 1920 - see the same argument written out at length in WhyMevo, where
+        the identical mistake was made and undone.
+      */}
+      <div className="relative w-full px-6 md:px-8 lg:px-10">
+        {/*
+          A VISIBLE `h2`, where this was `sr-only` before.
+
+          It had to be hidden while the stack existed, because every panel
+          printed "Our Services [01]" as its own label and a heading above them
+          would have said the words a sixth time. Those labels are gone, and so
+          is the "01 - 05" counter that sat under each panel: a counter telling
+          the reader which of five they are on is only meaningful when they
+          arrive one at a time, and they no longer do. The grid below is
+          self-evidently five things and does not need numbering.
+
+          `h2` and not `h1`: the page opens on PageBanner, and that banner's
+          heading is the `h1`. See the note in ServicesBody.
+        */}
+        <h2 className="text-3xl leading-[1.1] font-medium tracking-tighter text-ink capitalize md:text-4xl lg:text-5xl">
+          {services.heading}
+        </h2>
+
+        <ul
+          role="list"
+          /* `mt-16`/`mt-20` where this was `mt-10`/`mt-12`. A hairline rule
+             used to sit between the heading and this grid, carrying 24px of
+             margin above it and leaving the grid's own 40 below - so the two
+             were 64px apart at base and 80 at `md`. Deleting the rule without
+             folding its margin back in would have closed that to 40, which is
+             tighter than the heading and the index have ever been and reads as
+             the two running together. The separation was never the line; it was
+             the space the line sat in. */
+          className="mt-16 grid grid-flow-dense grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-6 md:mt-20 lg:grid-cols-5 lg:gap-x-8"
+        >
           {services.items.map((service, i) => (
-            <article
+            <li
               key={i}
-              data-card
-              className="svc-card bg-ink"
+              /*
+                Six columns below `lg`, five at `lg` and up.
+
+                On six, the first three cards take two columns each and the last
+                two take three each: 2+2+2 then 3+3, both rows exactly full. At
+                `lg` every card is one of five and the spans have to be reset,
+                which is what the `lg:col-span-1` is doing - without it the
+                sm-width spans would carry up and overflow the five-column row.
+
+                `i < 3` rather than a span stored on the content: which row a
+                service falls in is a property of how many services there are,
+                not of the service itself, so putting it in SERVICES.items would
+                mean three translated files had to agree about layout.
+
+                Single column below `sm`, where any split is a thumbnail.
+
+                THE SUBGRID IS WHAT KEEPS THE BODIES ON ONE LINE. A card is
+                three stacked things and the middle one is a title that wraps to
+                a different number of lines in every language - one in Chinese,
+                two in English, three in Malay for "Reka Bentuk Tersuai &
+                Pemilihan Sistem". Left as three cards' worth of ordinary flow,
+                each paragraph starts wherever its own title happened to end and
+                the row reads ragged.
+
+                `grid-rows-subgrid` over the three tracks the card spans hands
+                the photograph, the title and the body a shared row each, so
+                every title in a row is as tall as the tallest and every body
+                begins on the same line - in all three languages, with no
+                per-language measurement to keep true. A fixed `min-height`
+                would have been a guess that is right in English and wrong in
+                Malay.
+
+                `gap-y-0` because a subgrid inherits its parent's gutters, and
+                the parent's `gap-y-10` is the space BETWEEN cards. Inherited
+                inward it would open the same 40px between a card's photograph
+                and its own title. The spacing inside the card is the `mt-*` on
+                the two blocks below instead, which is not subject to that.
+              */
+              className={`group sm:row-span-3 sm:grid sm:grid-rows-subgrid sm:gap-y-0 ${
+                i < 3 ? "sm:col-span-2" : "sm:col-span-3"
+              } lg:col-span-1`}
             >
-              {/* This padding is for the panels in flow only. Pinned, the
-                  space above the content belongs to the frame instead, and
-                  globals.css zeroes this out. */}
-              {/* Below `md` this is a flex column, not a grid: the panel is
-                  held to exactly one screen there (globals.css), and something
-                  has to give when the screen is short. The copy is what must
-                  not, so the photograph is the flex item - it takes whatever
-                  is left after the copy has been laid out, at any phone size,
-                  rather than claiming a 4:5 block and pushing the copy off the
-                  bottom of a panel that clips. */}
-              <div className="svc-grid grid h-full grid-cols-1 pt-20 max-md:flex max-md:flex-col md:grid-cols-2">
-                <div className="svc-figure-frame p-6 max-md:min-h-0 max-md:flex-1 md:p-8 lg:p-10">
-                  <div className="svc-figure relative aspect-[4/5] w-full max-md:aspect-auto max-md:h-full">
-                    <Image
-                      src={service.image.src}
-                      alt={service.image.alt}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 46vw"
-                      quality={80}
-                      className="graded-soft object-cover"
-                    />
-                  </div>
-                </div>
+              {/*
+                overflow-hidden is what crops the hover scale; without it the
+                photograph grows past its own corners.
 
-                {/* The left padding is deliberately lighter than the right:
-                    the photograph already carries its own inset, so matching
-                    them would read as one wide trench between the columns. */}
-                <div className="flex flex-col justify-between gap-10 px-6 pt-6 pb-12 max-md:shrink-0 max-md:gap-6 max-md:pt-4 max-md:pb-8 md:gap-14 md:pr-10 md:pl-4 md:pt-8 md:pb-14 lg:pr-14 lg:pl-6 lg:pt-10">
-                  {/* The rule sits on the top edge of the photograph opposite
-                      it, so the two columns start on the same line. */}
-                  <div className="border-t border-white pt-5">
-                    <span className="text-base text-white capitalize md:text-lg">
-                      {services.heading} [{String(i + 1).padStart(2, "0")}]
-                    </span>
-                  </div>
+                THE CROP IS THE ONE THING THAT CHANGES PER BREAKPOINT, and each
+                of the three values is paying for something.
 
-                  <div>
-                    <h3 className="text-3xl leading-tight font-medium tracking-tight text-bg capitalize md:text-[2.25rem] lg:text-[2.75rem]">
-                      {service.title}
-                    </h3>
+                4:3 at `lg`, where all five cards are the same width and a
+                square-ish crop is what makes the row read as one index.
 
-                    <p className="mt-7 max-w-[52ch] border-y border-[rgb(244_245_246/0.18)] py-7 text-base leading-relaxed text-[rgb(244_245_246/0.72)]">
-                      {service.body}
-                    </p>
-                  </div>
+                2:1 for the last two cards between `sm` and `lg` only. In that
+                range they are three columns where the first three are two, so
+                at one shared ratio their photographs come out half as tall
+                again as the row above - 274px against 177 at an 820px viewport
+                - and the section reads bottom-heavy. 2:1 over their own wider
+                box lands them at 183px, within six pixels of the top row.
 
-                  <span
-                    aria-hidden
-                    className="font-mono text-xs tracking-[0.22em] text-[rgb(244_245_246/0.4)]"
-                  >
-                    {String(i + 1).padStart(2, "0")} —{" "}
-                    {String(CARDS).padStart(2, "0")}
-                  </span>
-                </div>
+                16:9 on a phone, where the cards are one column and the crop is
+                the whole cost of the section. 4:3 at 358px wide is a 268px
+                photograph and only one service fits a screen; 16:9 is 201px and
+                the next title clears the fold. A phone cannot show five
+                photographed services at once whatever the ratio, but it can
+                stop showing barely one.
+              */}
+              <div
+                className={`relative aspect-[16/9] w-full overflow-hidden bg-surface-2 ${
+                  i < 3 ? "sm:aspect-[4/3]" : "sm:aspect-[2/1] lg:aspect-[4/3]"
+                }`}
+              >
+                <Image
+                  src={service.image.src}
+                  alt={service.image.alt}
+                  fill
+                  /* A card is a third of the viewport at tablet widths and a
+                     fifth of it on a laptop, so the browser never needs the
+                     full-width source these files are stored at. */
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
+                  quality={80}
+                  className="graded-soft object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-105"
+                />
               </div>
-            </article>
-          ))}
 
-          {/* Scroll progress for the stack, on the frame rather than on a panel
-              so it survives every handover. Last in the DOM, so it paints over
-              the panels for the same reason they paint over each other. */}
-          <div
-            aria-hidden
-            className="svc-progress absolute inset-x-0 bottom-0 hidden h-px overflow-hidden bg-[rgb(244_245_246/0.16)]"
-          >
-            <span
-              data-progress
-              className="block h-full w-full origin-left scale-x-0 bg-[rgb(244_245_246/0.65)]"
-            />
-          </div>
-        </div>
+              {/* h3 under the section's h2. The type scale is set by the
+                  classes, not by the tag - the same note as in WhyChoose. */}
+              <h3 className="mt-5 text-lg leading-snug font-medium tracking-tight text-ink capitalize xl:text-xl">
+                {service.title}
+              </h3>
+
+              {/* `ink-2` and not `ink-3`: on white, #5b6167 is 6.3:1 where
+                  #8b9298 is 3.0:1, and this is body copy at 14px. */}
+              <p className="mt-2.5 text-sm leading-relaxed text-ink-2">
+                {service.body}
+              </p>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

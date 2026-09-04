@@ -2,6 +2,7 @@ import { SERVICES, SERVICES_ZH, SERVICES_BM } from "@/lib/content";
 import type { Locale } from "@/lib/paths";
 import { PageBanner } from "@/components/sections/PageBanner";
 import { Services } from "@/components/sections/Services";
+import { CoreUsps } from "@/components/sections/CoreUsps";
 import { WhyChoose } from "@/components/sections/WhyChoose";
 
 /**
@@ -24,13 +25,19 @@ import { WhyChoose } from "@/components/sections/WhyChoose";
  * sections below are client components and read the locale themselves, so
  * nothing has to be passed down to them.
  *
- * WHY BOTH SECTIONS TAKE `standalone`. Each was written as a band in the home
- * page's stack, where it is pulled up over the pinned section above it. Here
- * there is nothing above either of them to ride over, and a curtain drawn over
- * a section that is not pinned covers content instead of crossing it. What
- * `standalone` drops is the pull-up and its shadow; the runways and the sticky
- * frames stay, because the scrubbed sequence IS the section rather than the
- * transition into it.
+ * WHY WHYCHOOSE TAKES `standalone` AND SERVICES NO LONGER DOES. Both were
+ * written as bands in the home page's stack, where each is pulled up over the
+ * pinned section above it. Here there is nothing above either of them to ride
+ * over, and a curtain drawn over a section that is not pinned covers content
+ * instead of crossing it. What `standalone` drops is the pull-up and its
+ * shadow; WhyChoose's runway and sticky frame stay, because its scrubbed
+ * sequence IS the section rather than the transition into it.
+ *
+ * Services lost the prop entirely, because it lost the thing the prop was
+ * guarding. It is no longer a pinned stack — it is a static grid that scrolls
+ * like any other block of content — so it has no pull-up to drop and this page,
+ * its only caller, was the only place that ever passed the flag. The curtain
+ * classes it used to carry are still in globals.css: Projects uses them.
  *
  * The banner supplies the page's `h1`, which is why Services no longer promotes
  * its own heading to one — see the note on `Heading` in that file.
@@ -64,7 +71,11 @@ export function ServicesBody({ locale = "EN" }: { locale?: Locale }) {
         }}
       />
 
-      <Services standalone />
+      <Services />
+      {/* Butted straight onto Services, which carries no bottom margin of its
+          own any more: the two are one continuous light run, and what separates
+          them is the change of ground rather than a gap between them. */}
+      <CoreUsps />
       <WhyChoose standalone />
     </main>
   );

@@ -236,7 +236,16 @@ export function ProductCatalog() {
   }, [filter, openBySlug]);
 
   return (
-    <section className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12">
+    /* `data-hash-managed`: this section owns fragment scrolling for its own
+       rows. A slug in the URL names a row here, and reaching it means OPENING
+       that row first (see the hash effect above) and scrolling only once it is
+       laid out — timing the global handler in SmoothScroll cannot know. That
+       handler checks for this attribute and stands aside, leaving /our-products
+       to the effect above exactly as before the handler existed. */
+    <section
+      data-hash-managed
+      className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12"
+    >
       <div className="mx-auto w-full max-w-[1440px]">
         <h2 className="sr-only">{copy.catalogLabel}</h2>
 

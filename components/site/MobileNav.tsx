@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "@phosphor-icons/react/dist/ssr";
 import { NAV, NAV_ZH, NAV_BM, LOCALE_MENU, LOGO_ALT } from "@/lib/content";
-import { counterpart, isCurrentPath, useLocale } from "@/lib/locale";
+import { counterpart, isNavItemCurrent, useLocale } from "@/lib/locale";
 import { Flag } from "@/components/ui/Flag";
 import { Z } from "@/lib/z";
 import { holdAutoplay, releaseAutoplay } from "@/lib/autoplay";
@@ -202,13 +202,13 @@ export function MobileNav({
                          is the whole navigation on a phone, so it is the one
                          surface that most needs to. */
                       aria-current={
-                        isCurrentPath(pathname, item.href) ? "page" : undefined
+                        isNavItemCurrent(pathname, item) ? "page" : undefined
                       }
                       onClick={onClose}
                       className={NAV_LINK}
                     >
                       {item.label}
-                      {isCurrentPath(pathname, item.href) && CURRENT_MARK}
+                      {isNavItemCurrent(pathname, item) && CURRENT_MARK}
                     </Link>
                   ) : (
                     <a
