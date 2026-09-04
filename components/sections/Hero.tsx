@@ -110,6 +110,25 @@ export function Hero() {
       const playhead = { progress: 0 };
       let lastFrame = -1;
 
+      /* NO VISIBILITY GATE HERE, AND THAT IS A FINDING RATHER THAN AN
+         OMISSION - it was added, measured, and taken out again.
+
+         The theory was that the sheet closes over the hero early, so seeks
+         issued after that are paid for and never seen. Three versions were
+         tried: an IntersectionObserver on the section, one on the <video>, and
+         a bound on the timeline's own `progress`. None of them ever fired,
+         because the premise is wrong on this page - the autoplay does not let
+         the reader leave the hero. Driven to the foot of the document it eases
+         the page back to exactly the end of the hero's scrub and holds it, so
+         the scrub is legitimately still live whenever `currentTime` is moving.
+         What looked like waste in a profile was the sequence doing its job.
+
+         The three guards below are the real protection, and they are enough:
+         quantise to a whole frame, skip if the frame has not changed, skip if a
+         seek is already in flight. If the autoplay is ever changed so the page
+         can settle past the hero, THEN a `timeline.progress() >= 1` check here
+         becomes worth its line - and not before. */
+
       timeline.to(
         playhead,
         {

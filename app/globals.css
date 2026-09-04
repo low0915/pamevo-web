@@ -562,6 +562,35 @@ body {
   }
 }
 
+/* The header wordmark, and the one thing it must not do on a phone.
+
+   The island morphs as the page scrolls — it narrows, its corners round off,
+   its tint deepens — and the wordmark scales 1 -> 0.85 with it. That reads on a
+   wide display, where the island has width to give back.
+
+   It does not read below `xl`. There the burger replaces the six-item nav and
+   the wordmark is already at its floor: 16px tall on a 360px phone, sized in
+   Header.tsx against the ~296px the mark, its gap and the menu button have
+   between them. Taking 15% off that is taking it below the size it was measured
+   to fit at, so the one piece of brand on the screen shrinks toward a footnote
+   the moment the reader scrolls — losing legibility to buy room nothing is
+   asking for, since the mobile row has no six-item nav to make space for.
+
+   `!important` because the value it is overriding is an inline style written by
+   a motion value on every scroll frame, and inline beats a class on specificity
+   however the rule is written. This is the exception the file's own convention
+   allows: it is not out-specifying another stylesheet, it is switching off a
+   JS-driven property at a breakpoint JS never has to learn about.
+
+   `revert` rather than `scale(1)`, so the element goes back to whatever the
+   cascade says instead of being pinned to a value of its own — the origin and
+   the block display stay with the class in the component. */
+@media (max-width: 79.999rem) {
+  .logo-morph {
+    transform: revert !important;
+  }
+}
+
 /* Cookie notice.
 
    The plugin's own stylesheet is layered (see the @import at the top), so

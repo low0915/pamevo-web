@@ -350,7 +350,29 @@ export function Projects({ standalone = false }: { standalone?: boolean }) {
                     className="graded pointer-events-none object-cover transition-[filter] duration-500 ease-[var(--ease-out)]"
                   />
 
-                  <figcaption className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-[rgb(16_18_21/0.82)] px-2.5 py-1 font-mono text-xs tracking-tight text-bg backdrop-blur-[2px]">
+                  {/* NO `backdrop-blur` HERE, AND IT IS NOT AN OVERSIGHT.
+
+                      This carried `backdrop-blur-[2px]`, which rendered
+                      nothing: the pill's own ground is `rgb(16 18 21 / 0.82)`,
+                      opaque enough that there is no photograph showing through
+                      for a blur to act on. Screenshotted with the filter and
+                      with it forced off, the same crop came back byte for byte
+                      identical.
+
+                      What it did cost was real. `backdrop-filter` promotes the
+                      element to its own compositor layer and re-rasterises what
+                      is behind it every frame REGARDLESS of whether the element
+                      is on screen - and this caption is inside a carousel that
+                      renders COPIES sets of cards for its infinite loop, so the
+                      page carried eighteen of these, of which all but two or
+                      three are off-screen at any moment. On a 6x-throttled
+                      phone that was the largest single contributor to the
+                      style-recalculation cost of scrolling the home page.
+
+                      If a translucent pill is ever wanted here, the tint has to
+                      come down first - and then the blur is worth paying for
+                      because it would actually be visible. */}
+                  <figcaption className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-[rgb(16_18_21/0.82)] px-2.5 py-1 font-mono text-xs tracking-tight text-bg">
                     {image.label}
                   </figcaption>
                 </figure>

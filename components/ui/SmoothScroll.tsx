@@ -239,6 +239,43 @@ export function SmoothScroll() {
       if (holds === 0) interrupt();
     };
 
+    /* Whether the autoplay still has work to do, which is the half of "is
+       anything moving" that Lenis cannot answer.
+
+       `lenis.isScrolling` covers momentum the library is resolving. It does not
+       cover the autoplay, which drives the scroll ITSELF and therefore has to
+       be able to start from a dead stop - gate the ticker on Lenis alone and a
+       run that is counting down its hold never gets the frame it needs to begin
+       moving, and the sequence simply stops.
+
+       IT ASKS THE SAME QUESTION `autoplay` ASKS, and it has to, or the gate is
+       worthless. The first version of this returned true whenever any run was
+       unfinished and the page had not passed it - which at the top of the home
+       page is every run, so it was true forever and the ticker never idled.
+       Measured, that left the idle cost exactly where it had been.
+
+       A run only moves the page once it is ENGAGED: the page has to have
+       reached `run.start`, and `engaged` has to have accumulated past
+       AUTOPLAY_DELAY. A run the reader has not scrolled down to yet is waiting
+       on THEM, not on the ticker - and the frame that starts it will come from
+       their own scroll, which sets `isScrolling` and wakes this anyway.
+
+       So: true only while a hold is counting down, or a run is engaged and not
+       yet finished. That is the window in which the autoplay actually writes a
+       scroll position, and it is the only window the ticker is needed for. */
+    const pending = () => {
+      if (holds > 0 || document.visibilityState !== "visible") return false;
+      if (hold > 0) return true;
+      const at = lenis.targetScroll;
+      return runs.some((run) => {
+        const progress = progressOf(run.section);
+        if (progress.done || at >= run.end) return false;
+        // Engaged means the page is in the run and its opening beat has been
+        // served; before that the run is dormant and costs nothing.
+        return progress.engaged > 0 && at >= run.start;
+      });
+    };
+
     const autoplay = (dt: number) => {
       if (holds > 0) return;
       if (document.visibilityState !== "visible") return;
@@ -514,9 +551,41 @@ export function SmoothScroll() {
     window.addEventListener("hashchange", onHashChange);
 
 
+    /* IDLE FRAMES COST NOTHING NOW, and they used to cost the most of anything
+       on the page. `lenis.raf` runs its lerp and calls `window.scrollTo` every
+       frame whether or not the position has changed, and GSAP's ticker is
+       always running because ScrollTrigger needs it - so a reader who simply
+       stopped reading still paid a scroll write, a ScrollTrigger update and the
+       style recalculation behind it, sixty times a second, for as long as the
+       tab was open. Profiled on a 6x-throttled phone, sitting perfectly still
+       at the top of the home page: 647ms of script per four seconds, with
+       `scrollTo` and Lenis's own `render` at the top of the profile.
+
+       `isScrolling` is Lenis's own flag for "there is still momentum to
+       resolve", so this defers to the library rather than guessing: it is true
+       through a wheel, a swipe, its own easing and a programmatic `scrollTo`,
+       and false only once the animation has actually settled. The autoplay is
+       asked separately, because it drives the scroll itself and has to be able
+       to start from a standstill - `pending()` is true while a run is engaged
+       and waiting to advance.
+
+       One frame of overrun is deliberate: `wasBusy` keeps the last frame after
+       everything goes quiet, so the final position is committed rather than
+       left a fraction of a pixel short of its resting place. Without it a
+       curtain can stop one sub-pixel out and leave a hairline of the section
+       behind it showing. */
+    let wasBusy = true;
+
     const raf = (time: number, deltaTime: number) => {
       autoplay(Math.min(deltaTime / 1000, MAX_FRAME));
-      lenis.raf(time * 1000);
+
+      /* `Boolean(...)`: Lenis types `isScrolling` as `boolean | string` — it
+         reports the KIND of input that is driving ("wheel", "touch") rather
+         than a plain flag, and any of those is truthy and means the same thing
+         here. */
+      const busy = Boolean(lenis.isScrolling) || pending();
+      if (busy || wasBusy) lenis.raf(time * 1000);
+      wasBusy = busy;
     };
 
     gsap.ticker.add(raf);

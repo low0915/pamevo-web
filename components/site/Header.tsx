@@ -259,6 +259,9 @@ export function Header() {
     ],
     { clamp: true },
   );
+  /* The wordmark shrinks with the island as it morphs — but only where the
+     island actually has room to spare. See `.logo-morph` in globals.css for why
+     the breakpoint is enforced there rather than here. */
   const logoScale = useTransform(scrollY, range, [1, 0.85], { clamp: true });
   const logoTransform = useTransform(logoScale, (s) => `scale(${s})`);
 
@@ -321,8 +324,18 @@ export function Header() {
             aria-label="MEVO Malaysia, home"
             onClick={replayHero}
           >
+            {/* `logo-morph` is what confines the scale to the wide layout.
+
+                The scale is an INLINE style written by a motion value on every
+                scroll frame, and an inline style beats any class — so this
+                cannot be turned off with a Tailwind variant, and it cannot be
+                turned off in JS either without a media query in state, which
+                would mean guessing the viewport during SSR and correcting it on
+                hydration. The class hands the transform back to the stylesheet
+                below `xl`, where one rule can override it with `!important` and
+                no JavaScript has to know the width. */}
             <motion.span
-              className="block origin-left"
+              className="logo-morph block origin-left"
               style={reduce ? undefined : { transform: logoTransform }}
             >
               <Image
