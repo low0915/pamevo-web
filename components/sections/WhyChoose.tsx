@@ -5,7 +5,7 @@ import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
-import { USP_PART } from "@/components/sections/CoreUsps";
+import { USP_PART } from "@/components/sections/CoreUspsPanel";
 import { useCopy } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -18,11 +18,11 @@ gsap.registerPlugin(ScrollTrigger);
  * would be the same four sentences twice on one site.
  *
  * `parts[1]` is the ten USPs, and they are now a section of their own: see
- * CoreUsps, which is the band directly above this one on /services. They were
- * swapped through this panel by the timeline below, which meant nine of the ten
- * were behind a scroll at any moment. `FIRST` is imported from there rather
- * than written as a second `1` here, so the two cannot drift apart and start
- * printing the same list twice.
+ * CoreUspsPanel, which is the band directly above this one on /services. They
+ * were swapped through this panel by the timeline below, which meant nine of
+ * the ten were behind a scroll at any moment. `FIRST` is imported from there
+ * rather than written as a second `1` here, so the two cannot drift apart and
+ * start printing the same list twice.
  *
  * What is left is the six engineering figures. That is one part, so the swap
  * has nothing to swap and the timeline below is down to the drift, the marker
@@ -136,7 +136,8 @@ export function WhyChoose({ standalone = false }: { standalone?: boolean }) {
 
          Everything the sequence would have revealed is simply shown instead -
          one part, visible, which is all this section has had since the USPs
-         became CoreUsps. The annotation goes for the same reason it goes under
+         moved out into a band of their own. The annotation goes for the same
+         reason it goes under
          reduced motion: it points from a marker on a drifting photograph to a
          panel, and neither is moving now. */
       if (reduced || standalone) {

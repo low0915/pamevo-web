@@ -2,7 +2,8 @@ import { SERVICES, SERVICES_ZH, SERVICES_BM } from "@/lib/content";
 import type { Locale } from "@/lib/paths";
 import { PageBanner } from "@/components/sections/PageBanner";
 import { Services } from "@/components/sections/Services";
-import { CoreUsps } from "@/components/sections/CoreUsps";
+import { CoreUspsPanel } from "@/components/sections/CoreUspsPanel";
+import { EngineeringCarousel } from "@/components/sections/EngineeringCarousel";
 import { WhyChoose } from "@/components/sections/WhyChoose";
 
 /**
@@ -73,9 +74,15 @@ export function ServicesBody({ locale = "EN" }: { locale?: Locale }) {
 
       <Services />
       {/* Butted straight onto Services, which carries no bottom margin of its
-          own any more: the two are one continuous light run, and what separates
-          them is the change of ground rather than a gap between them. */}
-      <CoreUsps />
+          own: what separates the two is the change of ground rather than a gap
+          between them, and here that change does the work on its own — Services
+          ends on the site's near-white and this opens on near-black. */}
+      <CoreUspsPanel />
+      {/* The six engineering figures, as a carousel over its own blurred still.
+          It carries the figures alone; WhyChoose below still prints them with
+          the hardware note and the closing commitment, which is the context a
+          slide of six pictures cannot hold. */}
+      <EngineeringCarousel />
       <WhyChoose standalone />
     </main>
   );
