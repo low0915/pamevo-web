@@ -6,6 +6,7 @@ import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
 import { USP_PART } from "@/components/sections/CoreUspsPanel";
 import { useCopy } from "@/lib/locale";
+import { Reveal } from "@/components/ui/Reveal";
 
 /**
  * The index of the engineering part inside WHY_CHOOSE.parts.
@@ -89,7 +90,12 @@ function nearestSlide(
   track: HTMLElement,
   slides: (HTMLElement | null)[],
 ): number {
-  const base = track.getBoundingClientRect().left;
+  /* Measured against the track's CONTENT edge, not its border box: the gutter
+     means a card at rest sits one padding-width in, and comparing against the
+     border box would score it as a padding-width away from home and pick its
+     neighbour. */
+  const pad = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+  const base = track.getBoundingClientRect().left + pad;
   let nearest = 0;
   let best = Infinity;
   slides.forEach((el, i) => {
@@ -219,12 +225,21 @@ export function EngineeringCarousel() {
     pos.current = wrapped;
     setActive(within);
 
+    /* THE GUTTER LIVES IN THIS SUM. Scrolling to `offsetLeft - track.offsetLeft`
+       lands the card on the scroller's content origin — which is INSIDE the
+       left padding, so a `pl-6` pads only the initial scroll position and the
+       card at rest still sits hard against the screen edge. On a phone that
+       read as the carousel bleeding off the side with no margin at all.
+       Subtracting the padding back out leaves the card standing on the same
+       24px line as the heading above it. */
+    const pad = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+
     /* `track.scrollTo`, NOT `el.scrollIntoView`. `scrollIntoView` scrolls every
        ancestor that can scroll until the element is in view — including the
        document — and the whole PAGE slid sideways with the card: the heading ran
        off the left edge and the fixed header went with it. */
     track.scrollTo({
-      left: el.offsetLeft - track.offsetLeft,
+      left: el.offsetLeft - track.offsetLeft - pad,
       behavior: smooth ? "smooth" : "auto",
     });
   }, []);
@@ -402,7 +417,7 @@ export function EngineeringCarousel() {
   };
 
   return (
-    <section className="relative isolate overflow-hidden bg-surface py-20 md:py-28 lg:py-32">
+    <section className="relative isolate overflow-hidden bg-surface py-20 md:py-24 lg:py-28">
       {/*
         The blurred backdrop: every slide, stacked, with only the active one
         opaque. All six are rendered rather than swapped through one element so
@@ -480,9 +495,20 @@ export function EngineeringCarousel() {
             in this range fits on one line, and forcing it would either overflow
             the screen or shrink the heading to body copy. */}
         <div className="px-6 md:px-8 lg:px-10">
-          <h2 className="text-[clamp(1.5rem,3.6vw,3.25rem)] leading-[1.05] font-medium tracking-tighter text-ink lg:whitespace-nowrap">
-            {part.title}
-          </h2>
+          {/* THE HEADING REVEALS; THE TRACK DELIBERATELY DOES NOT.
+
+              `Reveal` animates `transform: translateY`, and the track is a
+              scroller whose card positions are measured with `offsetLeft` and
+              `getBoundingClientRect`. A transform on it — or on any ancestor —
+              shifts those readings while the animation is mid-flight, so a
+              drag or an arrow press during the reveal would scroll to the wrong
+              card. The cards carry their own entrance instead: they arrive with
+              the section, and the first thing that moves them is the reader. */}
+          <Reveal>
+            <h2 className="text-[clamp(1.5rem,3.6vw,3.25rem)] leading-[1.05] font-medium tracking-tighter text-ink lg:whitespace-nowrap">
+              {part.title}
+            </h2>
+          </Reveal>
         </div>
 
         {/*
@@ -524,7 +550,7 @@ export function EngineeringCarousel() {
              `go` passes `behavior: "smooth"` explicitly for the movement that
              should be seen, so nothing is lost by taking the blanket rule off. */
           className={
-            "mt-10 flex snap-x  gap-5 overflow-x-auto pb-2 pl-6 [scrollbar-width:none] md:mt-12 md:gap-6 md:pl-8 lg:mt-14 lg:ml-[18%] lg:pl-0 [&::-webkit-scrollbar]:hidden" +
+            "mt-8 flex snap-x scroll-pl-6 md:scroll-pl-8 lg:scroll-pl-0  gap-5 overflow-x-auto pb-2 pr-6 pl-6 [scrollbar-width:none] md:mt-10 md:gap-6 md:pr-8 md:pl-8 lg:mt-12 lg:ml-[18%] lg:pr-0 lg:pl-0 [&::-webkit-scrollbar]:hidden" +
             /* Snapping OFF mid-drag (see the handlers): with it on, every
                scroll written by the pointer is yanked back to the nearest snap
                point and the card will not follow the cursor. `cursor-grabbing`
@@ -559,7 +585,7 @@ export function EngineeringCarousel() {
                  most room for them. Viewport units keep the card the same size
                  whatever the indent does, and the cap stops it becoming a
                  billboard on an ultrawide display. */
-                className="group w-[82vw] shrink-0 snap-start sm:w-[64vw] lg:w-[min(46vw,720px)]"
+                className="group w-[calc(100vw-3rem)] shrink-0 snap-start sm:w-[64vw] lg:w-[min(46vw,720px)]"
               >
                 <figure className="flex h-full flex-col">
                   <div className="relative aspect-16/10 w-full overflow-hidden rounded-[16px] bg-ink/5">

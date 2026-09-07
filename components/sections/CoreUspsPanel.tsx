@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
+import { Reveal } from "@/components/ui/Reveal";
 
 /**
  * The index of the USP part inside WHY_CHOOSE.parts.
@@ -101,16 +102,22 @@ export function CoreUspsPanel() {
           same side.
         */}
         <div className="max-w-[640px]">
-          <h2 className="text-3xl leading-[1.1] font-medium tracking-tighter text-white capitalize md:text-4xl lg:text-5xl">
-            {usps.title}
-          </h2>
+          {/* Heading, then panel. Purpose: sequence. The two are one block
+              against the photograph, so they arrive in reading order rather
+              than together. */}
+          <Reveal>
+            <h2 className="text-3xl leading-[1.1] font-medium tracking-tighter text-white capitalize md:text-4xl lg:text-5xl">
+              {usps.title}
+            </h2>
+          </Reveal>
 
           {/* `glass-rim` alongside `glass-dark`, the pairing the header island
               uses: the rim draws the refracted hairline that stops the panel
               reading as a flat translucent box. It is an inset `::before`, so
               the panel has to be `relative` or the pseudo-element escapes to
               the nearest positioned ancestor and rims the wrong box. */}
-          <div className="glass-dark glass-rim relative mt-8 rounded-[14px] p-6 md:mt-10 md:p-8">
+          <Reveal delay={0.1}>
+            <div className="glass-dark glass-rim relative mt-8 rounded-[14px] p-6 md:mt-10 md:p-8">
             <ul
               role="list"
               /* Two columns from `md`, and the order runs DOWN the first
@@ -143,8 +150,9 @@ export function CoreUspsPanel() {
                   </p>
                 </li>
               ))}
-            </ul>
-          </div>
+              </ul>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>

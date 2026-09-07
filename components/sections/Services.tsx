@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { SERVICES, SERVICES_ZH, SERVICES_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
+import { Reveal } from "@/components/ui/Reveal";
 
 /**
  * Our Services, as one static index of five cards.
@@ -135,9 +136,13 @@ export function Services() {
           `h2` and not `h1`: the page opens on PageBanner, and that banner's
           heading is the `h1`. See the note in ServicesBody.
         */}
-        <h2 className="text-3xl leading-[1.1] font-medium tracking-tighter text-ink capitalize md:text-4xl lg:text-5xl">
-          {services.heading}
-        </h2>
+        {/* The heading arrives first, the cards follow it. Purpose: sequence —
+            the section reads top to bottom rather than landing in one piece. */}
+        <Reveal>
+          <h2 className="text-3xl leading-[1.1] font-medium tracking-tighter text-ink capitalize md:text-4xl lg:text-5xl">
+            {services.heading}
+          </h2>
+        </Reveal>
 
         <ul
           role="list"
@@ -152,7 +157,19 @@ export function Services() {
           className="mt-16 grid grid-flow-dense grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-6 md:mt-20 lg:grid-cols-5 lg:gap-x-8"
         >
           {services.items.map((service, i) => (
-            <li
+            /* `as="li"` RATHER THAN A WRAPPER, and that is not a style choice.
+               The card is `sm:row-span-3 sm:grid sm:grid-rows-subgrid`, and a
+               subgrid only works against its own parent's tracks — put a plain
+               `<div>` between the `<ul>` and this `<li>` and the shared rows
+               that keep every title and body aligned across a row collapse.
+               `Reveal` renders the tag it is given, so the animation lands on
+               the grid item itself and the layout is untouched. */
+            <Reveal
+              as="li"
+              /* Stagger by position, capped. 60ms reads as a sequence; left
+                 uncapped, the fifth card would wait 300ms after the first and
+                 the row would finish visibly late. */
+              delay={Math.min(i, 4) * 0.06}
               key={i}
               /*
                 Six columns below `lg`, five at `lg` and up.
@@ -249,7 +266,7 @@ export function Services() {
               <p className="mt-2.5 text-sm leading-relaxed text-ink-2">
                 {service.body}
               </p>
-            </li>
+            </Reveal>
           ))}
         </ul>
       </div>
