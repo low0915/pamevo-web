@@ -8,13 +8,10 @@ import { Reveal } from "@/components/ui/Reveal";
 /**
  * The index of the USP part inside WHY_CHOOSE.parts.
  *
- * IT LIVES HERE BECAUSE THIS IS NOW THE SECTION THAT PRINTS THAT PART. It was
- * declared in CoreUsps — the ring band that used to sit above this one — and
- * moved when that section was deleted rather than being left to die with it,
- * because WhyChoose counts off the same constant: it skips everything up to and
- * including this index and prints what is left. Two sections read the one array
- * from opposite ends, so neither can silently take the other's content when
- * `parts` is reordered.
+ * IT LIVES HERE BECAUSE THIS IS THE SECTION THAT PRINTS THAT PART, and it is
+ * exported because EngineeringCarousel counts its own index off it — the six
+ * figures are the part directly after the ten USPs. One constant, so the two
+ * bands cannot both claim the same entry when `parts` is reordered.
  */
 export const USP_PART = 1;
 

@@ -11,11 +11,10 @@ import { Reveal } from "@/components/ui/Reveal";
 /**
  * The index of the engineering part inside WHY_CHOOSE.parts.
  *
- * Counted off USP_PART rather than written as a literal `2`, the same way
- * WhyChoose derives its own FIRST. The three sections that read this array all
- * count from the one constant, so inserting a part into the content file moves
- * every one of them together instead of silently handing this section the ten
- * USPs.
+ * Counted off USP_PART rather than written as a literal `2`. The two sections
+ * that read this array both count from the one constant, so inserting a part
+ * into the content file moves them together instead of silently handing this
+ * section the ten USPs.
  */
 const ENGINEERING_PART = USP_PART + 1;
 
@@ -152,11 +151,12 @@ function nearestSlide(
  * the title's left edge — which is the whole point of the diagonal — while the
  * cards claim the width back.
  *
- * THE CARD IS IMAGE AND FIGURE, NOTHING ELSE. `parts[2]` carries a `note` about
- * the German hardware brands and it is deliberately not printed here: the brief
- * is a picture and a point per card, and the note is a sentence about three
- * suppliers that belongs with the full list rather than on one slide of six.
- * WhyChoose still prints it, so nothing is lost from the page.
+ * THIS IS THE ONLY PLACE THE SIX ARE PRINTED. WhyChoose — a scrubbed, pinned
+ * panel — used to sit under this band and set the same six figures again, with
+ * the hardware note and the closing commitment beneath them. Two statements of
+ * one list is once too many, so that section is gone; the note now hangs off
+ * the hardware card and the commitment closes this one, which is everything it
+ * carried that this did not.
  */
 export function EngineeringCarousel() {
   const whyChoose = useCopy(WHY_CHOOSE, {
@@ -694,6 +694,28 @@ export function EngineeringCarousel() {
             ))}
           </div>
         </div>
+
+        {/* THE CLOSING COMMITMENT, INHERITED FROM THE SECTION THIS REPLACED.
+
+            WhyChoose used to sit under this band and print the six figures a
+            second time, with the hardware note and these two lines beneath
+            them. Deleting it took the duplicate figures — which is the point —
+            but this was the one thing on the page it alone carried, so it moves
+            here rather than going with it. `WHY_CHOOSE.tagline`, still read from
+            the content file and still translated in three languages.
+
+            It closes the section rather than the carousel: the commitment is
+            about the company, not about the sixth slide, so it sits outside the
+            track on the band's own left edge where the heading started. */}
+        <Reveal delay={0.1}>
+          <p className="mt-14 px-6 text-base leading-relaxed text-ink-2 md:mt-16 md:px-8 lg:px-10">
+            {whyChoose.tagline.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </p>
+        </Reveal>
       </div>
     </section>
   );

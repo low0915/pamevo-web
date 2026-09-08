@@ -39,9 +39,9 @@ import { Reveal } from "@/components/ui/Reveal";
  * `bg-ink`, and the dark was doing a job: it split the page between the section
  * above and the one below. That job is already done here, because /services
  * opens on PageBanner and PageBanner is a full field of brand blue - the page
- * reads blue, then this, then WhyChoose. So the separation this needs is not
- * from the banner but from WhyChoose under it, and one step of tone does it:
- * `bg-surface` is white where WhyChoose sits on `bg-bg`, #f4f5f6.
+ * reads blue, then this, then the USP panel. So the separation this needs is
+ * not from the banner but from the band under it, and one step of tone does
+ * it: `bg-surface` is white where the panel below opens on near-black.
  *
  * A white band that wide reads as a hole rather than as a surface, which is
  * what the facade wash at the top is for. See the note on it below.
@@ -116,7 +116,7 @@ export function Services() {
 
         On /services that is visible rather than theoretical, because both of
         its neighbours are bands: PageBanner sets its copy at `left-[1.823%]`
-        of the viewport and WhyChoose floats its panel on percentages. Capped at
+        of the viewport and the USP panel floats its own on percentages. Capped at
         1440 this column started 8px inside them at 1440 and 288px inside them
         at 1920 - see the same argument written out at length in WhyMevo, where
         the identical mistake was made and undone.
@@ -256,7 +256,7 @@ export function Services() {
               </div>
 
               {/* h3 under the section's h2. The type scale is set by the
-                  classes, not by the tag - the same note as in WhyChoose. */}
+                  classes, not by the tag - the same note as in CoreUspsPanel. */}
               <h3 className="mt-5 text-lg leading-snug font-medium tracking-tight text-ink capitalize xl:text-xl">
                 {service.title}
               </h3>

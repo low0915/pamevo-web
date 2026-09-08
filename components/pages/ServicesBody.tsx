@@ -4,7 +4,6 @@ import { PageBanner } from "@/components/sections/PageBanner";
 import { Services } from "@/components/sections/Services";
 import { CoreUspsPanel } from "@/components/sections/CoreUspsPanel";
 import { EngineeringCarousel } from "@/components/sections/EngineeringCarousel";
-import { WhyChoose } from "@/components/sections/WhyChoose";
 
 /**
  * /services, /bm/services and /zh/services.
@@ -17,8 +16,7 @@ import { WhyChoose } from "@/components/sections/WhyChoose";
  * Those bands no longer print "Why Choose MEVO Malaysia" and its four claims:
  * the home page gives that its own section now, and the same four sentences on
  * two pages is once too many. What closes this page is the ten USPs and the six
- * engineering figures, which is the half of that section that is actually about
- * features. See FIRST in WhyChoose.tsx.
+ * engineering figures — each stated once, in a band of its own.
  *
  * A server component, so the copy arrives as a prop rather than through the
  * locale context: context is a client mechanism and this renders on the server,
@@ -26,15 +24,7 @@ import { WhyChoose } from "@/components/sections/WhyChoose";
  * sections below are client components and read the locale themselves, so
  * nothing has to be passed down to them.
  *
- * WHY WHYCHOOSE TAKES `standalone` AND SERVICES NO LONGER DOES. Both were
- * written as bands in the home page's stack, where each is pulled up over the
- * pinned section above it. Here there is nothing above either of them to ride
- * over, and a curtain drawn over a section that is not pinned covers content
- * instead of crossing it. What `standalone` drops is the pull-up and its
- * shadow; WhyChoose's runway and sticky frame stay, because its scrubbed
- * sequence IS the section rather than the transition into it.
- *
- * Services lost the prop entirely, because it lost the thing the prop was
+ * SERVICES LOST ITS `standalone` PROP, because it lost the thing the prop was
  * guarding. It is no longer a pinned stack — it is a static grid that scrolls
  * like any other block of content — so it has no pull-up to drop and this page,
  * its only caller, was the only place that ever passed the flag. The curtain
@@ -78,12 +68,11 @@ export function ServicesBody({ locale = "EN" }: { locale?: Locale }) {
           between them, and here that change does the work on its own — Services
           ends on the site's near-white and this opens on near-black. */}
       <CoreUspsPanel />
-      {/* The six engineering figures, as a carousel over its own blurred still.
-          It carries the figures alone; WhyChoose below still prints them with
-          the hardware note and the closing commitment, which is the context a
-          slide of six pictures cannot hold. */}
+      {/* The six engineering figures, and what closes the page. WhyChoose stood
+          under this and printed the same six a second time as a scrubbed panel;
+          the carousel carries them alone now, with the hardware note on its own
+          card and the closing commitment under the track. */}
       <EngineeringCarousel />
-      <WhyChoose standalone />
     </main>
   );
 }

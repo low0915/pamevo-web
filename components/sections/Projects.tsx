@@ -297,7 +297,7 @@ export function Projects({ standalone = false }: { standalone?: boolean }) {
         standalone ? "max-md:pt-28" : "sheet svc-curtain svc-curtain-floor"
       }`}
     >
-      <div className="mx-auto w-full max-w-[1440px] px-4 md:px-8 lg:px-12">
+      <div className="mx-auto w-full max-w-[1440px] px-6 md:px-8 lg:px-10">
         <Reveal>
           <Heading className="text-center text-4xl leading-[1.1] font-medium tracking-tighter text-ink md:text-5xl lg:text-6xl">
             {projects.heading}
@@ -384,7 +384,7 @@ export function Projects({ standalone = false }: { standalone?: boolean }) {
       </Reveal>
 
       <Reveal delay={0.16} className="mt-12 md:mt-16">
-        <div className="mx-auto flex w-full max-w-[1440px] justify-center px-4 md:px-8 lg:px-12">
+        <div className="mx-auto flex w-full max-w-[1440px] justify-center px-6 md:px-8 lg:px-10">
           <Link
             href={projects.cta.href}
             className="inline-flex items-center rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
