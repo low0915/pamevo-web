@@ -175,7 +175,27 @@ export function Header() {
      These are ceilings, not widths: the island is `w-full` under them, so below
      about 1700px it is the viewport less the header's own gutters that decides,
      and these only bind on a large display. */
-  const maxWidth = useTransform(scrollY, range, [1600, 1360], { clamp: true });
+  /**
+   * THE ISLAND DOES NOT CHANGE WIDTH, and 1440 is the site's own measure.
+   *
+   * It used to morph 1600 -> 1360 across the first 120px of scroll, so the
+   * header narrowed as the page moved under it. Two things were wrong with
+   * that. The width was nobody else's: every contained band on the site —
+   * VisionMission, Projects, ProductCatalog, EnquiryBand, Footer — sits in
+   * `max-w-[1440px]`, so the header agreed with none of them at either end of
+   * its morph and the page had three different measures depending on scroll
+   * position. And a width that animates is a width that reflows the nav row
+   * inside it: six items and a caret, re-laid-out on every frame of the scroll.
+   *
+   * So it is a constant now, matching the bands beneath it. The island still
+   * morphs — radius, tint, blur, shadow — because those are paint and cost
+   * nothing; only the size is fixed.
+   *
+   * It stays a CEILING rather than a width: the island is `w-full` under it, so
+   * below about 1540px it is the viewport less the header's own gutters that
+   * decides, and this only binds on a large display.
+   */
+  const ISLAND_MAX = 1440;
   const radius = useTransform(scrollY, range, [22, 999], { clamp: true });
   /* The island's tint, unscrolled to scrolled.
      Was 0.28/0.62, then 0.55/0.85, now this. The first raise was necessary and
@@ -259,18 +279,19 @@ export function Header() {
     ],
     { clamp: true },
   );
-  /* The wordmark shrinks with the island as it morphs — but only where the
-     island actually has room to spare. See `.logo-morph` in globals.css for why
-     the breakpoint is enforced there rather than here. */
-  const logoScale = useTransform(scrollY, range, [1, 0.85], { clamp: true });
-  const logoTransform = useTransform(logoScale, (s) => `scale(${s})`);
+  /* THE WORDMARK NO LONGER SHRINKS. It scaled 1 -> 0.85 to keep its proportion
+     as the island narrowed; with the island a fixed width there is nothing for
+     it to keep proportion WITH, and a logo that shrinks inside a container that
+     does not is just the logo getting smaller. The motion value, the inline
+     transform and the `.logo-morph` override that gated it are all gone. */
 
-  /* Reduced motion gets the island at rest rather than the morph, so it needs
-     the same ceiling the unscrolled end above carries - it was left at the old
-     1344 when that moved, which is 250px short of the six-item row. */
+  /* Reduced motion gets the island at rest rather than the morph. The width is
+     the same constant either way now, so this can no longer drift from it — it
+     was left at the old 1344 once when the morph's ends moved, which was 250px
+     short of the six-item row. */
   const staticStyle = reduce
     ? {
-        maxWidth: 1600,
+        maxWidth: ISLAND_MAX,
         borderRadius: 22,
         /* The material as well as the shape. Without these the reduced-motion
            island falls back to `.glass`, which is the shared light-glass
@@ -283,7 +304,7 @@ export function Header() {
         WebkitBackdropFilter: "blur(12px) saturate(140%) brightness(1.8)",
       }
     : {
-        maxWidth,
+        maxWidth: ISLAND_MAX,
         borderRadius: radius,
         background,
         backdropFilter,
@@ -294,7 +315,14 @@ export function Header() {
   return (
     <>
       <header
-        className="fixed inset-x-0 top-4 flex justify-center px-4 md:px-8 lg:px-12"
+        /* The site's gutter, so the island lines up with the bands beneath it.
+             It was `px-4 md:px-8 lg:px-12` — 16 at base and 48 at `lg` against
+             the 24/32/40 every contained section uses — so below the 1440
+             ceiling, where the gutters and not the ceiling decide the width,
+             the header sat 8px wider than the page at `lg` and 8px narrower at
+             base. Matching them makes the island the same measure as
+             VisionMission at every width rather than only past 1540. */
+          className="fixed inset-x-0 top-4 flex justify-center px-6 md:px-8 lg:px-10"
         style={{ zIndex: Z.header }}
       >
         <motion.div
@@ -324,20 +352,13 @@ export function Header() {
             aria-label="MEVO Malaysia, home"
             onClick={replayHero}
           >
-            {/* `logo-morph` is what confines the scale to the wide layout.
-
-                The scale is an INLINE style written by a motion value on every
-                scroll frame, and an inline style beats any class — so this
-                cannot be turned off with a Tailwind variant, and it cannot be
-                turned off in JS either without a media query in state, which
-                would mean guessing the viewport during SSR and correcting it on
-                hydration. The class hands the transform back to the stylesheet
-                below `xl`, where one rule can override it with `!important` and
-                no JavaScript has to know the width. */}
-            <motion.span
-              className="logo-morph block origin-left"
-              style={reduce ? undefined : { transform: logoTransform }}
-            >
+            {/* A plain `span` now. It was a `motion.span` carrying an inline
+                `scale()` written on every scroll frame, plus a `.logo-morph`
+                class in globals.css whose only job was to override that inline
+                style below `xl` — a whole mechanism to gate a shrink that no
+                longer happens. With the island a fixed width the wordmark is
+                simply its own size, and all of it goes. */}
+            <span className="block origin-left">
               <Image
                 src="/logo.png"
                 alt={LOGO_ALT}
@@ -364,7 +385,7 @@ export function Header() {
                    fitting and being cropped. */
                 className="h-4 w-auto sm:h-5 md:h-6 2xl:h-7"
               />
-            </motion.span>
+            </span>
           </Link>
 
           <nav className={`ml-auto hidden xl:block ${PANEL_ANCHOR}`}>

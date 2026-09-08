@@ -220,26 +220,25 @@ export function MobileNav({
                       {item.label}
                     </a>
                   )}
-                  {item.children && (
-                    <ul className={`${RULE} mb-5 ml-1 grid gap-1 border-l pl-4`}>
-                      {item.children.map((child) => (
-                        <li key={child.label}>
-                          {/* A plain anchor for the reason the island's copy
-                              of this gives: these are fragment links the
-                              catalogue reads, and a client navigation to a
-                              fragment fires no event for it to read. */}
-                          <a
-                            href={child.href}
-                            aria-disabled={child.href ? undefined : "true"}
-                            onClick={onClose}
-                            className="block py-1 text-base text-ink-2"
-                          >
-                            {child.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {/* NO SUBMENU HERE, DELIBERATELY.
+
+                      `item.children` is still read by the header island, which
+                      opens it as a dropdown on a pointer. This sheet used to
+                      print the same children inline under their parent, always
+                      expanded — so the two items that have them (Our Profile,
+                      Our Products) each carried a nested list nobody had asked
+                      to see, and the menu was a mix of destinations and
+                      sub-destinations at two type sizes.
+
+                      They are dropped rather than made collapsible: a parent
+                      here already navigates somewhere that lists its own
+                      children, so an accordion would be a control to reach a
+                      control — the same reasoning the language row below gives
+                      for being chips rather than a menu inside a menu.
+
+                      It also buys back the height the note at the top of this
+                      file is fighting for. The list is six destinations now,
+                      with nothing nested under them. */}
                 </motion.li>
               ))}
             </ul>

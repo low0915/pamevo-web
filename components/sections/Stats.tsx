@@ -47,10 +47,21 @@ const CELL = "lg:pt-[max(1rem,2.2dvh)] lg:pr-[1.77vw] lg:pb-[max(1.25rem,3dvh)]"
  * An inner box is measured from the rule down its left side - 34px of the 1920
  * drawing, the same 1.77vw as the inset on its right. The box in the first
  * column has no rule there: its left edge is the frame's, and the thing it has
- * to line up with is the heading directly above it, which sits on the plan's
- * outer margin of 4.22vw. At the inner inset its figure stood 35px to the left
- * of the heading at 1440, which on a layout made of ruled alignments is the one
- * mistake there is no hiding.
+ * to line up with is the heading directly above it. At the inner inset its
+ * figure stood 35px to the left of the heading at 1440, which on a layout made
+ * of ruled alignments is the one mistake there is no hiding.
+ *
+ * THE EDGE INSET IS THE SITE'S GUTTER, NOT THE DRAWING'S OUTER MARGIN. It was
+ * `4.22vw`, taken straight from the 1920 plan, and that is a proportion rather
+ * than a distance: it measured 61px at 1440 and 81px at 1920, while every other
+ * band on the site - WhyMevo, Projects, the service pages - holds a flat
+ * `lg:px-10`. So this was the one section whose left edge moved as the window
+ * widened, and it read as a band indented further than its neighbours.
+ *
+ * `2.5rem` is that same `lg:px-10`, written in rem because these constants are
+ * arbitrary values rather than Tailwind's own scale. The heading above uses it
+ * too, so the alignment the note above is protecting is unchanged - both moved
+ * together, and the figure still sits under the first word of the heading.
  *
  * Held as two separate constants rather than one plus an override, so a box
  * gets exactly one `padding-left`: `lg:pl-*` twice in one class string is two
@@ -58,7 +69,7 @@ const CELL = "lg:pt-[max(1rem,2.2dvh)] lg:pr-[1.77vw] lg:pb-[max(1.25rem,3dvh)]"
  * is decided by the order Tailwind emits them, not the order they are written.
  */
 const PAD_INNER = "lg:pl-[1.77vw]";
-const PAD_EDGE = "lg:pl-[4.22vw]";
+const PAD_EDGE = "lg:pl-[2.5rem]";
 
 /** Supporting line under a figure: 350px of the drawing, held to that same
     fraction of the width so it keeps its distance from the photograph, which
@@ -286,7 +297,7 @@ export function Stats() {
             {/* The intro runs to the long vertical rule. Its top inset clears
                 the header island, so it has a floor in rem as well as the
                 7.7dvh it was drawn at. */}
-            <div className="px-6 pt-28 pb-12 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-0 lg:pt-[max(7.7dvh,6rem)] lg:pb-0 lg:pl-[4.22vw]">
+            <div className="px-6 pt-28 pb-12 md:px-8 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:px-0 lg:pt-[max(7.7dvh,6rem)] lg:pb-0 lg:pl-[2.5rem]">
               <h2 data-intro className={`${FIGURE} font-normal text-ink`}>
                 {intro.heading.map((line, i) => (
                   <span key={i} className="block">
@@ -378,7 +389,7 @@ function StatCell({
   return (
     <div
       data-figure={index}
-      className={`relative flex flex-col justify-between border-t border-ink px-6 py-10 lg:border-t-0 lg:px-0 lg:py-0 ${CELL} ${
+      className={`relative flex flex-col justify-between border-t border-ink px-6 py-10 md:px-8 lg:border-t-0 lg:px-0 lg:py-0 ${CELL} ${
         edge ? PAD_EDGE : PAD_INNER
       } ${className}`}
     >
