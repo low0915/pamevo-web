@@ -43,7 +43,26 @@ export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
         src: "/products-hero-profiles.png",
         position: "right center",
         mirrored: true,
+        /* Where the figure sits vertically. `0%` is the box's own place, which
+           is where this banner was drawn and where it reads best — the
+           extrusions clear the band's foot without hanging into the catalogue
+           below it.
+
+           KEPT AT ZERO RATHER THAN DROPPED, deliberately: the knob is the only
+           thing that moves a figure on this axis, since `position`'s vertical
+           half is inert for a figure fitted by height (see BannerFigure). Left
+           out entirely, the next person wanting to nudge this has to rediscover
+           that. It was briefly 14% to hang the metal past the foot the way
+           /services does; that number is here if it is wanted again, and note
+           it is NOT /services' own 5% — the offset moves the box, and the two
+           PNGs carry different amounts of empty alpha above their subject, so
+           the same value lands the metal in a different place. */
+        offsetY: "0%",
       }}
+      /* The blue runs to both edges behind it — see `fullBleed` in PageBanner.
+         The figure still bleeds off the right; what it bleeds over is now blue
+         rather than the page's own ground. */
+      fullBleed
     />
   );
 }

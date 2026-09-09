@@ -60,6 +60,12 @@ export function ServicesBody({ locale = "EN" }: { locale?: Locale }) {
           scale: 1.1,
           offsetY: "5%",
         }}
+        /* The blue runs to both edges and the figure stays. `fullBleed` drops
+           the bare ground strip on the right — see its note in PageBanner —
+           which the cut-out no longer needs: it crosses onto the page at the
+           FOOT of the band, where the section lets it spill, rather than
+           sideways onto that strip. */
+        fullBleed
       />
 
       <Services />

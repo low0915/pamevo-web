@@ -88,12 +88,14 @@ export function ContactBody({
            down in the band - 0% is the top of the photograph, 100% the bottom.
            See BannerOverlay in PageBanner. */
         overlay={{ src: "/pa mevo_up.png", position: "50% 15%" }}
-        figure={{
-          src: "/Camada 1.png",
-          position: "55% 50%",
-          scale: 1.1,
-          offsetY: "5%",
-        }}
+        /* NO FIGURE, AND THE BAND CLOSES UP BEHIND IT. The extrusion cut-out
+           used to cross from the blue onto the page ground on the right; with
+           it gone the strip of ground it was photographed against is a bare
+           margin with nothing to explain it, so `fullBleed` runs the blue to
+           both edges and carries the rules out with it. See the prop's note in
+           PageBanner — /services and /directors-profile keep the framed
+           composition, so this is opt-in rather than the default. */
+        fullBleed
       />
 
       <section className="px-4 pt-20 pb-24 md:px-8 md:pt-24 md:pb-32 lg:px-12">

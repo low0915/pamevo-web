@@ -239,6 +239,7 @@ export function PageBanner({
   subheading,
   overlay,
   figure,
+  fullBleed = false,
 }: {
   heading: string;
   subheading: string;
@@ -248,11 +249,33 @@ export function PageBanner({
    * The cut-out on the right, or nothing.
    *
    * Omitted, the band is field, rules and copy — which is a complete
-   * composition, not a broken one: the ground strip stays, so the blue still
-   * ends where the frame ends it, and the space the figure would occupy reads
-   * as deliberate emptiness rather than as a gap.
+   * composition, not a broken one: by default the ground strip stays, so the
+   * blue still ends where the frame ends it, and the space the figure would
+   * occupy reads as deliberate emptiness rather than as a gap. Pass `fullBleed`
+   * to close that space instead.
    */
   figure?: BannerFigure;
+  /**
+   * Run the blue to both edges, and the rules with it.
+   *
+   * THE BARE STRIP EXISTS FOR THE FIGURE, so a band with no figure does not
+   * always want it. In the frame the field stops at 1492/1920 and the last
+   * 22.292% is page ground — that is what the cut-out is photographed against,
+   * which is how the picture crosses from the blue onto the page with no
+   * visible edge. Drop the figure and that strip is a bare margin at the end of
+   * a blue band, with nothing left to explain it.
+   *
+   * The horizontal rule is capped for the same reason: it stops at 86% so the
+   * stroke clears the figure rather than running under it. With the figure gone
+   * the cap has nothing to clear, so it extends too — still short of the edge,
+   * because a rule that touches the band's edge reads as a border rather than
+   * as a drawn line.
+   *
+   * Opt-in rather than derived from `figure` being absent: /directors-profile
+   * also omits the figure and is designed around the strip staying. This is a
+   * composition choice, not a consequence.
+   */
+  fullBleed?: boolean;
 }) {
   return (
     <section className="relative w-full overflow-x-clip bg-brand">
@@ -310,7 +333,12 @@ export function PageBanner({
             edge. Matching it lets the strip run into the page instead. A figure
             is a cut-out on transparency, so it takes the change without a
             halo. */}
-        <div aria-hidden className="absolute inset-y-0 right-0 hidden w-[22.292%] bg-bg md:block" />
+        {fullBleed ? null : (
+          <div
+            aria-hidden
+            className="absolute inset-y-0 right-0 hidden w-[22.292%] bg-bg md:block"
+          />
+        )}
 
         {/* The rules: white hairlines dividing the empty upper half, and the
             only drawing on the band — without them the top two thirds read as
@@ -320,11 +348,24 @@ export function PageBanner({
         <div aria-hidden className="absolute inset-0">
           {/* Across. The frame stops it at 1297/1920, short of the field's own
               edge; it runs further than that here so the stroke carries past
-              the figure rather than ending under it. Still short of the full
-              width - a rule that reached the band's edge would read as a
-              border rather than as a drawn line. */}
+              the figure rather than ending under it. Framed, it stays short of
+              the full width — against the bare ground strip on the right a rule
+              that reached the edge would read as a border rather than as a
+              drawn line.
+
+              FULL-BLEED IT RUNS THE WHOLE WAY, and the reasoning above does not
+              survive the change: with the strip gone there is no ground for the
+              line to stop against, so a cap just leaves it hanging in blue a
+              few percent short of the edge, which reads as unfinished rather
+              than as restraint. It was tried at 94% and looked exactly like
+              that. Edge to edge the band has a drawn line across it; there is
+              no border to be mistaken for, because both ends run off the
+              screen. */}
           <div
-            className="trace-across absolute left-0 h-[2px] w-[90%] bg-white md:w-[86%]"
+            className={
+              "trace-across absolute left-0 h-[2px] bg-white " +
+              (fullBleed ? "w-full" : "w-[90%] md:w-[86%]")
+            }
             style={{ top: RULE_Y, ...TRACE.sweep }}
           />
           {/* Down, from the top edge to the crossing: 288 and 741 of 1920. */}
@@ -341,7 +382,15 @@ export function PageBanner({
               copy is - there is no width left for the rule to fall beside the
               heading rather than through it. */}
           <div
-            className="trace-down absolute bottom-0 left-[63.125%] hidden w-[2px] bg-white md:block"
+            className={
+              "trace-down absolute bottom-0 hidden w-[2px] bg-white md:block " +
+              /* 1212/1920 of the band in the frame, which is 81.2% of the
+                 field's own 1492. Full-bleed the field IS the band, so the
+                 drop keeps its place within the blue rather than its place
+                 within the frame — otherwise it slides left of where the
+                 composition puts it and leaves a wide empty end. */
+              (fullBleed ? "left-[60%]" : "left-[63.125%]")
+            }
             style={{ top: RULE_Y, ...TRACE.lastDrop }}
           />
         </div>

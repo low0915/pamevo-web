@@ -43,16 +43,16 @@ const ENGINEERING_PART = USP_PART + 1;
  */
 const SLIDES = [
   {
-    src: "/engineering/wind.jpg",
-    alt: "Towering storm clouds building against a deep blue sky",
+    src: "/engineering/wind-2.jpg",
+    alt: "A glazed high-rise seen from street level, its curtain wall rising into an overcast sky",
   },
   {
-    src: "/engineering/air.jpg",
-    alt: "Close-up of wind-driven ripples crossing dark open water",
+    src: "/engineering/air-2.jpg",
+    alt: "Curtain-wall facade of a glazed tower rising into pale sky, its glazing joints running unbroken up the elevation",
   },
   {
-    src: "/engineering/water.jpg",
-    alt: "Rain running down a pane of glass, city traffic blurred behind it",
+    src: "/engineering/water-3.jpg",
+    alt: "Heavy rain running in sheets down a pane of glass, beaded across the surface and blurring what lies beyond it",
   },
   {
     src: "/engineering/thermal.jpg",
@@ -63,8 +63,8 @@ const SLIDES = [
     alt: "A quiet, softly lit living room beside a large glazed door",
   },
   {
-    src: "/engineering/hardware.jpg",
-    alt: "Corner of a MEVO aluminium profile, showing the machined chambers of the section",
+    src: "/scratched-metal-background.jpg",
+    alt: "Brushed aluminium surface raking across the frame, the grain of the milled metal catching the light",
   },
 ];
 
