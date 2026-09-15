@@ -76,6 +76,23 @@ function valleyDepth(width: number) {
  * colour - except that the middle of the frame is something a phone has too,
  * where hover is not.
  */
+/**
+ * NOTE: `standalone` NO LONGER HAS A CALLER.
+ *
+ * It existed for /our-projects, which rendered this strip as a page of its own
+ * — the flag promoted the heading to `h1` and dropped the curtain margin that
+ * pulls the section over the band above it on the home page. That page now
+ * opens on `PageBanner` and shows every photograph in the catalogue as a
+ * masonry wall instead; see components/pages/ProjectsBody.tsx and
+ * components/sections/ProjectGallery.tsx for why a page someone navigated to
+ * shows all 23 rather than six behind a drag gesture.
+ *
+ * The two remaining callers — HomeBody and the /preview-projects screenshot
+ * harness — both render this bare, so the flag is always false. It is kept
+ * rather than deleted because it is the whole of what makes this section
+ * page-ready, and removing it would have to be put back verbatim the next time
+ * a strip wants a page. Delete it if that has not happened in a while.
+ */
 export function Projects({ standalone = false }: { standalone?: boolean }) {
   /* See the note on Background: JSX reads a lowercase tag name as a literal
      element and an uppercase one as a component, so the case is doing work. */

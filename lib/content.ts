@@ -5,6 +5,10 @@
  */
 
 import { bmPath, zhPath, type Locale } from "./paths";
+/* The catalogue, for PROJECT_GALLERY below — which is built from it rather
+   than transcribed beside it. lib/products.ts imports nothing of its own, so
+   this is a leaf dependency and not the start of a cycle. */
+import { PRODUCTS } from "./products";
 
 /** `href` is set only on pages that actually exist. Everything else stays an
     inert placeholder until its route is built. */
@@ -1601,6 +1605,27 @@ export const PROJECTS = {
   heading: "Our Projects",
   blurb:
     "From homes to commercial spaces, explore aluminium windows and doors crafted for every unique project.",
+  /** The banner at the head of /our-projects, on the standalone page only.
+
+      The home page's strip has no banner — it is a section inside a longer
+      page, and the heading above it is doing that job. The standalone page
+      opens on the band, and when it does the band carries the `h1`: see the
+      note on `standalone` in Projects.tsx for why the section's own heading
+      then goes rather than being repeated under it.
+
+      The heading repeats `heading` above rather than reaching for something
+      of its own, and that is the decision rather than an oversight. Every
+      other banner on the site is a short noun phrase — "Our Products", "Our
+      Services", "Director's Profile" — and it is the words the nav item uses,
+      so a page is called what the reader clicked to reach it. /contact is the
+      one exception, and it earns it by asking for something.
+
+      The lede is where the page differs from the home page's strip: that one
+      shows six photographs in passing, this one is the whole catalogue. */
+  banner: {
+    heading: "Our Projects",
+    lede: "Windows, doors, sunrooms and entrances from across the MEVO range, photographed in the rooms they were installed in. Tap any photograph to see it full size.",
+  },
   /** Points at a page that does not exist yet; the link ships ahead of it. */
   cta: { label: "Contact us", href: "/contact" },
   /** Names each tile's lightbox trigger. Held here rather than written into the
@@ -1645,6 +1670,99 @@ export const PROJECTS = {
   ],
 };
 
+/**
+ * Every photograph in `public/products/`, for the masonry gallery on
+ * /our-projects.
+ *
+ * DERIVED FROM THE CATALOGUE RATHER THAN TRANSCRIBED FROM IT. `PRODUCTS` in
+ * lib/products.ts already carries each shot's `src` and `alt` beside the
+ * product it belongs to, and a second hand-written list of the same 23 entries
+ * would agree with it on the day it was written and never again — a swapped
+ * photograph in the catalogue would leave this one captioning the old picture.
+ * So the list is built from that array, and adding a product's photograph to
+ * the catalogue adds it here.
+ *
+ * Two things the catalogue has no room for are added on the way past:
+ *
+ *   - INTRINSIC PIXEL SIZES, which the masonry layout and the lightbox both
+ *     need. The grid gives each tile the photograph's own proportions rather
+ *     than a fixed box, which is what makes it masonry rather than a grid of
+ *     crops; the lightbox sizes its frame the same way. Measured off the files
+ *     themselves — a wrong number here is a tile of the wrong height, not a
+ *     stretched picture, since `object-cover` still fits it.
+ *   - A LABEL, which is the product's title with the model code dropped:
+ *     "Casement Window", not "DM106 Casement Window". Same rule the six-image
+ *     strip followed, and for the same reason — this is someone being shown
+ *     what MEVO makes, not looking up a part.
+ *
+ * The model code is the leading token of every catalogue title that has one
+ * (`DM106`, `DM122/132`), so it is stripped by shape rather than listed; the
+ * four entry doors and the clad-wood range have no code and pass through
+ * whole.
+ *
+ * THE LABELS ARE ENGLISH IN ALL THREE LOCALES, and that is a real gap rather
+ * than an oversight. lib/products.ts is English-only — the same reason
+ * /bm/our-products prints Malay chrome around English bullets, noted at the top
+ * of that file. PROJECTS carried hand-written ZH and BM label arrays, but they
+ * were six labels for the six photographs the strip showed, positional: the
+ * seventh entry here would silently take the first Chinese label. Rather than
+ * ship a wall captioned wrongly in two languages, the labels stay in one
+ * language until the client supplies the other two.
+ *
+ * Filling the gap is a `titleZh` / `titleMs` beside `title` in lib/products.ts
+ * and a lookup here keyed on `no` — not another positional array, which is the
+ * shape that could not survive a photograph being added.
+ */
+const MODEL_CODE = /^DM[\d/]+(?:Pro)?\s+/i;
+
+/** Intrinsic size of each file in `public/products/`, keyed by `src`. Read off
+    the files rather than guessed: see the note above. */
+const PRODUCT_IMAGE_SIZES: Record<string, { width: number; height: number }> = {
+  "/products/01.jpg": { width: 2560, height: 1706 },
+  "/products/02.png": { width: 2000, height: 1500 },
+  "/products/03.jpg": { width: 2560, height: 1792 },
+  "/products/04.jpg": { width: 2560, height: 1701 },
+  "/products/05-1.jpg": { width: 2560, height: 1844 },
+  "/products/05-2.jpg": { width: 2560, height: 1452 },
+  "/products/06.jpg": { width: 1920, height: 985 },
+  "/products/07.jpg": { width: 2560, height: 1785 },
+  "/products/08.jpg": { width: 2560, height: 1707 },
+  "/products/09.jpg": { width: 2560, height: 1536 },
+  "/products/10.jpg": { width: 2560, height: 1383 },
+  "/products/11.png": { width: 854, height: 678 },
+  "/products/12.jpg": { width: 2560, height: 1343 },
+  "/products/13.jpg": { width: 2560, height: 1425 },
+  "/products/14.jpg": { width: 2560, height: 2560 },
+  "/products/15.jpg": { width: 2048, height: 1536 },
+  "/products/16-1.jpeg": { width: 2560, height: 1728 },
+  "/products/16-2.jpeg": { width: 2560, height: 1360 },
+  "/products/16-3.jpeg": { width: 2560, height: 1738 },
+  "/products/17.jpg": { width: 2560, height: 1957 },
+  "/products/18.jpg": { width: 2560, height: 1920 },
+  "/products/19.jpg": { width: 2560, height: 2560 },
+  "/products/20.jpg": { width: 2560, height: 2249 },
+};
+
+/** The fallback shape for a photograph added to the catalogue without a size
+    being recorded above. 3:2 is the commonest ratio in the set, so a forgotten
+    entry lands at a plausible height rather than collapsing the tile. */
+const FALLBACK_SIZE = { width: 2560, height: 1707 };
+
+export const PROJECT_GALLERY: {
+  src: string;
+  label: string;
+  alt: string;
+  width: number;
+  height: number;
+}[] = PRODUCTS.flatMap((product) =>
+  product.images.map((image) => ({
+    src: image.src,
+    label: product.title.replace(MODEL_CODE, ""),
+    alt: image.alt,
+    ...(PRODUCT_IMAGE_SIZES[image.src] ?? FALLBACK_SIZE),
+  })),
+);
+
 /** Tile labels only. Each photograph's `src`, `alt` and intrinsic size are
     carried over from PROJECTS: the alt text describes the picture and is held
     in step with lib/products.ts by hand, so it stays in one place and in one
@@ -1664,6 +1782,13 @@ export const PROJECTS_ZH: Partial<typeof PROJECTS> = {
   heading: "我们的项目",
   blurb:
     "从住宅到商业空间，探索为每一个独特项目量身打造的铝合金门窗。",
+  /* The band at the head of /zh/our-projects. The heading is `heading` above
+     again, for the reason given on the English banner — it is what the nav
+     calls this page. The lede is the page's own. */
+  banner: {
+    heading: "我们的项目",
+    lede: "美沃全系列门窗、阳光房与入户门，实拍于安装现场。点击任意照片查看大图。",
+  },
   /* href too, not just the label: this pointed a Chinese reader at /contact. */
   cta: { ...PROJECTS.cta, label: "联系我们", href: zhPath(PROJECTS.cta.href) },
   openLabel: (project: string) => `查看${project}`,
@@ -1695,6 +1820,11 @@ export const PROJECTS_BM: Partial<typeof PROJECTS> = {
   heading: "Projek Kami",
   blurb:
     "Daripada rumah hingga ruang komersial, terokai tingkap dan pintu aluminium yang direka untuk setiap projek yang unik.",
+  /* The band at the head of /bm/our-projects — see the note on the Chinese. */
+  banner: {
+    heading: "Projek Kami",
+    lede: "Tingkap, pintu, sunroom dan pintu utama daripada keseluruhan rangkaian MEVO, dirakam di ruang tempat ia dipasang. Ketik mana-mana foto untuk melihatnya bersaiz penuh.",
+  },
   cta: { ...PROJECTS.cta, label: "Hubungi kami", href: bmPath(PROJECTS.cta.href) },
   openLabel: (project: string) => `Buka ${project}`,
   images: PROJECTS.images.map((image, i) => ({
