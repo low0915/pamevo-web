@@ -37,6 +37,20 @@ const MAX_ELAPSED_MS = 172_800_000;
 const LIMIT = { requests: 30, sends: 5, windowMs: 3_600_000 };
 
 /**
+ * Sends per hour across every IP together.
+ *
+ * The per-IP budget assumes one address is one sender. Anyone with a pool of
+ * addresses — a botnet, or a forged header on a misconfigured proxy — gets five
+ * sends from each, and the inbox takes all of them. This is the backstop: well
+ * above what a small business receives by hand, far below a flood.
+ */
+const GLOBAL_SENDS = 40;
+const sentGlobally: number[] = [];
+
+/** Tracked IPs. Past this the oldest are evicted, so memory stays flat. */
+const MAX_TRACKED = 5_000;
+
+/**
  * Recent activity per IP.
  *
  * In memory, which means it resets on redeploy and is per-instance: on a
@@ -55,22 +69,107 @@ function activityFor(ip: string, now: number): Activity {
     requests: previous.requests.filter((at) => at > cutoff),
     sends: previous.sends.filter((at) => at > cutoff),
   };
+  // Deleted before setting, so the map's insertion order is least recently
+  // seen first — which is what eviction below walks.
+  seen.delete(ip);
   seen.set(ip, current);
 
-  // Sweep on the way past, so the map cannot grow without bound.
-  if (seen.size > 5_000) {
+  if (seen.size > MAX_TRACKED) {
     for (const [key, value] of seen) {
       if (value.requests.every((at) => at <= cutoff)) seen.delete(key);
+    }
+    // Sweeping expired entries is not enough on its own: a stream of fresh
+    // addresses is all live, so nothing expires and the map, and the sweep
+    // over it, keep growing. Drop the stalest down to 80%, which also means
+    // this whole block runs once per thousand new addresses, not per request.
+    for (const key of seen.keys()) {
+      if (seen.size <= MAX_TRACKED * 0.8) break;
+      seen.delete(key);
     }
   }
 
   return current;
 }
 
+/**
+ * The address the rate limit keys on.
+ *
+ * X-Forwarded-For is a list every proxy appends to, so its left end is
+ * whatever the visitor chose to send and only its right end was written by
+ * infrastructure we trust. Reading the leftmost entry lets anyone mint a fresh
+ * "IP" per request and walk straight past the limit.
+ *
+ * - On Vercel the edge overwrites the header with the real client address, so
+ *   there the first entry is safe.
+ * - Self-hosted, TRUSTED_PROXIES is how many proxies we run in front of the app
+ *   (default 1: one nginx or Caddy using `$proxy_add_x_forwarded_for`). The
+ *   client is that many entries in from the right. If there is a CDN in front
+ *   of the proxy too, that is 2.
+ *
+ * The app must not be reachable directly, bypassing the proxy: then the whole
+ * header is the visitor's, and no reading of it can be trusted.
+ */
 function clientIp(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
+  const chain = (request.headers.get("x-forwarded-for") ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  if (process.env.VERCEL) return chain[0] ?? "unknown";
+
+  const hops = Number(process.env.TRUSTED_PROXIES ?? 1);
+  const trusted = Number.isInteger(hops) && hops >= 1 ? hops : 1;
+  return chain[chain.length - trusted] ?? "unknown";
+}
+
+/**
+ * Whether this request came from our own page.
+ *
+ * Not authentication — a script can send any Origin it likes. What it stops is
+ * a third-party page making its visitors' browsers post here: a `text/plain`
+ * form or a no-cors fetch needs no preflight, so without this every visitor to
+ * that page becomes a fresh IP with its own mail budget. A browser always sends
+ * Origin on a POST and never lets a page forge it.
+ */
+function fromOwnPage(request: Request) {
+  const origin = request.headers.get("origin");
+  const host =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (!origin || !host) return false;
+  try {
+    return new URL(origin).host === host;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The body as text, or null past `max` bytes.
+ *
+ * `request.text()` buffers the whole body before anything can look at its
+ * size, and route handlers have no body limit of their own — so checking the
+ * length afterwards still lets one request hold a gigabyte in memory. This
+ * refuses on the declared length first and stops reading the moment the
+ * stream runs over, whatever the header claimed.
+ */
+async function readCapped(request: Request, max: number) {
+  if (Number(request.headers.get("content-length")) > max) return null;
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
 }
 
 const asText = (value: unknown) =>
@@ -105,8 +204,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const raw = await request.text();
-  if (raw.length > LIMITS.bodyBytes) {
+  if (!fromOwnPage(request)) {
+    return NextResponse.json({ ok: false }, { status: 403 });
+  }
+
+  // The form sends JSON. Insisting on it also forces a CORS preflight on any
+  // cross-site attempt, which the Origin check above backs up.
+  const type = request.headers.get("content-type")?.split(";")[0].trim();
+  if (type?.toLowerCase() !== "application/json") {
+    return NextResponse.json({ ok: false }, { status: 415 });
+  }
+
+  const raw = await readCapped(request, LIMITS.bodyBytes);
+  if (raw === null) {
     return NextResponse.json({ ok: false }, { status: 413 });
   }
 
@@ -118,7 +228,7 @@ export async function POST(request: Request) {
   }
 
   // Trap one: a field no person can see, let alone fill in.
-  if (asText(body.company)) {
+  if (asText(body.website_url_2)) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
@@ -156,7 +266,13 @@ export async function POST(request: Request) {
   // The mail budget, checked only now that the payload is known to be a real
   // enquiry: the ones turned away above cost nothing to refuse and should not
   // spend anybody's allowance.
-  if (activity.sends.length >= LIMIT.sends) {
+  while (sentGlobally.length && sentGlobally[0] <= now - LIMIT.windowMs) {
+    sentGlobally.shift();
+  }
+  if (
+    activity.sends.length >= LIMIT.sends ||
+    sentGlobally.length >= GLOBAL_SENDS
+  ) {
     return NextResponse.json(
       { ok: false, reason: "rate-limited" },
       { status: 429 },
@@ -193,5 +309,6 @@ export async function POST(request: Request) {
   }
 
   activity.sends.push(now);
+  sentGlobally.push(now);
   return NextResponse.json({ ok: true });
 }

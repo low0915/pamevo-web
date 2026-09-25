@@ -9,9 +9,10 @@ import nodemailer, { type Transporter } from "nodemailer";
  * failed request — the deploy would break for want of a variable the deploy
  * itself is supposed to supply.
  *
- * The transport is cached on the module afterwards: nodemailer pools
- * connections, and rebuilding it per request would open a fresh SMTP handshake
- * every time.
+ * The transport is cached on the module afterwards, so the options are parsed
+ * once. It is not pooled: each enquiry opens its own SMTP connection. At the
+ * volume a contact form sees that costs nothing, and it avoids holding idle
+ * sockets open in a serverless function that may be frozen between requests.
  */
 const KEYS = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "CONTACT_TO"] as const;
 
@@ -25,12 +26,25 @@ export function missingMailEnv() {
 export function getTransport(): Transporter {
   if (cached) return cached;
 
+  const secure = process.env.SMTP_SECURE === "true";
+
   cached = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     // 465 is implicit TLS; 587 upgrades with STARTTLS. Default to the latter,
     // which is what most mailboxes expect.
     port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === "true",
+    secure,
+    // Without this, STARTTLS is only attempted if the server's greeting
+    // advertises it — and anyone on the network path can strip that line, at
+    // which point nodemailer logs in over plain text and hands them SMTP_PASS.
+    // Required, a missing upgrade is a failed send instead.
+    requireTLS: !secure,
+    // The defaults are two minutes to connect and ten of silence. A mail server
+    // that hangs would hold the request, and the visitor, that long — past
+    // the host's function timeout, which kills it with no response at all.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,

@@ -55,7 +55,7 @@ export function ContactForm() {
     email: "",
     phone: "",
     message: "",
-    company: "",
+    website_url_2: "",
   });
 
   /** When the form became fillable. The gap to submit is one of the traps.
@@ -161,7 +161,7 @@ export function ContactForm() {
   };
 
   const reset = () => {
-    setValues({ name: "", email: "", phone: "", message: "", company: "" });
+    setValues({ name: "", email: "", phone: "", message: "", website_url_2: "" });
     setErrors({});
     setStatus("idle");
     mountedAt.current = Date.now();
@@ -311,23 +311,26 @@ export function ContactForm() {
       </div>
 
       {/* The first trap. Off-screen rather than display:none, because the
-          simple bots this catches skip fields that are hidden outright, and
-          named `company` because that is a field they expect to find. Out of
-          the tab order and out of the accessibility tree, so nobody using the
-          form by keyboard or screen reader ever meets it. */}
+          simple bots this catches skip fields that are hidden outright. Named
+          to look like a real field to a bot but to match nothing a browser
+          autofills: it used to be `company`, which Chrome fills from a saved
+          address whatever `autoComplete` says — silently turning away a real
+          person whose profile had an organisation in it. Out of the tab order
+          and out of the accessibility tree, so nobody using the form by
+          keyboard or screen reader ever meets it. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -left-[9999px] h-px w-px overflow-hidden"
       >
-        <label htmlFor="contact-company">Company</label>
+        <label htmlFor="contact-website">Website</label>
         <input
-          id="contact-company"
-          name="company"
+          id="contact-website"
+          name="website_url_2"
           type="text"
           tabIndex={-1}
           autoComplete="off"
-          value={values.company}
-          onChange={(event) => set("company")(event.target.value)}
+          value={values.website_url_2}
+          onChange={(event) => set("website_url_2")(event.target.value)}
         />
       </div>
 
