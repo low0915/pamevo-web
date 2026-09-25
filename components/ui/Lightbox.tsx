@@ -16,9 +16,27 @@ export type LightboxImage = {
   height: number;
 };
 
-/** Room kept clear at the top for the fixed header (top-4 over h-16), and at
- *  the bottom for the caption under the picture. The picture is sized against
- *  what is left, so it never runs under the header. */
+/**
+ * Room kept clear at the top for the fixed header (top-4 over h-16), and the
+ * same again at the foot for the caption under the picture.
+ *
+ * THE TWO ARE EQUAL BECAUSE THE PICTURE IS CENTRED, and that is the whole
+ * reason this is one constant rather than two. A centred box divides its
+ * leftover space evenly, so the only way to hold the picture clear of the
+ * header is to reserve the header's own band at BOTH ends: reserve it only at
+ * the top and centring hands half of it straight back, putting the picture
+ * under the header again.
+ *
+ * It was `items-end` with this reserved at the top alone, which kept the
+ * picture clear but pushed it against the foot of the screen and stacked every
+ * spare pixel above it. On a phone showing a wide landscape shot that measured
+ * 605px of empty space over the picture and 56 under it.
+ *
+ * The cost is the picture is sized against `100dvh - 2 * HEADROOM` rather than
+ * one, so a tall photograph is smaller than it used to be. That is the trade
+ * being made on purpose: the old arrangement bought its extra height by
+ * spending the space asymmetrically, which is what made it look wrong.
+ */
 const HEADROOM = "10rem";
 
 /**
@@ -33,8 +51,9 @@ const HEADROOM = "10rem";
  * The close button repeats the gesture at the top right for anyone who would
  * not think to try the empty space, and Escape does the same from the keyboard.
  *
- * The picture is held against the bottom of the screen with the header's band
- * kept clear above it, so the two never share the same pixels.
+ * The picture is centred on the screen, with the header's band reserved above
+ * it and matched below so that centring cannot give the top half back — see
+ * the note on HEADROOM. The two never share the same pixels.
  *
  * Focus moves to the close button on open and returns to whatever opened the
  * lightbox on close, so a keyboard never lands behind the overlay.
@@ -76,8 +95,17 @@ export function Lightbox({
     <AnimatePresence>
       {image && (
         <motion.div
-          className="fixed inset-0 flex items-end justify-center bg-[rgb(16_18_21/0.9)] px-4 pb-6 backdrop-blur-[3px] md:px-10 md:pb-10"
-          style={{ zIndex: Z.lightbox, paddingTop: HEADROOM }}
+          className="fixed inset-0 flex items-center justify-center bg-[rgb(16_18_21/0.9)] px-4 backdrop-blur-[3px] md:px-10"
+          /* Both ends reserved, and the picture centred in what is left — see
+             the note on HEADROOM for why the two have to match. The vertical
+             padding is inline rather than a `py` class because it is the same
+             constant the height below is computed from, and the two must not
+             be able to drift apart. */
+          style={{
+            zIndex: Z.lightbox,
+            paddingTop: HEADROOM,
+            paddingBottom: HEADROOM,
+          }}
           role="dialog"
           aria-modal="true"
           aria-label={image.label ?? image.alt}
@@ -118,7 +146,12 @@ export function Lightbox({
               // tall photograph still belong to the backdrop.
               onClick={(event) => event.stopPropagation()}
               className="h-auto max-h-full w-auto max-w-full min-h-0 rounded-[14px] object-contain"
-              style={{ maxHeight: `calc(100dvh - ${HEADROOM})` }}
+              /* Both reservations subtracted, not one: the picture sits inside
+                 a box that is now padded at both ends, and subtracting a single
+                 HEADROOM would let a tall photograph overflow it by the other.
+                 The caption is laid out under the picture inside this box, so
+                 the foot of the reservation covers it. */
+              style={{ maxHeight: `calc(100dvh - ${HEADROOM} * 2)` }}
             />
 
             {image.label && (
