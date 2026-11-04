@@ -1,340 +1,465 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Link from "next/link";
+import { ArrowRight, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { HERO, HERO_ZH, HERO_BM } from "@/lib/content";
-import { useCopy } from "@/lib/locale";
+import { localePath, useCopy, useLocale } from "@/lib/locale";
 
-gsap.registerPlugin(ScrollTrigger);
-
-/** Word choreography, as fractions of the scrubbed timeline. */
-const FIRST_WORD_AT = 0.24;
-const SLOT = 0.235;
-const ENTER = 0.09;
-const HOLD = 0.06;
-const EXIT = 0.07;
-/** Slide distance in px. Large enough to read as travel at 192px type. */
-const TRAVEL = 120;
-/** Source frame rate. Seeks are quantised to whole frames. */
-const VIDEO_FPS = 24;
-
-/** The sequence, in viewport heights: the runway is 500dvh, but it is over
- *  after this much of it, where the sheet below starts its overlap. The
- *  timeline ends here and so does the autoplay that carries it. */
-const SEQUENCE = 2;
-
-/** How much of that the autoplay plays per second, on landing: two viewports
- *  at this pace is about eight seconds, or a word every two. */
-const SPEED = 0.25;
+/** How long each slide holds before the next, in ms. */
+const INTERVAL = 7000;
+/** Crossfade between slides, in ms. */
+const FADE = 900;
+/** Horizontal travel, in px, a drag needs before it changes slide. */
+const SWIPE = 50;
+/** How far the text follows the pointer during a drag, as a share of it. */
+const DRAG_FOLLOW = 0.25;
 
 /**
- * Scroll-scrubbed hero.
+ * Home hero: a full-screen slider with media as the background.
  *
- * The section is a 500vh runway; the frame inside is `sticky`, so it holds
- * still while the runway scrolls past. The sequence occupies the first 200vh
- * and the sheet below overlaps the remainder: the two must not collide, or the
- * sheet covers the description while the last word is still arriving. CSS sticky is used rather than
- * ScrollTrigger's `pin` because pinning inserts a spacer element, which would
- * fight the sheet that overlaps this section further down the page.
+ * The first slide is the lockup (the logo, the tagline), then one per entry in
+ * `HERO.slides`, each leading somewhere. The slider itself, its timer, drag,
+ * progress bars and arrows, is HeroCarousel below, which the inner pages'
+ * PageHero shares at partial height.
  *
- * One scrubbed timeline maps the whole runway:
- *   0.00 - 0.10  logo holds, vertically centred and hard left
- *   0.10 - 0.22  logo leaves
- *   0.24 - 0.80  the tagline words take turns in a single slot: each slides
- *                in from the right, holds, then continues out to the left,
- *                with a beat of empty slot before the next arrives. Everything
- *                travels leftward, including the logo's exit, so the whole
- *                sequence reads as one movement. Only one word is ever on
- *                screen; the last one stays.
- * The description is not in the timeline at all. It is on screen from the
- * first frame and never moves. It holds one line from `md` up, where its
- * 641px measures inside the available width; below that it wraps.
- *
- * The hero deliberately breaks the site's centred 1440 column and runs to the
- * viewport edge on a narrow gutter, so from `md` up the lockup sits hard left.
- * Below `md` there is no width to sit hard left in - the tagline alone fills
- * the line - so logo, tagline and description are centred instead, and the
- * type is sized off the viewport so `Performance.` still holds its one line
- * on a 320px phone. The video's currentTime is tweened across the same range,
- * so the footage is driven entirely by the wheel.
- *
- * The scrim is heavy and light-coloured out of necessity. Sampled across the
- * clip, the region under this text swings from luminance 187 down to 56, and
- * the logo is deep crimson (ink luminance 49) which needs a bright ground. The
- * scrim is sized for the darkest frame so the lockup never drops below AA,
- * which does mean the footage reads as a pale wash on the left.
+ * The scrim is light and weighted left: the logo is deep crimson and needs a
+ * bright ground.
  */
 export function Hero() {
-  const rootRef = useRef<HTMLElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const hero = useCopy(HERO, { ZH: HERO_ZH, BM: HERO_BM });
-
-  useEffect(() => {
-    const section = rootRef.current;
-    const video = videoRef.current;
-    if (!section || !video) return;
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const ctx = gsap.context(() => {
-      const words = gsap.utils.toArray<HTMLElement>("[data-word]");
-
-      if (reduced) {
-        gsap.set("[data-hero-logo]", { autoAlpha: 0 });
-        gsap.set(words, { autoAlpha: 1, x: 0 });
-        return;
-      }
-
-      gsap.set(words, { x: TRAVEL });
-
-      const timeline = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          // Two viewports of runway, in pixels. The sheet below begins its
-          // overlap at exactly this point, so the sequence is complete before
-          // anything starts covering it. Re-measured on refresh.
-          end: () => "+=" + window.innerHeight * SEQUENCE,
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      // Driving `currentTime` directly on every tick queues seeks faster than
-      // the decoder can service them, which is what makes scrubbed video stutter.
-      // Instead: tween a plain number, quantise it to a whole frame, and only
-      // issue a seek when the frame actually changes and no seek is in flight.
-      const playhead = { progress: 0 };
-      let lastFrame = -1;
-
-      /* NO VISIBILITY GATE HERE, AND THAT IS A FINDING RATHER THAN AN
-         OMISSION - it was added, measured, and taken out again.
-
-         The theory was that the sheet closes over the hero early, so seeks
-         issued after that are paid for and never seen. Three versions were
-         tried: an IntersectionObserver on the section, one on the <video>, and
-         a bound on the timeline's own `progress`. None of them ever fired,
-         because the premise is wrong on this page - the autoplay does not let
-         the reader leave the hero. Driven to the foot of the document it eases
-         the page back to exactly the end of the hero's scrub and holds it, so
-         the scrub is legitimately still live whenever `currentTime` is moving.
-         What looked like waste in a profile was the sequence doing its job.
-
-         The three guards below are the real protection, and they are enough:
-         quantise to a whole frame, skip if the frame has not changed, skip if a
-         seek is already in flight. If the autoplay is ever changed so the page
-         can settle past the hero, THEN a `timeline.progress() >= 1` check here
-         becomes worth its line - and not before. */
-
-      timeline.to(
-        playhead,
-        {
-          progress: 1,
-          duration: 1,
-          onUpdate: () => {
-            const duration = video.duration || 10;
-            const frame = Math.round(playhead.progress * duration * VIDEO_FPS);
-            if (frame === lastFrame || video.seeking) return;
-            lastFrame = frame;
-            video.currentTime = frame / VIDEO_FPS;
-          },
-        },
-        0,
-      );
-
-      timeline.to(
-        "[data-hero-logo]",
-        { autoAlpha: 0, x: -40, duration: 0.12 },
-        0.1,
-      );
-
-      // The words share one slot, so each must clear out before the next
-      // arrives. Each slot is enter, hold, exit, then a beat of empty space so
-      // the exit is actually seen rather than being masked by the next entry.
-      // A word travels straight through: in from the left, out to the right.
-      words.forEach((word, i) => {
-        const enterAt = FIRST_WORD_AT + i * SLOT;
-
-        // Decelerating in, accelerating out: the word arrives and settles,
-        // then gathers pace as it leaves. Linear on both would read mechanical.
-        timeline.to(
-          word,
-          { autoAlpha: 1, x: 0, duration: ENTER, ease: "power3.out" },
-          enterAt,
-        );
-
-        if (i < words.length - 1) {
-          timeline.to(
-            word,
-            { autoAlpha: 0, x: -TRAVEL, duration: EXIT, ease: "power2.in" },
-            enterAt + ENTER + HOLD,
-          );
-        }
-      });
-
-    }, section);
-
-    // Some browsers refuse to seek a video that has never been played, and the
-    // duration is unknown until metadata lands.
-    const onMetadata = () => ScrollTrigger.refresh();
-    video.addEventListener("loadedmetadata", onMetadata);
-    video
-      .play()
-      .then(() => video.pause())
-      .catch(() => {});
-
-    return () => {
-      video.removeEventListener("loadedmetadata", onMetadata);
-      ctx.revert();
-    };
-  }, []);
+  const { locale } = useLocale();
 
   return (
-    <section
-      ref={rootRef}
-      data-autoplay={SEQUENCE}
-      data-autoplay-speed={SPEED}
-      className="relative h-[500svh]"
-    >
-      {/* `lvh`, where the runway around it is `svh`. The two are doing
-          different jobs: the runway is a length in the scroll chain and has to
-          hold still, but this frame has to COVER, and a box sized to the
-          viewport-with-chrome leaves a strip of page showing along the bottom
-          the moment the URL bar slides away. `lvh` is the viewport at its
-          tallest, so the frame always reaches the foot of the screen; the
-          overflow when the bar is showing costs nothing, because what is
-          inside is `object-cover` and clipped anyway. */}
-      <div className="sticky top-0 h-[100lvh] w-full overflow-hidden">
-        <video
-          ref={videoRef}
-          className="graded absolute inset-0 h-full w-full object-cover"
-          src="/hero-video.mp4"
-          muted
-          playsInline
-          /* `auto`, and it has to stay `auto`.
-
-             At 3.0 MB this is the largest single asset on the site and the
-             obvious candidate for `preload="metadata"` — but this video is not
-             played, it is SCRUBBED: the timeline below drives `currentTime`
-             from scroll position. Seeking needs the byte range already
-             buffered, so anything less than `auto` turns the hero into a
-             stutter on first scroll, or a still frame until the network
-             catches up.
-
-             The cost is real and is worth paying down elsewhere: a `poster`
-             would give the frame something to paint before the first bytes
-             land, and a smaller source would cut what has to be fetched. Both
-             need an asset that does not exist in public/ yet. */
-          preload="auto"
-          aria-hidden
-          tabIndex={-1}
-        />
-
-        {/* Two scrims, because the lockup sits in a different place on each.
-            The `md` one is weighted left, where the text is; the mobile one is
-            centred text running the full width, so it has to hold most of the
-            way across or the tail of `Performance.` lands on bare footage. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 md:hidden"
-          style={{
-            background:
-              "linear-gradient(to right, rgb(244 245 246 / 0.94) 0%, rgb(244 245 246 / 0.92) 60%, rgb(244 245 246 / 0.86) 100%)",
-          }}
-        />
-
-        <div
-          aria-hidden
-          className="absolute inset-0 hidden md:block"
-          style={{
-            background:
-              "linear-gradient(to right, rgb(244 245 246 / 0.94) 0%, rgb(244 245 246 / 0.90) 42%, rgb(244 245 246 / 0.45) 68%, rgb(244 245 246 / 0) 92%)",
-          }}
-        />
-
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full px-6 md:px-8 lg:px-10">
-            {/* The heading is text, not the logo. `data-hero-logo` is driven
-                with `autoAlpha`, which writes visibility: hidden, and that
-                would take an h1 out of the accessibility tree along with it.
-                So the words sit in their own element the timeline never
-                touches, and the logo animates as the picture it is. */}
-            <h1 className="sr-only">{hero.heading}</h1>
-            {/* Below `md` the lockup is centred, and the logo has to land in
-                the same slot the first word arrives in or the handover reads
-                as a jump. So on mobile this block mirrors the tagline block
-                exactly: an invisible line box at the tagline's own size and
-                leading, which the logo centres inside, followed by an
-                invisible copy of the description. Both blocks are then the
-                same height and centred in the same viewport, so the logo and
-                the words share one baseline. From `md` up the mirrors are
-                display:none and the layout is the original left-aligned,
-                viewport-centred one. */}
-            <div className="grid">
-              <p
-                aria-hidden
-                className="invisible col-start-1 row-start-1 text-[min(3.75em,14.5vw)] leading-[0.92] font-medium tracking-tighter md:hidden"
-              >
-                &nbsp;
-              </p>
-              <div data-hero-logo className="col-start-1 row-start-1 flex items-center md:block">
+    <HeroCarousel
+      label={hero.heading}
+      className="h-[100svh] min-h-[560px]"
+      /* The page's real heading. The visible lockup is the logo image, so the
+         words are given to screen readers and crawlers here, outside the
+         slides, where a slide change can never hide them. */
+      heading={<h1 className="sr-only">{hero.heading}</h1>}
+      slides={[
+        {
+          key: "home",
+          /* The product, in the opening shot: a door and a window in a home.
+             `preload`, as the first thing on the page. */
+          media: (
+            <Image
+              src={hero.image}
+              alt={hero.alt}
+              fill
+              sizes="100vw"
+              preload
+              draggable={false}
+              className="graded-hero object-cover"
+            />
+          ),
+          content: (
+            <Lockup
+              mark={
                 <Image
                   src="/logo.png"
-                  /* Decorative: the h1 above states the same thing, and the
-                     brand should not be announced twice. */
+                  /* Decorative: the h1 above states the same thing. */
                   alt=""
                   width={2220}
                   height={174}
-                  /* Was `priority`, deprecated as of Next 16. The LCP element
-                     on the home page — the <video> has no poster, so it is not
-                     an LCP candidate — which is the case that still wants a
-                     real preload rather than merely eager loading. */
                   preload
-                  className="mx-auto h-auto w-full max-w-[520px] md:mx-0 md:max-w-[760px] lg:max-w-[980px]"
+                  draggable={false}
+                  className="h-full w-auto"
                 />
-              </div>
-            </div>
+              }
+              headline={hero.tagline}
+              body={hero.subheading}
+            />
+          ),
+        },
+        ...hero.slides.map((slide) => ({
+          key: slide.href,
+          media: (
+            <Image
+              src={slide.image}
+              alt={slide.alt}
+              fill
+              sizes="100vw"
+              draggable={false}
+              className="graded-hero object-cover"
+            />
+          ),
+          content: (
+            <Lockup
+              mark={
+                <p className="text-sm font-medium tracking-[0.2em] text-ink-2 uppercase md:text-base">
+                  {slide.eyebrow}
+                </p>
+              }
+              headline={slide.title}
+              body={slide.body}
+              cta={{ label: slide.cta, href: localePath(slide.href, locale) }}
+            />
+          ),
+        })),
+      ]}
+    />
+  );
+}
+
+export type HeroSlide = {
+  key: string;
+  /** The background: an image, filling the slide. The scrim goes over it. */
+  media: ReactNode;
+  /** The text block, set left on the site gutter (centred on a phone). */
+  content: ReactNode;
+};
+
+/**
+ * The slider every hero on the site is built on: the home page's at full
+ * screen, the inner pages' (PageHero) at partial height.
+ *
+ * Slides crossfade on a timer that pauses while the pointer or focus is inside
+ * the hero, and does not run at all under reduced motion. Each slide is a
+ * stacked layer; only the current one is visible, and the others are `inert`
+ * so their content is out of the tab order and the accessibility tree. That
+ * is why the page's h1 comes in through `heading`, outside the slides.
+ *
+ * Drag (mouse, pen or touch) changes slide; the text follows the pointer a
+ * little and carries on the way it was thrown as its slide fades.
+ */
+export function HeroCarousel({
+  label,
+  className,
+  heading,
+  slides,
+}: {
+  /** The carousel's accessible name. */
+  label: string;
+  /** Height classes: the home hero is full screen, the inner pages' are not. */
+  className: string;
+  heading?: ReactNode;
+  slides: HeroSlide[];
+}) {
+  const count = slides.length;
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(false);
+  /** Where the current drag started, or null when there is none. */
+  const dragStart = useRef<number | null>(null);
+  /** The live drag distance, for the text to follow. */
+  const [dragX, setDragX] = useState<number | null>(null);
+  /** Where the text was let go on the slide a drag just left, so it carries on
+      from there as it fades instead of snapping back. */
+  const [leaveX, setLeaveX] = useState(0);
+
+  const go = useCallback(
+    (step: number) => setIndex((i) => (i + step + count) % count),
+    [count],
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  // Keyed on `index`, so a manual change restarts the full interval rather
+  // than advancing again a moment later.
+  useEffect(() => {
+    if (paused || reduced || count < 2) return;
+    const id = window.setTimeout(() => go(1), INTERVAL);
+    return () => window.clearTimeout(id);
+  }, [index, paused, reduced, go, count]);
+
+  // Once the slide that was dragged away is fully faded, put its text back.
+  useEffect(() => {
+    if (leaveX === 0) return;
+    const id = window.setTimeout(() => setLeaveX(0), FADE);
+    return () => window.clearTimeout(id);
+  }, [leaveX]);
+
+  const running = !paused && !reduced && dragX === null;
+
+  const endDrag = (commit: boolean) => {
+    if (commit && dragX !== null && Math.abs(dragX) > SWIPE) {
+      setLeaveX(dragX);
+      go(dragX < 0 ? 1 : -1);
+    }
+    dragStart.current = null;
+    setDragX(null);
+  };
+
+  return (
+    <section
+      aria-roledescription="carousel"
+      aria-label={label}
+      /* `touch-action: pan-y` leaves vertical swipes to the page, so a phone
+         can still scroll past the hero; only horizontal drags reach here. */
+      className={`relative ${className} w-full touch-pan-y overflow-hidden bg-surface select-none ${
+        dragX === null ? "cursor-grab" : "cursor-grabbing"
+      }`}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
+      }}
+      /* Mouse, pen and touch alike. A press on a control or a slide's button
+         is left to it, so clicking one is never read as a drag. */
+      onPointerDown={(e) => {
+        if (e.button !== 0 || (e.target as HTMLElement).closest("a, button")) return;
+        dragStart.current = e.clientX;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        if (dragStart.current === null) return;
+        setDragX(e.clientX - dragStart.current);
+      }}
+      onPointerUp={() => endDrag(true)}
+      onPointerCancel={() => endDrag(false)}
+    >
+      {heading}
+
+      {slides.map((slide, i) => (
+        <Slide key={slide.key} active={index === i} label={`${i + 1} / ${count}`}>
+          {slide.media}
+          <Scrim />
+          <SlideBody active={index === i} dragX={dragX} leaveX={leaveX}>
+            {slide.content}
+          </SlideBody>
+        </Slide>
+      ))}
+
+      {/* Controls: the slide count and the progress bars, which fill over the
+          time left on the current slide and double as slide buttons; then the
+          arrows. */}
+      <div className="absolute inset-x-0 bottom-0 px-6 pb-8 md:px-8 md:pb-10 lg:px-10">
+        <div className="flex items-center justify-center gap-4 md:justify-between">
+          <div className="flex items-center gap-4">
             <p
               aria-hidden
-              className="invisible mt-4 text-base leading-relaxed md:hidden"
+              className="text-sm font-medium tracking-tight text-ink tabular-nums"
             >
-              {hero.subheading}
+              {String(index + 1).padStart(2, "0")}
+              <span className="text-ink/40"> / {String(count).padStart(2, "0")}</span>
             </p>
-          </div>
-        </div>
-
-        <div className="pointer-events-none absolute inset-0 flex items-center">
-          <div className="w-full px-6 md:px-8 lg:px-10">
-            {/* One grid cell holds all three, so they overlap exactly and the
-                block keeps a fixed height: the description below never shifts. */}
-            <p className="grid text-center text-[min(3.75em,14.5vw)] leading-[0.92] font-medium tracking-tighter text-ink sm:text-[3.75em] md:text-left md:text-[5.5em] lg:text-[7.5em] xl:text-[12em]">
-              {/* Keyed by position, not by the word itself: the locale
-                  toggle rewrites all three, and keying on the text would
-                  remount the spans and throw away the inline transform the
-                  scrubbed timeline is holding them at. */}
-              {hero.taglineWords.map((word, i) => (
-                <span
-                  key={i}
-                  data-word
-                  className="col-start-1 row-start-1 block whitespace-nowrap"
-                  style={{ opacity: 0, visibility: "hidden" }}
+            <div className="flex items-center gap-2">
+              {slides.map((slide, i) => (
+                <button
+                  key={slide.key}
+                  type="button"
+                  aria-label={`Go to slide ${i + 1}`}
+                  aria-current={i === index}
+                  onClick={() => setIndex(i)}
+                  className="group relative flex h-8 items-center"
                 >
-                  {word}
-                </span>
+                  <span className="relative block h-[3px] w-12 overflow-hidden rounded-full bg-ink/20 md:w-16">
+                    <span
+                      /* Keyed on the index and the pause, so the fill restarts
+                         with the timer: on every change, and on resuming. */
+                      key={i === index ? `on-${index}-${running}` : "off"}
+                      className="absolute inset-y-0 left-0 block rounded-full bg-ink"
+                      style={
+                        i !== index
+                          ? { width: 0 }
+                          : running
+                            ? {
+                                width: "100%",
+                                transformOrigin: "left",
+                                animation: `hero-progress ${INTERVAL}ms linear both`,
+                              }
+                            : { width: "100%" }
+                      }
+                    />
+                  </span>
+                </button>
               ))}
-            </p>
+            </div>
+          </div>
 
-            {/* Constant: on screen from the first frame, never animated, and
-                held in place by the fixed-height word slot above it. */}
-            <p className="mt-4 text-center text-base leading-relaxed text-ink md:text-left md:whitespace-nowrap">
-              {hero.subheading}
-            </p>
+          <div className="hidden items-center gap-2 md:flex">
+            <ArrowButton label="Previous slide" onClick={() => go(-1)}>
+              <CaretLeftIcon size={18} weight="bold" />
+            </ArrowButton>
+            <ArrowButton label="Next slide" onClick={() => go(1)}>
+              <CaretRightIcon size={18} weight="bold" />
+            </ArrowButton>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes hero-progress {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+      `}</style>
     </section>
+  );
+}
+
+function Slide({
+  active,
+  label,
+  children,
+}: {
+  active: boolean;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      role="group"
+      aria-roledescription="slide"
+      aria-label={label}
+      aria-hidden={!active}
+      inert={!active}
+      className="absolute inset-0 transition-opacity ease-in-out"
+      style={{ opacity: active ? 1 : 0, transitionDuration: `${FADE}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** The text block. It fades with its slide and does not move on its own:
+    the only movement is following the pointer during a drag, and, on the
+    slide a drag has just left, carrying on from where it was let go. */
+function SlideBody({
+  active,
+  dragX,
+  leaveX,
+  children,
+}: {
+  active: boolean;
+  dragX: number | null;
+  leaveX: number;
+  children: ReactNode;
+}) {
+  let x = 0;
+  let transition = "translate 400ms var(--ease-out)";
+  if (active && dragX !== null) {
+    x = dragX * DRAG_FOLLOW;
+    transition = "none";
+  } else if (!active) {
+    // Twice the follow distance, eased: the text keeps travelling the way it
+    // was thrown while the slide fades. With no drag, `leaveX` is 0 and the
+    // text simply fades where it is.
+    x = leaveX * DRAG_FOLLOW * 2;
+    transition = leaveX ? `translate ${FADE}ms var(--ease-out)` : "none";
+  }
+
+  return (
+    <div className="absolute inset-0 flex items-center">
+      <div
+        className="w-full px-6 text-center md:px-8 md:text-left lg:px-10"
+        style={{ translate: `${x}px 0`, transition }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One layout for every slide, so they line up exactly as they swap.
+ *
+ * The mark row is a fixed height whatever is in it — the logo on the first
+ * slide, a short eyebrow on the others — and its content sits on the row's
+ * bottom edge. The headline holds one line from `md` up and the body one line
+ * from `lg` up. Below `md` the headline wraps — the tagline to three lines —
+ * so it reserves three lines' height there, and a shorter headline leaves the
+ * space under itself rather than shifting the whole block. The button row is
+ * a fixed height too, and held empty on the first slide, which has no button.
+ * With every row the same height on every slide, each slide's block centres
+ * to the same place, and each row of one sits exactly where the same row of
+ * the others was.
+ */
+function Lockup({
+  mark,
+  headline,
+  body,
+  cta,
+}: {
+  mark: ReactNode;
+  headline: string;
+  body: string;
+  /** Every slide but the first has one. The first holds the same height empty,
+      so its lockup centres to the same place as the others'. */
+  cta?: { label: string; href: string };
+}) {
+  return (
+    <>
+      <div className="mb-6 flex h-6 items-end justify-center md:mb-8 md:h-9 md:justify-start lg:h-11">
+        {mark}
+      </div>
+      <p className="min-h-[3em] text-[clamp(1.875rem,3.5vw,5rem)] leading-[1] font-medium tracking-tighter text-ink md:min-h-0 md:whitespace-nowrap">
+        {headline}
+      </p>
+      <p className="mt-5 text-base leading-relaxed text-ink md:text-lg lg:whitespace-nowrap">
+        {body}
+      </p>
+      <div className="mt-8 flex h-12 items-center justify-center md:justify-start">
+        {cta && (
+          <Link
+            href={cta.href}
+            draggable={false}
+            className="group inline-flex h-12 items-center gap-2 rounded-full bg-ink px-7 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0"
+          >
+            {cta.label}
+            <ArrowRight
+              size={18}
+              className="transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+            />
+          </Link>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** Two scrims, because the text sits differently on each: centred and full
+    width on mobile, weighted left from `md` up. */
+export function Scrim() {
+  return (
+    <>
+      <div
+        aria-hidden
+        className="absolute inset-0 md:hidden"
+        style={{
+          background:
+            "linear-gradient(to right, rgb(244 245 246 / 0.9) 0%, rgb(244 245 246 / 0.8) 60%, rgb(244 245 246 / 0.7) 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 hidden md:block"
+        style={{
+          background:
+            "linear-gradient(to right, rgb(244 245 246 / 0.95) 0%, rgb(244 245 246 / 0.85) 35%, rgb(244 245 246 / 0.45) 58%, rgb(244 245 246 / 0) 80%)",
+        }}
+      />
+    </>
+  );
+}
+
+function ArrowButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="flex size-11 items-center justify-center rounded-full border border-ink/15 bg-white/60 text-ink backdrop-blur transition-[background-color,scale] duration-150 ease-out hover:bg-white active:scale-95"
+    >
+      {children}
+    </button>
   );
 }

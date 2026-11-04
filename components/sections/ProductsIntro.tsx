@@ -2,17 +2,22 @@ import {
   PRODUCTS_PAGE,
   PRODUCTS_PAGE_ZH,
   PRODUCTS_PAGE_BM,
+  MATERIALS,
+  MATERIALS_ZH,
+  MATERIALS_BM,
 } from "@/lib/content";
 import type { Locale } from "@/lib/paths";
-import { PageBanner } from "@/components/sections/PageBanner";
+import { PageHero } from "@/components/sections/PageHero";
 
 /**
- * The banner of /our-products: the shared `PageBanner`, with the extrusions as
- * its figure and the city facade as its overlay.
+ * The opening of /our-products: the inner pages' hero (PageHero), as on
+ * /our-profile and /services, in place of the blue PageBanner it used to
+ * share with /contact.
  *
- * The geometry, the trace and the entry all live in PageBanner, which /contact
- * uses too. What is left here is the two things that belong to this page: which
- * words, and which pictures.
+ * "Our Products" is the eyebrow and the headline is the home hero's Our
+ * Products slide; the range in a sentence is the body. The button glides down
+ * to the material library under the catalogue, which twenty rows would
+ * otherwise leave most readers never reaching.
  */
 export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
   /* A server component, so the locale arrives as a prop rather than through
@@ -29,40 +34,18 @@ export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
     ZH: PRODUCTS_PAGE_ZH,
   };
   const copy = { ...PRODUCTS_PAGE, ...TRANSLATIONS[locale] };
+  const materials = {
+    ...MATERIALS,
+    ...{ EN: {}, BM: MATERIALS_BM, ZH: MATERIALS_ZH }[locale],
+  };
 
   return (
-    <PageBanner
-      heading={copy.heading}
-      subheading={copy.subheading}
-      /* `position` frames the overlay inside the band - see BannerOverlay in
-         PageBanner for the values. Omitted here: this crop is centred. */
-      overlay={{ src: "/office-building-city-closeup.jpg" }}
-      /* Mirrored and pushed right: the extrusions run the wrong way and are
-         meant to bleed off the band's edge. See BannerFigure. */
-      figure={{
-        src: "/products-hero-profiles.png",
-        position: "right center",
-        mirrored: true,
-        /* Where the figure sits vertically. `0%` is the box's own place, which
-           is where this banner was drawn and where it reads best — the
-           extrusions clear the band's foot without hanging into the catalogue
-           below it.
-
-           KEPT AT ZERO RATHER THAN DROPPED, deliberately: the knob is the only
-           thing that moves a figure on this axis, since `position`'s vertical
-           half is inert for a figure fitted by height (see BannerFigure). Left
-           out entirely, the next person wanting to nudge this has to rediscover
-           that. It was briefly 14% to hang the metal past the foot the way
-           /services does; that number is here if it is wanted again, and note
-           it is NOT /services' own 5% — the offset moves the box, and the two
-           PNGs carry different amounts of empty alpha above their subject, so
-           the same value lands the metal in a different place. */
-        offsetY: "0%",
-      }}
-      /* The blue runs to both edges behind it — see `fullBleed` in PageBanner.
-         The figure still bleeds off the right; what it bleeds over is now blue
-         rather than the page's own ground. */
-      fullBleed
+    <PageHero
+      eyebrow={copy.heading}
+      headline={copy.headline}
+      body={copy.subheading}
+      cta={{ label: materials.bannerLink, href: `#${MATERIALS.id}` }}
+      image={{ src: copy.heroImage, alt: copy.heroAlt }}
     />
   );
 }

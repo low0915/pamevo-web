@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ProductCatalog } from "@/components/sections/ProductCatalog";
+import { Materials } from "@/components/sections/Materials";
 import { ProductsIntro } from "@/components/sections/ProductsIntro";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SEO_ZH } from "@/lib/content";
@@ -24,6 +25,9 @@ export default function OurProductsPageZh() {
 
       <ProductsIntro locale="ZH" />
       <ProductCatalog />
+      {/* Glass, finishes and hardware: where a reader who has found a
+          product goes next. See Materials. */}
+      <Materials />
     </main>
   );
 }

@@ -1,6 +1,7 @@
-import { SERVICES, SERVICES_ZH, SERVICES_BM } from "@/lib/content";
+import { WORKMANSHIP } from "@/lib/content";
 import type { Locale } from "@/lib/paths";
-import { PageBanner } from "@/components/sections/PageBanner";
+import { PageHero } from "@/components/sections/PageHero";
+import { Workmanship } from "@/components/sections/Workmanship";
 import { Services } from "@/components/sections/Services";
 import { CoreUspsPanel } from "@/components/sections/CoreUspsPanel";
 import { EngineeringCarousel } from "@/components/sections/EngineeringCarousel";
@@ -34,38 +35,25 @@ import { EngineeringCarousel } from "@/components/sections/EngineeringCarousel";
  * its own heading to one — see the note on `Heading` in that file.
  */
 export function ServicesBody({ locale = "EN" }: { locale?: Locale }) {
-  /* Keyed off a table rather than a chain of ternaries, so a language added to
-     `Locale` and missed here is a type error rather than an English banner over
-     a translated page. That was a real bug on /our-products once. */
-  const TRANSLATIONS: Record<Locale, Partial<typeof SERVICES>> = {
-    EN: {},
-    BM: SERVICES_BM,
-    ZH: SERVICES_ZH,
-  };
-  const copy = { ...SERVICES, ...TRANSLATIONS[locale] };
+  /* The banner's translated heading and lede were read here, from SERVICES
+     and its overlays. The page opens on the workmanship hero now, which is
+     English only until the client's copy is translated, so nothing on this
+     level varies by language; the sections below read the locale themselves.
+     `locale` is still taken so the three routes keep calling this the same
+     way, and so the hero can pick up translations when they exist. */
+  void locale;
 
   return (
     <main className="flex-1">
-      <PageBanner
-        heading={copy.banner.heading}
-        subheading={copy.banner.lede}
-        /* /contact's banner exactly. The pages open the same way as each other
-           on purpose, so what distinguishes them is the words rather than the
-           picture. The second number in `position` moves the showroom up or
-           down inside the band — see BannerOverlay in PageBanner. */
-        overlay={{ src: "/pa mevo_up.png", position: "50% 15%" }}
-        figure={{
-          src: "/Camada 1.png",
-          position: "55% 50%",
-          scale: 1.1,
-          offsetY: "5%",
-        }}
-        /* The blue runs to both edges and the figure stays. `fullBleed` drops
-           the bare ground strip on the right — see its note in PageBanner —
-           which the cut-out no longer needs: it crosses onto the page at the
-           FOOT of the band, where the section lets it spill, rather than
-           sideways onto that strip. */
-        fullBleed
+      {/* The home hero's opening, with the client's workmanship copy, in
+          place of the PageBanner this page used to open on. It carries the
+          page's h1 now. Its button glides down to the cross-section. */}
+      <PageHero
+        eyebrow={WORKMANSHIP.hero.eyebrow}
+        headline={WORKMANSHIP.hero.headline}
+        body={WORKMANSHIP.hero.body}
+        cta={{ label: WORKMANSHIP.hero.cta, href: `#${WORKMANSHIP.section.id}` }}
+        image={{ src: WORKMANSHIP.hero.image, alt: WORKMANSHIP.hero.alt }}
       />
 
       <Services />
@@ -74,6 +62,10 @@ export function ServicesBody({ locale = "EN" }: { locale?: Locale }) {
           between them, and here that change does the work on its own — Services
           ends on the site's near-white and this opens on near-black. */}
       <CoreUspsPanel />
+      {/* How it is built, between why to buy it and how it tests: four of
+          its five components are proven by figures in the carousel below. The
+          hero's button scrolls here. */}
+      <Workmanship />
       {/* The six engineering figures, and what closes the page. WhyChoose stood
           under this and printed the same six a second time as a scrubbed panel;
           the carousel carries them alone now, with the hardware note on its own

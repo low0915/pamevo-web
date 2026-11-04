@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 
 import { Background } from "@/components/sections/Background";
+import { PageHero } from "@/components/sections/PageHero";
+import { ProfileFigures } from "@/components/sections/ProfileFigures";
+import { SalesTeam } from "@/components/sections/SalesTeam";
 import { VisionMission } from "@/components/sections/VisionMission";
 import { JsonLd } from "@/components/site/JsonLd";
-import { SEO_ZH } from "@/lib/content";
+import { SEO_ZH, PROFILE_HERO, PROFILE_HERO_ZH } from "@/lib/content";
 import { pageGraph } from "@/lib/schema";
 import { pageMetadataZh } from "@/lib/seo";
 
@@ -31,11 +34,25 @@ export const metadata: Metadata = pageMetadataZh(SEO_ZH.story);
  * `lang` its root layout renders.
  */
 export default function OurProfilePageZh() {
+  const hero = { ...PROFILE_HERO, ...PROFILE_HERO_ZH };
   return (
     <main className="flex-1">
       <JsonLd data={pageGraph("story", "ZH")} />
-      <Background standalone />
+      {/* The home hero's opening, one slide at inner-page height, ahead of
+          Our Story's own lead. It has the h1 now, so Background is told. */}
+      <PageHero
+        eyebrow={hero.eyebrow}
+        headline={hero.headline}
+        body={hero.body}
+        cta={{ label: hero.cta, href: "#story" }}
+        image={{ src: hero.image, alt: hero.alt, position: "50% 42%" }}
+      />
+      <Background standalone belowHero />
+      {/* The group behind PA Projects, in four figures. See ProfileFigures. */}
+      <ProfileFigures locale="ZH" />
       <VisionMission locale="ZH" />
+      {/* Who to talk to, last. See SalesTeam. */}
+      <SalesTeam locale="ZH" />
     </main>
   );
 }

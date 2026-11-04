@@ -240,6 +240,7 @@ export function PageBanner({
   overlay,
   figure,
   fullBleed = false,
+  link,
 }: {
   heading: string;
   subheading: string;
@@ -276,6 +277,9 @@ export function PageBanner({
    * composition choice, not a consequence.
    */
   fullBleed?: boolean;
+  /** An optional link under the paragraph, to a section further down the
+      page — /our-products uses it for the material library. */
+  link?: { label: string; href: string };
 }) {
   return (
     <section className="relative w-full overflow-x-clip bg-brand">
@@ -510,6 +514,18 @@ export function PageBanner({
           >
             {subheading}
           </p>
+          {link && (
+            <a
+              href={link.href}
+              className="enter-rise group mt-6 inline-flex items-center gap-2 text-sm font-medium text-white underline decoration-white/40 underline-offset-4 transition-colors hover:decoration-white md:ml-[0.677%]"
+              style={ENTER.paragraph}
+            >
+              {link.label}
+              <span aria-hidden className="transition-transform duration-200 group-hover:translate-y-0.5">
+                ↓
+              </span>
+            </a>
+          )}
         </div>
       </div>
     </section>

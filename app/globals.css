@@ -285,7 +285,8 @@ body {
   background: linear-gradient(90deg, rgb(126 133 140 / 0.55), rgb(126 133 140 / 0.05));
 }
 
-/* Shared photographic grade so hero and the project grid read as one set. */
+/* Shared photographic grade so the photographs across the site read as one
+   set. The home hero has a lighter one of its own: `.graded-hero` below. */
 .graded {
   filter: saturate(0.18) contrast(1.07) brightness(1.02);
 }
@@ -410,6 +411,13 @@ body {
   filter: saturate(0.6) contrast(1.05);
 }
 
+/* The home hero's slides: a light grade, 20% off full colour, so the footage
+   and photographs read as colour rather than the near-monochrome `.graded`
+   the rest of the site uses. The scrim over them is unchanged. */
+.graded-hero {
+  filter: saturate(0.8) contrast(1.04);
+}
+
 /* The Services curtain, and the stat band it is pulled up over.
 
    THE SERVICES STACK USED TO LIVE HERE: a `.svc-runway` several screens tall
@@ -444,6 +452,11 @@ body {
      travel, and the 110svh the curtain is pulled up by, with 10svh of slack. */
   .band-runway {
     height: 240svh;
+  }
+  /* The band with nothing after it: one screen for the frame and the 30svh
+     hold, none of the curtain's travel or pull-up. See `last` in Stats.tsx. */
+  .band-runway.band-last {
+    height: 130svh;
   }
   /* No padding: the band is one full-bleed 16:9 composition whose rules run to
      the frame's own edges, and it measures its own insets off that frame. */
@@ -534,6 +547,10 @@ body {
      four fifths of the screen before the page carries on. */
   .band-runway::after {
     height: 110svh;
+  }
+  /* No curtain follows the last band, so no runway for one. */
+  .band-runway.band-last::after {
+    height: 0;
   }
 
   /* The stat band holds its last screenful while Projects rides over it. It

@@ -128,7 +128,15 @@ const RULE_V = `${RULE} lg:h-full lg:w-0 lg:origin-top lg:justify-self-start lg:
  * Below lg the plan is dropped for a single column - the rules come off, each
  * block carries one top border, and the photograph falls to the end.
  */
-export function Stats() {
+/**
+ * `last`: nothing rides up over this band. Its runway is sized for Projects'
+ * curtain — 110svh of it exists only for that pull-up — and its 4em foot is the
+ * gap that curtain accounts for. With Projects gone from the page, both would
+ * be a stretch of scroll where the band sits pinned and nothing happens before
+ * the closing sheet, so `last` cuts the runway to the 30svh hold alone and
+ * drops the foot. See `.band-last` in globals.css.
+ */
+export function Stats({ last = false }: { last?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const intro = useCopy(STATS_INTRO, { ZH: STATS_INTRO_ZH, BM: STATS_INTRO_BM });
@@ -261,7 +269,8 @@ export function Stats() {
               duration: 0.7,
               ease: "power2.out",
               onUpdate: () => {
-                number.textContent = String(Math.round(playhead.value));
+                // Grouped, so 3800 counts up as "3,800" and lands on it.
+                number.textContent = Math.round(playhead.value).toLocaleString("en-US");
               },
             },
             at,
@@ -274,7 +283,11 @@ export function Stats() {
   }, []);
 
   return (
-    <section className="band-runway sheet relative mb-[4em] -mt-[110svh] min-h-[110svh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0">
+    <section
+      className={`band-runway sheet relative -mt-[110svh] min-h-[110svh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0 ${
+        last ? "band-last" : "mb-[4em]"
+      }`}
+    >
       {/* Pinned, so the curtain that follows has something still to ride over.
           A pinned frame is one screen, and globals.css holds this band to it.
           `min-h` is for everywhere else: a curtain has to be at least as tall
@@ -396,7 +409,7 @@ function StatCell({
       <div>
         <p className={`${FIGURE} flex items-baseline font-normal text-ink`}>
           <span data-num={index} className="tabular-nums">
-            {stat.value}
+            {stat.value.toLocaleString("en-US")}
           </span>
           {stat.suffix ? <span>{stat.suffix}</span> : null}
         </p>

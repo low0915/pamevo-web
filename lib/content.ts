@@ -54,12 +54,15 @@ export const NAV: NavItem[] = [
     children: [
       { label: "Window System", href: "/our-products#window" },
       { label: "Door System", href: "/our-products#door" },
+      /* The material library under the catalogue. An element id rather than
+         a filter keyword, so SmoothScroll lands on it like any other anchor. */
+      { label: "Glass, Finishes & Hardware", href: "/our-products#materials" },
     ],
   },
-  /* The label is the client's, singular; the page it opens is headed "Our
-     Projects" by the section it is built from, and the URL follows the section
-     rather than the label. Worth aligning one way or the other. */
-  { label: "Our Project", href: "/our-projects" },
+  /* "Our Project" is hidden from the header for now. The page still exists at
+     /our-projects; to bring the link back, restore
+     `{ label: "Our Project", href: "/our-projects" }` here AND its line in
+     NAV_ZH_LABELS and NAV_BM_LABELS below — they are positional. */
   { label: "Contact Us", href: "/contact" },
 ];
 
@@ -95,8 +98,7 @@ export const NAV: NavItem[] = [
 const NAV_ZH_LABELS: { label: string; children?: string[] }[] = [
   { label: "公司简介", children: ["我们的故事", "愿景与使命", "董事简介"] },
   { label: "服务与特色" },
-  { label: "我们的产品", children: ["窗系统", "门系统"] },
-  { label: "我们的项目" },
+  { label: "我们的产品", children: ["窗系统", "门系统", "玻璃、饰面与五金"] },
   { label: "联系我们" },
 ];
 
@@ -127,8 +129,7 @@ export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
 const NAV_BM_LABELS: { label: string; children?: string[] }[] = [
   { label: "Profil Kami", children: ["Kisah Kami", "Visi & Misi", "Profil Pengarah"] },
   { label: "Perkhidmatan & Ciri" },
-  { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu"] },
-  { label: "Projek Kami" },
+  { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu", "Kaca, Kemasan & Perkakasan"] },
   { label: "Hubungi Kami" },
 ];
 
@@ -426,11 +427,15 @@ export const SEO_BM = {
 };
 
 export const HERO = {
+  /** Set on one line on the hero's first slide. */
   tagline: "Innovation. Performance. Affordable.",
-  /** The tagline split for the scroll-driven reveal. Same words, same order. */
-  taglineWords: ["Innovation.", "Performance.", "Affordable."],
   subheading:
     "Redefining Modern Living Through High-Performance Window & Door Systems",
+  /** The first slide's picture: the product in use, a full-height sliding
+      door opened onto a terrace pool. Replaced the abstract chrome footage
+      (/hero-video.mp4, still in public/), which showed no window or door. */
+  image: "/products/07.jpg",
+  alt: "A full-height aluminium sliding door opened from a living room onto a terrace pool, a fixed window panel beside it",
   /**
    * The page’s real <h1>. What is visible in that slot is the logo image, so
    * the heading text is rendered sr-only beside it: screen readers and
@@ -440,6 +445,67 @@ export const HERO = {
    */
   heading:
     "P.A. Projects x MEVO Malaysia — specialists in aluminium windows and doors",
+  /**
+   * The slides after the first, in order. Each leads somewhere: `href` is the
+   * English path, and the hero prefixes it for /zh and /bm.
+   *
+   * Headlines are kept to one line at hero size, like the tagline on slide 1,
+   * so every slide's lockup is the same height and the slides line up as they
+   * swap. Untranslated for now, so /zh and /bm fall through to this English.
+   * Copy is ours, not the client's. Every claim comes from the company
+   * catalogue (MEVO MALAYSIA PA PROJECTS e-catalogue) or is already on the
+   * site: P.A. Group's in-house smelting, die design, extrusion and anodising
+   * and its 3,800 MT monthly extrusion capacity (catalogue p. 3), "one-stop
+   * custom service" (its cover), twenty systems, tested performance, and the
+   * Shah Alam team.
+   *
+   * MALAYSIA FIRST: the site is PA Projects', the Malaysian company. MEVO is
+   * its partner in China and is named as one, but the slides speak for the
+   * Malaysian side — so no "China's top 10" here, though the catalogue has it.
+   *
+   * "Finished profile", not "finished window": P.A. Group makes the aluminium
+   * profile; the windows and doors are MEVO's, made in China.
+   *
+   * Images are from the site's own library, chosen per destination.
+   */
+  slides: [
+    {
+      eyebrow: "Our Products",
+      title: "Twenty systems. One standard.",
+      body: "Window and door systems supplied, installed and serviced in Malaysia, tested for heat, sound, water and wind.",
+      cta: "View Products",
+      href: "/our-products",
+      image: "/products/05-1.jpg",
+      alt: "A slimline panoramic sliding door framing a lake and mountains from a living room",
+    },
+    {
+      eyebrow: "Our Profile",
+      title: "From billet to finished profile.",
+      body: "Smelted, extruded and anodised in Malaysia by P.A. Group: 3,800 tonnes of profile every month.",
+      cta: "About Us",
+      href: "/our-profile",
+      image: "/pa mevo_up.png",
+      alt: "The MEVO and P.A. Projects showroom and office lit at dusk",
+    },
+    {
+      eyebrow: "Services & Features",
+      title: "One-stop custom service.",
+      body: "Design, customisation, supply, installation and after-sales, from one team.",
+      cta: "Our Services",
+      href: "/services",
+      image: "/services/04.jpg",
+      alt: "An installer fixing a window frame in place with a cordless drill",
+    },
+    {
+      eyebrow: "Support",
+      title: "Here when you need us.",
+      body: "Questions, site visits, servicing and after-sales: talk to our team in Shah Alam.",
+      cta: "Contact Us",
+      href: "/contact",
+      image: "/services/05.jpg",
+      alt: "Close view of hands driving a screw into a window frame",
+    },
+  ],
 };
 
 /**
@@ -454,9 +520,6 @@ export const HERO = {
  */
 export const HERO_ZH: Partial<typeof HERO> = {
   tagline: "创新。性能。实惠。",
-  /** Split on the same three beats the English words are, so the scrubbed
-      hero timeline needs no change: three words in, three words out. */
-  taglineWords: ["创新。", "性能。", "实惠。"],
   subheading: "通过高性能门窗系统重新定义现代生活",
   /**
    * The real <h1>, translated now that Chinese has a URL of its own.
@@ -478,18 +541,12 @@ export const HERO_ZH: Partial<typeof HERO> = {
  * phrase Malaysian housing and property copy actually uses, and this is a line
  * about price on a page selling to homeowners.
  *
- * Split on the same three beats, so the scrubbed hero timeline needs no change:
- * three words in, three words out. The third is two words long in Malay where
- * it is one in English and Chinese — it is the last word, which holds on screen
- * rather than travelling through the slot, so it has the room.
- *
  * `heading` is the real sr-only h1 and is translated, for the reason HERO_ZH
  * gives: on a page with its own URL the h1 is the strongest single statement it
  * makes about what it is.
  */
 export const HERO_BM: Partial<typeof HERO> = {
   tagline: "Inovasi. Prestasi. Mampu Milik.",
-  taglineWords: ["Inovasi.", "Prestasi.", "Mampu Milik."],
   subheading:
     "Mentakrif Semula Kehidupan Moden Melalui Sistem Tingkap & Pintu Berprestasi Tinggi",
   heading:
@@ -567,8 +624,13 @@ export const BACKGROUND = {
   paragraphs: [
     "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over two decades of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group.",
     "Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
-    "In addition, P.A. Group has established an in-depth strategic partnership with MEVO Doors & Windows, a renowned Chinese window and door brand, which serves as our key overseas supplier for window and door products.",
-    "Specialised in the R&D and manufacturing of energy-saving and low-carbon windows and doors, MEVO operates two major operational centres in East China and South China, providing strong support for the Group's global window and door business.",
+    /* [2] and [3] rewritten from the client's copy to tell the partnership
+       from the Malaysian side: the site is PA Projects', and MEVO is named as
+       the partner it is. MEVO's own operations in China (two centres, East and
+       South China) came out; what MEVO makes, energy-saving and low-carbon
+       systems, stayed, because that is what the reader is buying. */
+    "P.A. Group has also formed an in-depth strategic partnership with MEVO Doors & Windows, a renowned window and door brand and our key overseas supplier of energy-saving, low-carbon window and door systems.",
+    "Through PA Projects, those systems are brought to Malaysia: supplied, installed and serviced by our own team from our Shah Alam showroom, from the first consultation to long after handover.",
   ],
 };
 
@@ -614,8 +676,8 @@ export const BACKGROUND_BM: Partial<typeof BACKGROUND> = {
   paragraphs: [
     "Ditubuhkan pada 2004 dan tersenarai di Pasaran Utama Bursa Malaysia pada 2006; P.A. Resources Berhad (P.A. Group) ialah sebuah syarikat Malaysia yang terkemuka dalam aplikasi aluminium seni bina dan perindustrian. Dengan lebih dua dekad kepakaran yang terbukti, Kumpulan ini telah berkembang daripada pengeluar ekstrusi aluminium khusus kepada sebuah kumpulan perindustrian bersepadu menegak.",
     "Operasi kami merangkumi peleburan bilet, reka bentuk alat dan acuan, ekstrusi berpresisi, rawatan permukaan dan penyelesaian tenaga solar. Beribu pejabat di Kuala Selangor, P.A. Group diiktiraf secara meluas di rantau ini kerana kualiti, kepimpinan dan kepakarannya dalam industri aluminium.",
-    "Selain itu, P.A. Group telah menjalin kerjasama strategik yang mendalam dengan MEVO Doors & Windows, sebuah jenama tingkap dan pintu terkemuka dari China, yang menjadi pembekal luar negara utama kami bagi produk tingkap dan pintu.",
-    "Mengkhusus dalam penyelidikan dan pembangunan serta pembuatan tingkap dan pintu jimat tenaga dan rendah karbon, MEVO mengendalikan dua pusat operasi utama di Timur dan Selatan China, yang memberikan sokongan kukuh kepada perniagaan tingkap dan pintu global Kumpulan.",
+    "P.A. Group juga telah menjalin kerjasama strategik yang mendalam dengan MEVO Doors & Windows, jenama tingkap dan pintu yang terkenal dan pembekal luar negara utama kami bagi sistem tingkap dan pintu yang jimat tenaga dan rendah karbon.",
+    "Melalui PA Projects, sistem-sistem ini dibawa ke Malaysia: dibekalkan, dipasang dan diselenggara oleh pasukan kami sendiri dari bilik pameran kami di Shah Alam, dari konsultasi pertama hingga lama selepas serahan.",
   ],
 };
 
@@ -674,7 +736,70 @@ export const PRODUCT_GRID_BM: Partial<typeof PRODUCT_GRID> = {
 };
 
 /**
- * Why Choose MEVO Malaysia. Copy supplied by the client.
+ * The door collection band on the home page, under the product grid. Copy
+ * supplied by the client; English only for now, so /zh and /bm show it in
+ * English but link into their own catalogue.
+ *
+ * Three categories, shown as expanding panels — see DoorCollection.tsx.
+ *
+ * THE IMAGES ARE STAND-INS: the closest catalogue photograph for each category,
+ * until the client supplies one per category. They should be portrait and lit
+ * alike, since the three sit side by side.
+ *
+ * Every category links to the door half of the catalogue: the catalogue filters
+ * by system (window / door) and nothing finer, so there is no "interior doors
+ * only" view to send a category to yet.
+ */
+export const DOOR_COLLECTION = {
+  title: "Explore Our Door Collection",
+  subheading: "Different Styles. Endless Possibilities.",
+  description:
+    "Discover MEVO’s range of modern door systems, thoughtfully designed to complement every space with elegance, functionality, and style.",
+  categories: [
+    {
+      name: "Modern Interior Doors",
+      tagline: "Sleek Design. Timeless Elegance.",
+      description:
+        "Enhance your interior with modern door designs featuring clean lines, elegant finishes, and a sophisticated appearance.",
+      image: "/products/14.jpg",
+      alt: "Black-panelled room with a slim black-framed interior door with an arched glass grille",
+    },
+    {
+      name: "Luxury Double Doors",
+      tagline: "A Grand Entrance. A Lasting Impression.",
+      description:
+        "Make a statement with beautifully crafted double doors that bring a bold, luxurious touch to residential and commercial spaces.",
+      image: "/products/17.jpg",
+      alt: "Dark double entry door with a bronze medallion handle under a columned porch",
+    },
+    {
+      name: "Glass Interior Doors",
+      tagline: "Modern Simplicity. Beautiful Spaces.",
+      description:
+        "Create bright, stylish interiors with elegant glass door designs that balance privacy, natural light, and contemporary aesthetics.",
+      image: "/products/13.jpg",
+      alt: "Black-framed arched French sliding doors in reeded glass closing off a kitchen",
+    },
+  ],
+  explore: "Explore",
+  ctaHeading: "Find the Perfect Door for Your Space",
+  ctaBody:
+    "From modern simplicity to luxurious statement designs, explore door solutions that reflect your style.",
+  ctaButton: "View All Doors",
+  href: "/our-products#door",
+};
+
+export const DOOR_COLLECTION_ZH: Partial<typeof DOOR_COLLECTION> = {
+  href: "/zh/our-products#door",
+};
+
+export const DOOR_COLLECTION_BM: Partial<typeof DOOR_COLLECTION> = {
+  href: "/bm/our-products#door",
+};
+
+/**
+ * Why Choose PA Projects. Copy supplied by the client; the company name was
+ * "MEVO Malaysia" and is PA Projects now, the Malaysian company the site is for.
  * One background photograph; the panel advances through three parts.
  * No heading by design.
  */
@@ -685,7 +810,7 @@ export const WHY_CHOOSE = {
   },
   parts: [
     {
-      title: "Why Choose MEVO Malaysia",
+      title: "Why Choose PA Projects",
       items: [
         "First Local Manufacturer & Seller of MEVO Systems",
         "Trusted & Reliable After-Sales Services",
@@ -709,17 +834,26 @@ export const WHY_CHOOSE = {
         "Professional MEVO Installation Team & After-Sales Service",
       ],
     },
+    /* The client's benefit names are the card titles; the test grades they
+       rest on are each card's description (`bodies`, parallel to `items`).
+       Air and water share a card, as the client lists them, so there are
+       five. */
     {
-      title: "6 Engineering Performance Highlights",
+      title: "5 Engineering Performance Highlights",
       items: [
-        "Wind Resistance Level 9 (≥5000 Pa = 500 kgf/m²)",
-        "Air Tightness Level 8 (-67% to 96% Airflow Leakage)",
-        "Water Tightness Level 6 (≥700 Pa)",
-        "Thermal Insulation Level 8 (1.5 W/m²K, CRF ≥75)",
-        "Acoustic Insulation Level 5 (Sound Reduction 43dB)",
-        "Superior German Hardware System",
+        "Sound Reduction",
+        "Heat Reduction",
+        "Air & Water Tightness",
+        "Safety & Security",
+        "Wind Resistance",
       ],
-      note: "German Roto Hardware System, HOPPE Handle, TECTUS / TPEO Transmission Rod System",
+      bodies: [
+        ["Acoustic Insulation Level 5 (Sound Reduction 43dB)"],
+        ["Thermal Insulation Level 8 (1.5 W/m²K, CRF ≥75)"],
+        ["Air Tightness Level 8 (-67% to 96% Airflow Leakage)", "Water Tightness Level 6 (≥700 Pa)"],
+        ["Superior German Hardware System: German Roto Hardware System, HOPPE Handle, TECTUS / TPEO Transmission Rod System"],
+        ["Wind Resistance Level 9 (≥5000 Pa = 500 kgf/m²)"],
+      ],
     },
   ],
   tagline: [
@@ -765,7 +899,7 @@ export const WHY_CHOOSE = {
 export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
   parts: [
     {
-      title: "为什么选择 MEVO Malaysia",
+      title: "为什么选择 PA Projects",
       items: [
         "本地首家制造商与销售商",
         "值得信赖、可靠的售后服务",
@@ -789,16 +923,15 @@ export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
       ],
     },
     {
-      title: "6 大工程性能亮点",
-      items: [
-        "抗风压性能 Level 9（≥5000 Pa = 500 kgf/m²）",
-        "气密性能 Level 8（空气渗漏减少 67% 至 96%）",
-        "水密性能 Level 6（≥700 Pa）",
-        "隔热性能 Level 8（1.5 W/m²K，CRF ≥75）",
-        "隔音性能 Level 5（降噪达 43dB）",
-        "卓越德国五金系统",
+      title: "5 大工程性能亮点",
+      items: ["隔音降噪", "隔热降温", "气密与水密", "安全防护", "抗风压"],
+      bodies: [
+        ["隔音性能 Level 5（降噪达 43dB）"],
+        ["隔热性能 Level 8（1.5 W/m²K，CRF ≥75）"],
+        ["气密性能 Level 8（空气渗漏减少 67% 至 96%）", "水密性能 Level 6（≥700 Pa）"],
+        ["卓越德国五金系统：德国 Roto 五金系统、HOPPE 把手、TECTUS / TPEO 传动杆系统"],
+        ["抗风压性能 Level 9（≥5000 Pa = 500 kgf/m²）"],
       ],
-      note: "德国 Roto 五金系统、HOPPE 把手、TECTUS / TPEO 传动杆系统",
     },
   ],
   tagline: ["我们的承诺很简单：", "创新与性能交融。尊贵生活，触手可及。"],
@@ -831,7 +964,7 @@ export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
 export const WHY_CHOOSE_BM: Partial<typeof WHY_CHOOSE> = {
   parts: [
     {
-      title: "Mengapa Pilih MEVO Malaysia",
+      title: "Mengapa Pilih PA Projects",
       items: [
         "Pengeluar & Penjual Tempatan Pertama Sistem MEVO",
         "Perkhidmatan Selepas Jualan yang Dipercayai & Boleh Diharap",
@@ -855,16 +988,21 @@ export const WHY_CHOOSE_BM: Partial<typeof WHY_CHOOSE> = {
       ],
     },
     {
-      title: "6 Sorotan Prestasi Kejuruteraan",
+      title: "5 Sorotan Prestasi Kejuruteraan",
       items: [
-        "Rintangan Angin Level 9 (≥5000 Pa = 500 kgf/m²)",
-        "Kalis Udara Level 8 (Kebocoran Aliran Udara -67% hingga 96%)",
-        "Kalis Air Level 6 (≥700 Pa)",
-        "Penebat Haba Level 8 (1.5 W/m²K, CRF ≥75)",
-        "Penebat Akustik Level 5 (Pengurangan Bunyi 43dB)",
-        "Sistem Perkakasan Jerman Unggul",
+        "Pengurangan Bunyi",
+        "Pengurangan Haba",
+        "Kalis Udara & Air",
+        "Keselamatan & Sekuriti",
+        "Rintangan Angin",
       ],
-      note: "Sistem Perkakasan Roto Jerman, Pemegang HOPPE, Sistem Rod Transmisi TECTUS / TPEO",
+      bodies: [
+        ["Penebat Akustik Level 5 (Pengurangan Bunyi 43dB)"],
+        ["Penebat Haba Level 8 (1.5 W/m²K, CRF ≥75)"],
+        ["Kalis Udara Level 8 (Kebocoran Aliran Udara -67% hingga 96%)", "Kalis Air Level 6 (≥700 Pa)"],
+        ["Sistem Perkakasan Jerman Unggul: Sistem Perkakasan Roto Jerman, Pemegang HOPPE, Sistem Rod Transmisi TECTUS / TPEO"],
+        ["Rintangan Angin Level 9 (≥5000 Pa = 500 kgf/m²)"],
+      ],
     },
   ],
   tagline: [
@@ -929,7 +1067,7 @@ export const STATS_INTRO = {
 export const STATS = [
   {
     value: 20,
-    suffix: "",
+    suffix: "+",
     label: "Years of Experience",
     body: "Extruding aluminium since 2004, listed on Bursa Malaysia's Main Market since 2006.",
   },
@@ -946,16 +1084,16 @@ export const STATS = [
     body: "Residential units, commercial buildings and high-rise facades completed across Malaysia.",
   },
   {
-    value: 98,
-    suffix: "%",
-    /* The supporting line adds no claim of its own. "Stay after handover" is
-       the retention figure restated, and the local team that installed the
-       system is STATS_INTRO's own "a service team that stays involved after
-       handover" and the Mission's localised delivery, installation and
-       after-sales. Written in the same register as the three above it: terse,
-       factual, and never in the first person. */
-    label: "Customer Retention",
-    body: "Owners who stay after handover, looked after by the same local team that installed the system.",
+    value: 3800,
+    /* A no-break space, not a plain one: the figure and its unit are flex
+       items, and a flex item's leading space is dropped. */
+    suffix: " MT",
+    /* Replaced Customer Retention (98%), which said much what Satisfied
+       Clients beside it says. This is P.A. Group's own, Malaysian figure, from
+       the company catalogue (p. 3): 11 automated extrusion lines, 4 to 8 inch,
+       with a monthly capacity of 3,800 metric tonnes. */
+    label: "Extruded Monthly",
+    body: "Aluminium profile from P.A. Group's 11 automated extrusion lines in Malaysia.",
   },
 ];
 
@@ -989,8 +1127,8 @@ const STATS_TEXT_ZH = [
     body: "已在马来西亚完成住宅单位、商业建筑与高层幕墙工程。",
   },
   {
-    label: "客户留存率",
-    body: "交付后仍持续合作的业主，由安装该系统的同一支本地团队继续跟进。",
+    label: "月挤压产能",
+    body: "P.A. Group 在马来西亚的 11 条自动化挤压生产线所产铝型材。",
   },
 ];
 
@@ -1027,8 +1165,8 @@ const STATS_TEXT_BM = [
     body: "Unit kediaman, bangunan komersial dan fasad bangunan tinggi disiapkan di seluruh Malaysia.",
   },
   {
-    label: "Pengekalan Pelanggan",
-    body: "Pemilik yang kekal selepas serahan, dijaga oleh pasukan tempatan yang sama yang memasang sistem tersebut.",
+    label: "Kapasiti Penyemperitan Bulanan",
+    body: "Profil aluminium daripada 11 barisan penyemperitan automatik P.A. Group di Malaysia.",
   },
 ];
 
@@ -1074,7 +1212,7 @@ export const VISION = {
   blocks: [
     {
       label: "Vision",
-      body: "To redefine premium living in Malaysia by making high-end quality accessible to more people at an affordable price — backed by a 15-year product warranty and lifetime maintenance.",
+      body: "To redefine premium living in Malaysia by making high-end quality accessible to more people at an affordable price — backed by up to 15 years of product warranty and lifetime maintenance.",
       image: {
         src: "/pexels-masoodaslami-29585706.jpg",
         alt: "The white structural lattice of a contemporary building, seen from below against the sky",
@@ -1097,7 +1235,7 @@ export const VISION = {
 const VISION_TEXT_ZH = [
   {
     label: "愿景",
-    body: "重新定义马来西亚的优质生活 —— 以可负担的价格，让更多人享有高端品质，并以 15 年产品保固与终身维护作为支撑。",
+    body: "重新定义马来西亚的优质生活 —— 以可负担的价格，让更多人享有高端品质，并以长达 15 年的产品保固与终身维护作为支撑。",
   },
   {
     label: "使命",
@@ -1118,7 +1256,7 @@ export const VISION_ZH: Partial<typeof VISION> = {
 const VISION_TEXT_BM = [
   {
     label: "Visi",
-    body: "Mentakrif semula kehidupan premium di Malaysia dengan menjadikan kualiti tinggi mampu dimiliki lebih ramai orang pada harga berpatutan — disokong jaminan produk 15 tahun dan penyelenggaraan sepanjang hayat.",
+    body: "Mentakrif semula kehidupan premium di Malaysia dengan menjadikan kualiti tinggi mampu dimiliki lebih ramai orang pada harga berpatutan — disokong jaminan produk sehingga 15 tahun dan penyelenggaraan sepanjang hayat.",
   },
   {
     label: "Misi",
@@ -1133,6 +1271,218 @@ export const VISION_BM: Partial<typeof VISION> = {
   },
   blocks: VISION.blocks.map((block, i) => ({ ...block, ...VISION_TEXT_BM[i] })),
 };
+/**
+ * The second slide of the /contact hero (ContactHero): an invitation to the
+ * Shah Alam showroom, its button opening the address in Google Maps.
+ *
+ * The address is FOOTER.address, short of its "(Showroom & Office)" tag. The
+ * map link searches for that address rather than pointing at a place ID, so
+ * it needs nothing from the client to work; swap in the showroom's own Maps
+ * link when there is one, and the pin will carry the business name.
+ *
+ * The picture is the showroom and office at dusk, the one the home hero's
+ * Our Profile slide uses.
+ */
+const SHOWROOM_ADDRESS =
+  "19, Jalan 15/23, Taman Perindustrian Tiong Nam, Seksyen 15, 40200 Shah Alam, Selangor";
+
+export const SHOWROOM_SLIDE = {
+  eyebrow: "Visit Our Showroom",
+  headline: "See it before you decide.",
+  body: SHOWROOM_ADDRESS,
+  cta: "Get Directions",
+  href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `PA Projects, ${SHOWROOM_ADDRESS}, Malaysia`,
+  )}`,
+  image: "/pa mevo_up.png",
+  alt: "The PA Projects showroom and office in Shah Alam, lit at dusk",
+};
+
+export const SHOWROOM_SLIDE_ZH: Partial<typeof SHOWROOM_SLIDE> = {
+  eyebrow: "参观展厅",
+  headline: "亲眼看过，再做决定。",
+  cta: "获取路线",
+};
+
+/** The first slide of the /contact hero: the page's own. Its headline and
+    lede are CONTACT.banner's, per locale; this is what that copy lacked. */
+export const CONTACT_HERO = {
+  eyebrow: "Contact Us",
+  image: "/products/12.jpg",
+  alt: "A living room opening onto a forest and mountains through a run of full-height aluminium sliding doors",
+};
+
+export const CONTACT_HERO_ZH: Partial<typeof CONTACT_HERO> = { eyebrow: "联系我们" };
+export const CONTACT_HERO_BM: Partial<typeof CONTACT_HERO> = { eyebrow: "Hubungi Kami" };
+
+export const SHOWROOM_SLIDE_BM: Partial<typeof SHOWROOM_SLIDE> = {
+  eyebrow: "Kunjungi Bilik Pameran Kami",
+  headline: "Lihat dahulu, baru memilih.",
+  cta: "Dapatkan Arah",
+};
+
+/**
+ * The opening of /our-profile: the home hero's layout, on one slide, at the
+ * partial height every inner page's hero now takes. Its button glides down to
+ * Our Story (#story).
+ *
+ * The image is the company e-catalogue's cover render - a slimline panoramic
+ * slider opening a pavilion onto a courtyard - extracted from the PDF at its
+ * full 2800x4624. It is a render of the product, not a photograph of a place,
+ * which is why it is used here rather than the catalogue's HQ photograph (see
+ * PROFILE_FIGURES on why that one is waiting).
+ *
+ * Malaysia first: the lines are about P.A. Group, the Malaysian company. ZH and
+ * BM are ours, and want a native speaker's eye.
+ */
+export const PROFILE_HERO = {
+  eyebrow: "Our Profile",
+  headline: ["Malaysian aluminium,", "since 2004."],
+  body: "PA Projects is part of P.A. Group: an aluminium manufacturer in Malaysia since 2004, listed on Bursa Malaysia since 2006.",
+  cta: "Our Story",
+  image: "/profile-hero.jpg",
+  alt: "A slimline panoramic sliding door opening a pavilion onto a courtyard pool, two people and a car beyond the glass",
+};
+
+export const PROFILE_HERO_ZH: Partial<typeof PROFILE_HERO> = {
+  eyebrow: "公司简介",
+  headline: ["马来西亚铝业，", "始于 2004 年。"],
+  body: "PA Projects 隶属 P.A. Group：自 2004 年起在马来西亚从事铝材制造，并于 2006 年在马来西亚交易所上市。",
+  cta: "我们的故事",
+};
+
+export const PROFILE_HERO_BM: Partial<typeof PROFILE_HERO> = {
+  eyebrow: "Profil Kami",
+  headline: ["Aluminium Malaysia,", "sejak 2004."],
+  body: "PA Projects ialah sebahagian daripada P.A. Group: pengeluar aluminium di Malaysia sejak 2004, tersenarai di Bursa Malaysia sejak 2006.",
+  cta: "Kisah Kami",
+};
+
+/**
+ * The last section of /our-profile: the sales team, as an edge-to-edge grid of
+ * portraits, each revealing the person's name, role, languages and contact on
+ * hover (or tap, on a touch screen).
+ *
+ * PLACEHOLDERS, ALL OF IT BELOW THE LEDE. The people are stand-ins until the
+ * client sends, for each: name, role or area, a portrait (4:5, matched
+ * background and crop across the team), the languages they speak, and the
+ * number to reach them on. Until a member has a `photo`, the card draws a
+ * neutral silhouette; until they have their own `whatsapp`/`phone`, the
+ * buttons fall back to the company's (WHATSAPP, FOOTER).
+ *
+ * `languages` are shown as written, in every locale: "EN", "中文", "BM" read
+ * the same to every reader of the page.
+ */
+export type SalesMember = {
+  name: string;
+  role: string;
+  languages: string[];
+  photo?: string;
+  /** wa.me / api.whatsapp.com link; the company's when absent. */
+  whatsapp?: string;
+  /** tel: link; the company's when absent. */
+  phone?: string;
+};
+
+export const SALES_TEAM = {
+  eyebrow: "Our Sales Team",
+  heading: "The people behind your project.",
+  lede: "From the first site visit to the final fitting, you deal with the same team. Talk to us in English, Mandarin or Bahasa Malaysia.",
+  whatsapp: "WhatsApp",
+  call: "Call",
+  members: [
+    { name: "Team Member", role: "Sales Manager", languages: ["EN", "中文", "BM"] },
+    { name: "Team Member", role: "Sales Consultant, Residential", languages: ["EN", "中文"] },
+    { name: "Team Member", role: "Sales Consultant, Projects", languages: ["EN", "BM"] },
+    { name: "Team Member", role: "Showroom Consultant", languages: ["BM", "EN"] },
+  ] as SalesMember[],
+};
+
+export const SALES_TEAM_ZH: Partial<typeof SALES_TEAM> = {
+  eyebrow: "销售团队",
+  heading: "为您的项目把关的人。",
+  lede: "从第一次现场勘察到最后的安装，始终由同一支团队为您服务。英语、华语或马来语，皆可沟通。",
+  whatsapp: "WhatsApp",
+  call: "致电",
+};
+
+export const SALES_TEAM_BM: Partial<typeof SALES_TEAM> = {
+  eyebrow: "Pasukan Jualan Kami",
+  heading: "Orang di sebalik projek anda.",
+  lede: "Dari lawatan tapak pertama hingga pemasangan akhir, anda berurusan dengan pasukan yang sama. Bercakap dengan kami dalam bahasa Inggeris, Mandarin atau Bahasa Malaysia.",
+  whatsapp: "WhatsApp",
+  call: "Hubungi",
+};
+
+/**
+ * The trust band on /our-profile, between Our Story and Vision & Mission: the
+ * group behind PA Projects, in four figures a homeowner can weigh.
+ *
+ * Every figure is from the company e-catalogue (pp. 2-3) and is P.A. Group's
+ * own, in Malaysia. The MEVO factory figures in the same pages (150,000 m2,
+ * 500+ stores, 500,000 households) are left out: they are China's, and this
+ * band is about the Malaysian side.
+ *
+ * ISO 9001:2015 IS NOT HERE, though it was planned. Its only source is the sign
+ * in the catalogue's HQ photograph, and that photograph carries an AI-generator
+ * watermark - so it waits for the client to confirm the certification.
+ *
+ * The labels are written for a buyer rather than an investor: what the figure
+ * means for the window, not the furnace. ZH and BM are ours, and want a
+ * native speaker's eye.
+ */
+export const PROFILE_FIGURES = {
+  eyebrow: "The Group Behind PA Projects",
+  heading: "A listed Malaysian manufacturer, behind every system.",
+  lede: "PA Projects is backed by P.A. Group's own aluminium operations in Malaysia: smelting, extrusion and surface treatment, under one publicly listed group.",
+  figures: [
+    {
+      value: "2006",
+      label: "Listed on Bursa Malaysia",
+      body: "On the Main Market since 2006, with accounts and governance open to public scrutiny.",
+    },
+    {
+      value: "11",
+      label: "Automated extrusion lines",
+      body: "4- to 8-inch presses at P.A. Group's own plant, for precise, complex profiles.",
+    },
+    {
+      value: "3,800 MT",
+      label: "Extruded every month",
+      body: "Finished in-house on two anodising lines, for weather resistance and a lasting surface.",
+    },
+    {
+      value: "4,000 MT",
+      label: "Billet smelted every month",
+      body: "From our own furnaces, the composition checked by spectrometer before it is extruded.",
+    },
+  ],
+};
+
+export const PROFILE_FIGURES_ZH: Partial<typeof PROFILE_FIGURES> = {
+  eyebrow: "PA Projects 背后的集团",
+  heading: "一家上市的马来西亚制造商，支撑每一套系统。",
+  lede: "PA Projects 背后是 P.A. Group 在马来西亚自有的铝业运营：熔铸、挤压与表面处理，同属一家上市集团。",
+  figures: [
+    { value: "2006", label: "马来西亚交易所上市", body: "自 2006 年起于主板上市，财务与治理接受公众监督。" },
+    { value: "11", label: "条自动化挤压生产线", body: "P.A. Group 自有工厂的 4 至 8 英寸挤压机，精准生产复杂型材。" },
+    { value: "3,800 MT", label: "每月挤压产能", body: "由两条阳极氧化生产线在厂内完成表面处理，耐候且持久。" },
+    { value: "4,000 MT", label: "每月铝锭熔铸", body: "出自自有熔炉，挤压前以光谱仪检测成分。" },
+  ],
+};
+
+export const PROFILE_FIGURES_BM: Partial<typeof PROFILE_FIGURES> = {
+  eyebrow: "Kumpulan di Sebalik PA Projects",
+  heading: "Pengeluar Malaysia yang tersenarai, di sebalik setiap sistem.",
+  lede: "PA Projects disokong oleh operasi aluminium P.A. Group sendiri di Malaysia: peleburan, penyemperitan dan rawatan permukaan, di bawah satu kumpulan tersenarai awam.",
+  figures: [
+    { value: "2006", label: "Tersenarai di Bursa Malaysia", body: "Di Pasaran Utama sejak 2006, dengan akaun dan tadbir urus terbuka kepada penelitian awam." },
+    { value: "11", label: "Barisan penyemperitan automatik", body: "Mesin 4 hingga 8 inci di kilang P.A. Group sendiri, untuk profil kompleks yang tepat." },
+    { value: "3,800 MT", label: "Disemperit setiap bulan", body: "Disiapkan di kilang sendiri pada dua barisan anodisasi, untuk ketahanan cuaca dan permukaan yang tahan lama." },
+    { value: "4,000 MT", label: "Bilet dilebur setiap bulan", body: "Daripada relau kami sendiri, komposisinya diperiksa dengan spektrometer sebelum disemperit." },
+  ],
+};
+
 
 
 /**
@@ -1600,6 +1950,261 @@ export const SERVICES_BM: Partial<typeof SERVICES> = {
   heading: "Perkhidmatan Kami",
   items: SERVICES.items.map((item, i) => ({ ...item, ...SERVICES_ITEMS_BM[i] })),
 };
+/**
+ * MEVO Workmanship. Copy supplied by the client for /services, used as given;
+ * "PA Projects Marketing" in their draft is written "PA Projects", as the
+ * client asked and as the company catalogue prints it. English only for now, so /zh and /bm fall
+ * through to it.
+ *
+ * `hero` is the page's opening slide; `section` is the annotated cross-section
+ * further down the page, which the hero's button scrolls to.
+ *
+ * Each component's `spec` comes from the company catalogue (MEVO MALAYSIA
+ * PA PROJECTS company profile e-catalogue): "3.0mm wall thickness exceeding
+ * Chinese national standard", "imported German hardware & window handles",
+ * the 46.6 topological thermal break strip and "three-layer sealing design"
+ * from its Core Functional Advantages page, the DM30/75's six sealing layers,
+ * the "injected corner cleats" of its Professional Craftsmanship panel, and
+ * the DM15's 15mm interlock.
+ */
+export const WORKMANSHIP = {
+  hero: {
+    eyebrow: "MEVO Workmanship",
+    /** Three short sentences, set one to a line. */
+    headline: ["Precision Engineering.", "Exceptional Quality.", "Built to Last."],
+    body: "At PA Projects, we believe that exceptional doors and windows begin with exceptional workmanship.",
+    cta: "Explore the Engineering",
+    image: "/pexels-francesca-cinel-114872900-9729590.jpg",
+    alt: "Two hands holding an aluminium window profile, the chambers of its section visible at the cut end",
+  },
+  section: {
+    /** The fragment the hero's button scrolls to. */
+    id: "workmanship",
+    heading: "Experience the Art of Precision Engineering",
+    paragraphs: [
+      "Discover the engineering behind MEVO’s advanced door and window systems, where every detail is thoughtfully designed to deliver strength, durability, smooth functionality, and modern aesthetics.",
+      "From precision-engineered aluminium profiles to carefully selected hardware and innovative sealing technologies, every component plays an essential role in creating reliable, high-performance systems.",
+    ],
+    subheading: "Engineered with Precision. Designed for Everyday Living.",
+    lead: "Explore the craftsmanship behind MEVO’s door and window solutions, featuring:",
+    /** In the order the numbers run round the drawing. */
+    components: [
+      {
+        title: "Advanced Aluminium Profiles",
+        body: "Engineered for structural strength, durability, and contemporary design.",
+        spec: "Wall thickness up to 3.0mm",
+      },
+      {
+        title: "Precision Hardware Systems",
+        body: "Designed to support smooth operation and dependable performance.",
+        spec: "Imported German hardware & handles",
+      },
+      {
+        title: "Thermal Break Technology",
+        body: "Developed to help improve thermal insulation and indoor comfort.",
+        spec: "46.6mm insulation strip",
+      },
+      {
+        title: "Innovative Sealing Systems",
+        body: "Designed to enhance sealing performance against external elements.",
+        spec: "Three-layer sealing, up to six on sliding doors",
+      },
+      {
+        title: "Modern Engineering & Design",
+        body: "Combining functionality, attention to detail, and refined aesthetics.",
+        spec: "Injected corner cleats, 15mm slim interlock",
+      },
+    ],
+    exterior: "Exterior",
+    interior: "Interior",
+    /** The drawing's caption, for anyone who cannot see it. */
+    figureLabel:
+      "Cross-section of a thermally broken aluminium window, with its profile chambers, hardware, thermal break strips, seals and glazing marked one to five",
+  },
+};
+/**
+ * MEVO Global Strategic Partners: the material library at the foot of
+ * /our-products. Intro copy supplied by the client, used as given ("PA
+ * Projects Marketing" written "PA Projects", as on /services).
+ *
+ * THE SAMPLES ARE OURS, NOT THE CLIENT'S, and every one marked `placeholder`
+ * is a stand-in to be replaced once the client supplies their real range of
+ * finishes. Low-E and laminated insulated glass are confirmed by the company
+ * catalogue (pp. 4-5), as are Hörmann and VBH hardware (DM27, DM112). The rest are taken from the product catalogue
+ * (lib/products.ts), which names each of them against a real product:
+ *
+ *   - Insulated glass: the 5+20A+5 black-spacer units of the DM122/132.
+ *     Reeded glass: the DM16 French sliding door.
+ *   - Faux copper and raw aluminium: the Fortune Deer entry door's surface.
+ *     Phantom Grey: the Bamboo Rhyme door's handle. Fluorocarbon: RUYUDESHUI.
+ *   - Every hardware brand is one a product's spec names. That they are
+ *     "strategic partners" rather than suppliers is the client's claim and
+ *     theirs to confirm before launch; names are set as text, not logos,
+ *     until the client supplies logo files they have the right to use.
+ *
+ * `swatch` is a colour for the finish chips and the tinted profile drawing.
+ * `image` is a photograph from the site's own library for the large view.
+ * `product` names where the sample can be seen in the catalogue, by slug.
+ */
+export const MATERIALS = {
+  id: "materials",
+  eyebrow: "MEVO Global Strategic Partners",
+  heading: "Quality Components. Trusted Partnerships. Exceptional Performance.",
+  paragraphs: [
+    "At PA Projects, we believe quality begins with the right components.",
+    "MEVO brings together carefully selected materials, premium hardware, and innovative technologies to deliver reliable, stylish, and high-performance door and window systems.",
+    "Explore our range of glass options, aluminium finishes, and hardware solutions designed to complement every space.",
+  ],
+  partnersLabel: "Hardware partners",
+  closing: "Discover Quality in Every Detail.",
+  cta: { label: "Book a Showroom Visit", href: "/contact" },
+  /** The small link in the /our-products banner that scrolls here. */
+  bannerLink: "Glass, Finishes & Hardware",
+  seenIn: "Seen in",
+  placeholderTag: "Placeholder",
+  tabs: [
+    {
+      key: "glass",
+      label: "Glass",
+      samples: [
+        {
+          name: "Insulated Glass",
+          body: "Two panes sealed around a black aluminium spacer, such as the 5mm + 20A + 5mm units of the DM122/132, for insulation against heat and sound.",
+          image: "/products/10.jpg",
+          product: "dm122-132-side-pressure-sliding-window",
+        },
+        {
+          name: "Reeded Glass",
+          body: "Fluted glass that lets light through while softening the view, for interior doors where privacy matters.",
+          image: "/products/13.jpg",
+          product: "dm16-french-interior-sliding-door",
+        },
+        {
+          name: "Low-E Glass",
+          body: "Premium-grade coated glass for intense sun: Low-E thermal insulation, sun protection and UV resistance, where ordinary glass absorbs heat and glares.",
+          image: "/products/06.jpg",
+        },
+        {
+          name: "Laminated Insulated Glass",
+          body: "Laminated, double-glazed units for superior sound insulation, sealed on three layers around the sash.",
+          image: "/products/01.jpg",
+        },
+      ],
+    },
+    {
+      key: "finishes",
+      label: "Aluminium Finishes",
+      samples: [
+        {
+          name: "Matte Black",
+          body: "A placeholder for the client's standard dark finish. Replace with the real name and coating.",
+          swatch: "#1b1d20",
+          placeholder: true,
+        },
+        {
+          name: "Phantom Grey",
+          body: "A soft, deep grey, as on the Bamboo Rhyme entry door's handle.",
+          swatch: "#5d6268",
+          product: "bamboo-rhyme-entry-door",
+        },
+        {
+          name: "Raw Aluminium",
+          body: "The metal's own silver, left visible, as on the Fortune Deer entry door.",
+          swatch: "#c3c8ce",
+          product: "fortune-deer-entry-door",
+        },
+        {
+          name: "Faux Copper",
+          body: "A warm copper-toned surface treatment, spliced with raw aluminium on the Fortune Deer entry door.",
+          swatch: "#9a6646",
+          product: "fortune-deer-entry-door",
+        },
+        {
+          name: "Fluorocarbon Coating",
+          body: "An ultra-weather-resistant coating for surfaces that face the sun and rain, as on the RUYUDESHUI entry door.",
+          swatch: "#3c4148",
+          product: "ruyudeshui-entry-door",
+        },
+      ],
+    },
+    {
+      key: "hardware",
+      label: "Hardware",
+      samples: [
+        {
+          name: "ROTO",
+          body: "German hardware, including the lift-and-slide system on MEVO's large sliding doors.",
+          image: "/products/12.jpg",
+          product: "dm30-75-sliding-door",
+        },
+        {
+          name: "HOPPE",
+          body: "German handles, fitted across MEVO's casement and fixed window systems.",
+          image: "/products/01.jpg",
+          product: "dm106-casement-window",
+        },
+        {
+          name: "KESENBERG",
+          body: "German hardware for MEVO's bifold doors, on high-load double-row rollers.",
+          image: "/products/11.png",
+          product: "dm80-biofold-door",
+        },
+        {
+          name: "Wehag",
+          body: "German hardware for awning windows, with 30° micro-ventilation.",
+          image: "/products/08.jpg",
+          product: "dm122-awning-window",
+        },
+        {
+          name: "Hörmann",
+          body: "German anti-theft hook locks on the slimline panoramic door.",
+          image: "/products/05-1.jpg",
+          product: "dm27-slimline-panoramic-door",
+        },
+        {
+          name: "VBH",
+          body: "German hardware handles, with Mtuosi, on the DM112 window and door system.",
+          image: "/products/07.jpg",
+          product: "dm112-windowdoor-system",
+        },
+        {
+          name: "OPK",
+          body: "The Perfect System multi-linkage hardware behind MEVO's ultra-slim interior sliding doors.",
+          image: "/products/15.jpg",
+          product: "dm10-interior-sliding-door",
+        },
+        {
+          name: "HYUNDAI",
+          body: "The South Korean motorised system on the slimline panoramic door.",
+          image: "/products/05-1.jpg",
+          product: "dm27-slimline-panoramic-door",
+        },
+      ],
+    },
+  ] as MaterialTab[],
+};
+
+export type MaterialSample = {
+  name: string;
+  body: string;
+  image?: string;
+  swatch?: string;
+  product?: string;
+  placeholder?: boolean;
+};
+export type MaterialTab = { key: string; label: string; samples: MaterialSample[] };
+
+export const MATERIALS_ZH: Partial<typeof MATERIALS> = {
+  bannerLink: "玻璃、饰面与五金",
+  cta: { label: "预约参观展厅", href: "/contact" },
+};
+
+export const MATERIALS_BM: Partial<typeof MATERIALS> = {
+  bannerLink: "Kaca, Kemasan & Perkakasan",
+  cta: { label: "Tempah Lawatan Bilik Pameran", href: "/contact" },
+};
+
+
 
 export const PROJECTS = {
   heading: "Our Projects",
@@ -2136,6 +2741,11 @@ export const PRIVACY = {
 
 export const PRODUCTS_PAGE = {
   heading: "Our Products",
+  /** The hero's headline (PageHero), under `heading` as its eyebrow: the
+      home hero's Our Products slide, one phrase to a line. */
+  headline: ["Twenty systems.", "One standard."],
+  heroImage: "/products/15.jpg",
+  heroAlt: "A run of full-height aluminium sliding doors opening a living room onto a rocky shore and the sea",
   /** The banner's one paragraph, under the heading.
 
       It is the whole range in a sentence — the four product families, who they
@@ -2189,6 +2799,7 @@ export const PRODUCTS_PAGE = {
  */
 export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
   heading: "我们的产品",
+  headline: ["二十套系统，", "同一标准。"],
   subheading:
     "平开窗与推拉窗、全景门与入户门，以及阳光房——为马来西亚各地的住宅项目、商业建筑与高层幕墙供应并安装。背靠二十年铝型材挤压经验与持证安装团队。",
   catalogLabel: "产品目录",
@@ -2220,6 +2831,7 @@ export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
  */
 export const PRODUCTS_PAGE_BM: Partial<typeof PRODUCTS_PAGE> = {
   heading: "Produk Kami",
+  headline: ["Dua puluh sistem.", "Satu standard."],
   subheading:
     "Tingkap casement dan gelangsar, pintu panoramik dan pintu utama, serta sunroom — dibekal dan dipasang untuk projek kediaman, bangunan komersial dan fasad bangunan tinggi di seluruh Malaysia. Disokong oleh dua dekad ekstrusi aluminium dan pasukan pemasangan bertauliah.",
   catalogLabel: "Katalog produk",

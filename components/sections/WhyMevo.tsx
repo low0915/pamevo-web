@@ -62,171 +62,183 @@ function Arrow({
   return <path d={`M${x - 4 * d} ${y - 3.5} L${x} ${y} L${x - 4 * d} ${y + 3.5}`} {...w} />;
 }
 
+/** Section hatching at 45 degrees, the way a drawing marks cut material.
+    Defined inside each mark that uses it, under its own id, because every mark
+    is its own <svg>; the lines take the mark's ink through `currentColor`. */
+function Hatch({ id, gap = 3 }: { id: string; gap?: number }) {
+  return (
+    <defs>
+      <pattern id={id} width={gap} height={gap} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2={gap} stroke="currentColor" strokeWidth="0.6" />
+      </pattern>
+    </defs>
+  );
+}
+
+/** The warranty scale: fifteen years along the 152 units between the
+    extension lines, one tick a year. */
+const YEAR = 152 / 15;
+const YEARS = Array.from({ length: 14 }, (_, i) => 8 + (i + 1) * YEAR);
+
 /**
  * The four marks, in the order the claims arrive.
  *
  * These are drawings of the claim, not icons for it. A padlock or a handshake
  * would say "warranty" and "service" in the vocabulary of every other website;
- * a dimension line and a return arc say it in the vocabulary of the drawings
- * this company works from, which is the one the enquiry band and the product
- * band are already speaking.
+ * a section, a plan and a dimension line say it in the vocabulary of the
+ * drawings this company works from, which is the one the enquiry band and the
+ * product band are already speaking.
  *
- * REDRAWN FROM GENERATED CONCEPTS, and authored rather than embedded. Four
- * reference images were generated for these four claims and the useful part of
- * each was taken into SVG by hand: the isometric billet, the die drawn as a
- * section with an aperture, the glazing rebate in the profile, the doubled
- * outlines that make a frame read as a frame, the tall return sweep, and the
- * two-height tick scale. Nothing is a traced import - the references informed
- * the drawing, they are not in the build.
+ * REDRAWN, second pass. The first set was boxes and arrows standing in for
+ * the things they named; these draw the things. Each is a real convention of a
+ * technical drawing - a cylinder with its hidden half dashed, a hatched section,
+ * an elevation with its sash and handle, the plan symbol for a casement swing,
+ * a dimension with architectural ticks - so each reads as a drawing first and a
+ * meaning second.
  *
- * Vector, and staying vector: the marks are one flat colour each at any size,
- * they take their inks from the same tokens the rest of the section does, they
- * cost no request, and a raster illustration on a white card would have been
- * the one pictorial thing in a section made entirely of ruled lines.
+ * Every mark is still two or three `data-step` groups, drawn in turn when its
+ * card lands, and still one ink at two weights. Detail a 40px phone mark cannot
+ * carry is `max-sm:hidden`.
  *
  * `aria-hidden` on every one of them: the claim is set as text directly
  * underneath, and a description here would say it a second time.
  */
 const MARKS: ReactNode[] = [
-  /* Manufacture: billet, die, profile — the extrusion line, left to right.
-     Extents 4-166 x 8-48: no dead quadrant.
+  /* Manufacture: billet, die, profile - the extrusion line, left to right,
+     and the thing P.A. Group actually does.
 
-     The billet is isometric with its hidden edges dashed, which is the one
-     solid object in the sequence and the only place three dimensions appear.
-     The die is drawn as a section and hatched at 45 degrees on both jambs,
-     because that is what a section through solid material is; the aperture
-     through it is the shape the third step comes out as. The profile carries
-     two chambers, the web between them, a thermal break dashed across it and a
-     glazing rebate cut into its right edge with the glass drawn in. */
+     The billet is a cylinder seen from its forward end, the far half of its
+     back face dashed. The die is cut through and hatched, its aperture the
+     opening the metal is pushed through. What comes out is drawn as what it
+     becomes: a thermally broken window profile in section - exterior and
+     interior chambers, the two polyamide strips that join them hatched as a
+     second material, and the double glazing standing on it in its seals. */
   <g key="manufacture" className="text-brand" stroke="currentColor">
+    <Hatch id="why-hatch-die" />
+    <Hatch id="why-hatch-strip" gap={2} />
     <g data-step>
-      <path d="M4 18 H24 V38 H4 Z" {...HAIR} />
-      <path d="M4 18 L9 13 H29 L24 18" {...HAIR} />
-      <path d="M24 18 L29 13 V33 L24 38" {...HAIR} />
-      <path d="M9 13 V33 M9 33 H24" strokeDasharray="1.5 2" {...HAIR} />
-      <path d="M32 28 H42" {...HAIR} />
-      <Arrow x={44} y={28} w={HAIR} />
+      <path d="M8 15 H30 M8 41 H30" {...HAIR} />
+      <ellipse cx="30" cy="28" rx="4.5" ry="13" {...HAIR} />
+      <path d="M8 15 A4.5 13 0 0 0 8 41" {...HAIR} />
+      <path d="M8 15 A4.5 13 0 0 1 8 41" strokeDasharray="1.5 2" {...HAIR} />
+      <path d="M38 28 H45" {...HAIR} />
+      <Arrow x={47} y={28} w={HAIR} />
     </g>
 
     <g data-step>
-      <path d="M50 8 H72 V48 H50 Z" {...LINE} />
-      <path d="M56 20 H66 V36 H56 Z" {...LINE} />
-      <g className="max-sm:hidden">
-        <path
-          d="M50 14 L56 8 M50 22 L56 16 M50 30 L56 24 M50 38 L56 32 M50 46 L56 40"
-          {...HAIR}
-        />
-        <path
-          d="M66 14 L72 8 M66 22 L72 16 M66 30 L72 24 M66 38 L72 32 M66 46 L72 40"
-          {...HAIR}
-        />
-      </g>
-      <path d="M78 28 H88" {...HAIR} />
-      <Arrow x={90} y={28} w={HAIR} />
+      <path d="M52 7 H66 V21 H52 Z M52 35 H66 V49 H52 Z" {...LINE} fill="url(#why-hatch-die)" />
+      {/* The extrusion axis through the aperture, chain-dotted as a centre
+          line is: it is what joins the die to the billet and the arrows, so
+          the two jambs read as one die cut through rather than two blocks. */}
+      <path d="M48 28 H70" strokeDasharray="5 1.5 1 1.5" {...HAIR} />
+      <path d="M52 21 H66 M52 35 H66" {...HAIR} />
+      <path d="M72 28 H79" {...HAIR} />
+      <Arrow x={81} y={28} w={HAIR} />
     </g>
 
     <g data-step>
-      <path d="M98 8 H166 V18 H150 V26 H166 V48 H98 Z" {...LINE} />
-      <path d="M104 14 H126 V42 H104 Z" {...LINE} />
-      <path d="M132 30 H144 V42 H132 Z" {...LINE} />
-      <path d="M132 14 H144 V24 H132 Z" {...LINE} />
-      <path d="M126 28 H132" {...LINE} />
+      {/* Exterior chamber, split by its internal wall. */}
+      <path d="M88 22 H114 V48 H88 Z" {...LINE} />
+      <path d="M101 22 V48" {...HAIR} />
+      {/* Interior chamber, with its webs. */}
+      <path d="M124 22 H162 V48 H124 Z" {...LINE} />
+      <path d="M143 22 V48 M124 35 H143" {...HAIR} />
+      {/* The thermal break: the only thing joining the two. */}
+      <path d="M114 24 H124 V28 H114 Z M114 42 H124 V46 H114 Z" {...LINE} fill="url(#why-hatch-strip)" />
+      {/* The glazing: two panes, a spacer, and a seal either side. */}
       <g className="max-sm:hidden">
-        <path d="M126 22 H132" strokeDasharray="1.5 2" {...HAIR} />
-        <path d="M155 19 V25 M159 19 V25" {...HAIR} />
+        <path d="M110 4 H113 V20 H110 Z M125 4 H128 V20 H125 Z" {...HAIR} />
+        <path d="M113 17 H125" {...HAIR} />
+        <path d="M107.5 16 H110 V22 H107.5 Z M128 16 H130.5 V22 H128 Z" fill="currentColor" stroke="none" />
       </g>
     </g>
   </g>,
 
-  /* After-sales: the unit goes out along the lower line, past two stations, and
-     the service comes back over the top of it to the same frame it started
-     from. Extents 4-152 x 4-46.
+  /* After-sales: the window, the visits that follow it out into its life, and
+     the service that keeps coming back to it.
 
-     The window is doubled with a mullion between the lights so it reads as a
-     frame rather than a square. The outgoing path is dashed and ticked at the
-     points along it where somebody does something; the return is the one solid
-     sweep in the drawing, which is what makes it the subject. */
+     The window is a casement in elevation - frame, two sashes, handle - so it
+     reads as a window and not a square. Its life runs out along the dashed
+     line past three stations, delivery, installation and maintenance; the last
+     is filled, because it is the one that keeps happening. The return is the
+     one solid sweep in the drawing, which is what makes it the subject. */
   <g key="after-sales" className="text-brand" stroke="currentColor">
     <g data-step>
-      <path d="M4 14 H40 V46 H4 Z" {...LINE} />
-      <path d="M8 18 H36 V42 H8 Z" {...HAIR} />
-      <path d="M22 18 V42" {...HAIR} />
+      <path d="M6 10 H42 V50 H6 Z" {...LINE} />
+      <path d="M10 14 H22 V46 H10 Z M26 14 H38 V46 H26 Z" {...HAIR} />
+      <path d="M29 27 V34" {...LINE} />
     </g>
 
     <g data-step>
-      <path d="M46 42 H138" strokeDasharray="3 4" {...HAIR} />
+      <path d="M48 44 H142" strokeDasharray="3 3" {...HAIR} />
+      <Arrow x={146} y={44} w={HAIR} />
       <g className="max-sm:hidden">
-        <path d="M76 38 V46 M108 38 V46" {...HAIR} />
+        <circle cx="74" cy="44" r="3" {...HAIR} fill="#fff" />
+        <circle cx="100" cy="44" r="3" {...HAIR} fill="#fff" />
       </g>
-      <Arrow x={140} y={42} w={HAIR} />
+      <circle cx="126" cy="44" r="3.2" fill="currentColor" stroke="none" />
     </g>
 
     <g data-step>
-      <path d="M146 34 C 146 6, 64 2, 46 20" {...LINE} />
-      <Arrow x={45} y={21} back />
+      <path d="M152 38 C 154 6, 72 0, 50 20" {...LINE} />
+      <Arrow x={49} y={21} back />
     </g>
   </g>,
 
-  /* Try before you buy: closed, half open, open — the swing drawn as three
-     positions rather than two, which is what turns a symbol into a sequence.
-     Extents 4-164 x 6-50.
+  /* Try before you buy: the casement in plan, the symbol an architect draws
+     for a sash that swings.
 
-     Only the last position carries the heavy weight and the doubled outline:
-     the first two are where the sash HAS been, and dashed hairline is what this
-     drawing has always used to say that. The arc and its arrowhead close the
-     movement past the open position. */
+     The wall is cut and hatched either side of the opening. The sash is drawn
+     where it has been - closed in the opening, then half open - in dashed
+     hairline, and where it is now, standing open on its hinge, at the heavy
+     weight. The quarter-circle is the swing itself: the movement a reader can
+     only judge by doing it, which is the point of the showroom. */
   <g key="try" className="text-brand" stroke="currentColor">
+    <Hatch id="why-hatch-wall" />
     <g data-step>
-      <path d="M4 6 H40 V50 H4 Z" strokeDasharray="3 3" {...HAIR} />
-      <path d="M8 10 H36 V46 H8 Z" strokeDasharray="3 3" {...HAIR} />
+      <path d="M20 44 H52 V52 H20 Z M92 44 H148 V52 H92 Z" {...LINE} fill="url(#why-hatch-wall)" />
     </g>
 
     <g data-step>
-      <path d="M48 6 L82 12 V44 L48 50 Z" strokeDasharray="3 3" {...HAIR} />
+      <path d="M52 41 H92 V44 H52 Z" strokeDasharray="2 2" {...HAIR} />
+      <path d="M52 44 L80.3 15.7" strokeDasharray="2 2" {...HAIR} />
     </g>
 
     <g data-step>
-      <path d="M90 6 L132 17 V39 L90 50 Z" {...LINE} />
-      <path d="M94 11 L128 21 V35 L94 45 Z" {...HAIR} />
-      <path d="M88 24 V32" {...LINE} />
-      <path d="M140 14 A 18 18 0 0 1 140 42" strokeDasharray="3 3" {...HAIR} />
-      <Arrow x={140} y={42} back w={HAIR} />
+      <path d="M52 4 H55 V44 H52 Z" {...LINE} />
+      <path d="M92 44 A40 40 0 0 0 52 4" strokeDasharray="3 3" {...HAIR} />
+      <circle cx="52" cy="44" r="1.6" fill="currentColor" stroke="none" />
     </g>
   </g>,
 
-  /* Warranty: a measured span, read left to right like every other mark here.
-     Extents 6-162 x 8-48.
+  /* Warranty: the term, dimensioned.
 
-     Extension lines at both ends, arrowheads turned outward against them, and
-     the span ticked off between at two heights — majors every 26 units with
-     minors between. An evenly spaced row of identical marks is a pattern; a
-     scale is what makes the line a measurement, and duration is the one thing
-     a fifteen-year term actually is. The minors come off below `sm`, where the
-     mark is 40px wide and 24 of them would be a grey band rather than a
-     scale. */
+     Extension lines at both ends and a dimension line between them, closed
+     with the 45-degree ticks an architectural drawing uses instead of
+     arrowheads. The span is divided into fifteen equal steps, one a year, the
+     fifth and tenth drawn long - so the line is not a decoration of a
+     duration but a measurement of this one. The yearly ticks come off below
+     `sm`, where fourteen of them would be a grey band rather than a scale. */
   <g key="warranty" className="text-brand" stroke="currentColor">
     <g data-step>
-      <path d="M6 8 V48 M162 8 V48" {...HAIR} />
+      <path d="M8 8 V48 M160 8 V48" {...HAIR} />
     </g>
 
     <g data-step>
-      <path d="M6 28 H162" {...LINE} />
-      <Arrow x={11} y={28} back />
-      <Arrow x={157} y={28} />
+      <path d="M8 28 H160" {...LINE} />
+      <path d="M4 32 L12 24 M156 32 L164 24" {...LINE} />
     </g>
 
     <g data-step>
-      <path d="M32 20 V36 M58 20 V36 M84 20 V36 M110 20 V36 M136 20 V36" {...LINE} />
       <g className="max-sm:hidden">
-        <path
-          d="M19 24 V32 M45 24 V32 M71 24 V32 M97 24 V32 M123 24 V32 M149 24 V32"
-          {...HAIR}
-        />
-        <path
-          d="M25.5 25.5 V30.5 M38.5 25.5 V30.5 M51.5 25.5 V30.5 M64.5 25.5 V30.5 M77.5 25.5 V30.5 M90.5 25.5 V30.5 M103.5 25.5 V30.5 M116.5 25.5 V30.5 M129.5 25.5 V30.5 M142.5 25.5 V30.5 M155.5 25.5 V30.5"
-          {...HAIR}
-        />
+        {YEARS.map((x, i) =>
+          i === 4 || i === 9 ? null : <path key={x} d={`M${x.toFixed(2)} 24 V32`} {...HAIR} />,
+        )}
       </g>
+      <path
+        d={`M${(8 + 5 * YEAR).toFixed(2)} 18 V38 M${(8 + 10 * YEAR).toFixed(2)} 18 V38`}
+        {...LINE}
+      />
     </g>
   </g>,
 ];
@@ -445,7 +457,7 @@ export function WhyMevo() {
        * rather than exactly with it - the same margin every other handover on
        * this page is built on.
        */
-      className="relative h-[250svh] motion-reduce:h-auto"
+      className="sheet relative -mt-[110svh] h-[250svh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
     >
       {/*
         `lvh` in the frame's own measures where the runway is `svh`, for the
@@ -564,7 +576,9 @@ export function WhyMevo() {
               the fit the foot-pin does not do on its own - the frame grows, and
               this is what makes the rows grow with it. */}
           <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_repeat(4,minmax(min-content,1fr))] gap-2.5 sm:grid-cols-2 sm:grid-rows-[auto_minmax(min-content,1fr)_minmax(min-content,1fr)] lg:grid-cols-3 lg:grid-rows-2 lg:gap-x-3 lg:gap-y-2.5 motion-reduce:min-h-0 motion-reduce:flex-none">
-            {/* The standfirst, in the cell the panels leave open. Two
+            {/* The standfirst, in the cell the panels leave open, and the
+                full width of it from `lg` (it was held to 34ch, about two
+                thirds of the cell). Two
                 paragraphs, as drawn: what the company sells and who does the
                 work, then what that is for. `ink-2` on the page ground is
                 5.60:1 and the promise lifted to full ink is 16.9:1, so both
@@ -573,13 +587,13 @@ export function WhyMevo() {
             <div className="sm:col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-1 lg:self-start">
               <p
                 data-lede
-                className="max-w-[42ch] text-[clamp(0.8125rem,1.7svh,1rem)] leading-[1.45] text-ink-2 lg:max-w-[34ch] lg:leading-[1.5]"
+                className="max-w-[42ch] text-[clamp(0.8125rem,1.7svh,1rem)] leading-[1.45] text-ink-2 lg:max-w-none lg:pr-6 lg:leading-[1.5]"
               >
                 {lede}
               </p>
               <p
                 data-lede
-                className="mt-[max(0.375rem,1.2svh)] max-w-[42ch] text-[clamp(0.8125rem,1.7svh,1rem)] leading-[1.45] text-ink-2 lg:max-w-[34ch] lg:leading-[1.5]"
+                className="mt-[max(0.375rem,1.2svh)] max-w-[42ch] text-[clamp(0.8125rem,1.7svh,1rem)] leading-[1.45] text-ink-2 lg:max-w-none lg:pr-6 lg:leading-[1.5]"
               >
                 {commitment} <span className="text-ink">{promise}</span>
               </p>
@@ -614,7 +628,7 @@ export function WhyMevo() {
                   /* Beside the text on a phone and above it from `sm` up. Held
                      to its own ratio either way, so the stroke stays
                      proportional to the sheet it is drawn on. */
-                  className="h-auto w-10 shrink-0 sm:w-full sm:max-w-[min(200px,20svh)]"
+                  className="h-auto w-10 shrink-0 sm:w-full sm:max-w-[min(300px,30svh)]"
                 >
                   {MARKS[i]}
                 </svg>

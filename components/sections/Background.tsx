@@ -69,12 +69,23 @@ const SPEED = 0.25;
  * because on its own page it is the page's own title rather than one band's
  * label under the hero's.
  */
-export function Background({ standalone = false }: { standalone?: boolean }) {
+/**
+ * `belowHero`: on its own page, a PageHero above it carries the `h1`, so the
+ * section's heading goes back to the `h2` it is on the home page. A page has
+ * one h1, and it is the first thing on it.
+ */
+export function Background({
+  standalone = false,
+  belowHero = false,
+}: {
+  standalone?: boolean;
+  belowHero?: boolean;
+}) {
   const rootRef = useRef<HTMLElement>(null);
   /* Capitalised because JSX reads a lowercase tag name as a literal element and
      an uppercase one as a component; this has to be the former, held in a
      variable, so the case is doing work rather than following a convention. */
-  const Heading = standalone ? "h1" : "h2";
+  const Heading = standalone && !belowHero ? "h1" : "h2";
   const background = useCopy(BACKGROUND, { ZH: BACKGROUND_ZH, BM: BACKGROUND_BM });
 
   useEffect(() => {
@@ -402,12 +413,13 @@ export function Background({ standalone = false }: { standalone?: boolean }) {
                   to itself; the offset lives one level up where nothing
                   competes for it. */}
               <div className="translate-y-[10%]">
-                <h1
+                {/* `Heading`, not a literal h1: below a PageHero it is the h2. */}
+                <Heading
                   data-lead="heading"
                   className="max-w-[16ch] text-[clamp(2rem,9.5vw,3.25rem)] leading-[1.02] font-medium tracking-tighter text-white md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]"
                 >
                   {background.heading}
-                </h1>
+                </Heading>
               </div>
 
               {/* The stage: bar behind, cut-out in front. The bar is FIRST in

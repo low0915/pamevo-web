@@ -1,8 +1,8 @@
 import { Hero } from "@/components/sections/Hero";
 import { WhyMevo } from "@/components/sections/WhyMevo";
 import { ProductGrid } from "@/components/sections/ProductGrid";
+import { DoorCollection } from "@/components/sections/DoorCollection";
 import { Stats } from "@/components/sections/Stats";
-import { Projects } from "@/components/sections/Projects";
 import { JsonLd } from "@/components/site/JsonLd";
 import { homeGraph } from "@/lib/schema";
 import type { Locale } from "@/lib/locale";
@@ -26,23 +26,18 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
       <Hero />
 
       {/*
-        The hero is pinned; everything below rides over it as one sheet.
-        `bg-bg` is required, not decorative: several sections are transparent
-        and would otherwise show the pinned hero through them.
+        The hero is a plain full-screen slider in normal flow now, so the sheet
+        starts directly below it rather than being pulled up over a pinned
+        runway. `bg-bg` is still required: several sections are transparent.
         `flow-root` stops the first section's top margin collapsing out of the
         sheet, and unlike `overflow-hidden` it does not break the sticky
         heading inside the Background section.
       */}
       <div
-        className="relative -mt-[200svh] flow-root bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
+        className="relative flow-root bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
         style={{ zIndex: Z.raised }}
       >
-        {/* The band the sheet opens on, and so the one that covers the hero
-            while it is still pinned. The sheet is pulled up 200svh and the hero
-            holds until 400svh, which leaves 100svh of rise to cover — hence a
-            frame the full height of the viewport, and an opaque one.
-
-            WhyMevo now holds a runway of its own as well, which it did not
+        {/* The band the sheet opens on. WhyMevo holds a runway of its own as well, which it did not
             before: 250svh around a 100lvh sticky frame, so ProductGrid can be
             pulled up 110svh and drawn over it the way Background is drawn over
             ProductGrid and Stats over Background. That makes the whole page one
@@ -52,6 +47,13 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             The two runways are the same 250svh on purpose: this pair is the
             only place on the page where one section is both ends of a handover,
             and matching them is what keeps that legible. */}
+        {/* Product first: the door collection opens the sheet, so the second
+            thing on the page is what is sold, and Why Choose follows as the
+            reason to buy it here. The door collection took WhyMevo's place at
+            the head of the chain (no pull-up, runway only), and WhyMevo took
+            the door collection's (pulled up 110svh over its pinned frame).
+            Both hold the same 250svh runway, so the chain is unchanged. */}
+        <DoorCollection />
         <WhyMevo />
         <ProductGrid />
         {/* WhyChoose stood here and Services stood between Stats and Projects.
@@ -87,8 +89,11 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             this stack, the thing to check is that whatever sits above a curtain
             still holds a pinned frame for at least the 110svh it is pulled
             over. */}
-        <Stats />
-        <Projects />
+        {/* Projects is hidden from the home page for now (and from the nav:
+            /our-projects still exists). It was the curtain over Stats, so Stats
+            is now the last band and is told so — see `last` in Stats.tsx. To
+            bring it back: render <Projects /> here again and drop `last`. */}
+        <Stats last />
       </div>
     </main>
   );

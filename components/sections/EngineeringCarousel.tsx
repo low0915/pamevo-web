@@ -43,33 +43,26 @@ const ENGINEERING_PART = USP_PART + 1;
  */
 const SLIDES = [
   {
-    src: "/engineering/wind-2.jpg",
-    alt: "A glazed high-rise seen from street level, its curtain wall rising into an overcast sky",
-  },
-  {
-    src: "/engineering/air-2.jpg",
-    alt: "Curtain-wall facade of a glazed tower rising into pale sky, its glazing joints running unbroken up the elevation",
-  },
-  {
-    src: "/engineering/water-3.jpg",
-    alt: "Heavy rain running in sheets down a pane of glass, beaded across the surface and blurring what lies beyond it",
+    src: "/engineering/acoustic.jpg",
+    alt: "A quiet, softly lit living room beside a large glazed door",
   },
   {
     src: "/engineering/thermal.jpg",
     alt: "Glazed office towers at dusk seen from above, their windows lit",
   },
   {
-    src: "/engineering/acoustic.jpg",
-    alt: "A quiet, softly lit living room beside a large glazed door",
+    src: "/engineering/water-3.jpg",
+    alt: "Heavy rain running in sheets down a pane of glass, beaded across the surface and blurring what lies beyond it",
   },
   {
     src: "/scratched-metal-background.jpg",
     alt: "Brushed aluminium surface raking across the frame, the grain of the milled metal catching the light",
   },
+  {
+    src: "/engineering/wind-2.jpg",
+    alt: "A glazed high-rise seen from street level, its curtain wall rising into an overcast sky",
+  },
 ];
-
-/** The index of the hardware figure, which is the one the note belongs under. */
-const LAST = SLIDES.length - 1;
 
 /**
  * How many times the six are laid end to end in the DOM.
@@ -169,10 +162,11 @@ export function EngineeringCarousel() {
      three files. If a language ever disagrees about the count, `items[i]` and
      `SLIDES[i]` stop describing the same figure — so fall back to the list the
      table was written against rather than captioning the wrong photograph. */
-  const items =
-    part.items.length === SLIDES.length
-      ? part.items
-      : WHY_CHOOSE.parts[ENGINEERING_PART].items;
+  const source =
+    part.items.length === SLIDES.length ? part : WHY_CHOOSE.parts[ENGINEERING_PART];
+  const items = source.items;
+  /* Each card's description: the test grades behind the benefit in its title. */
+  const bodies = source.bodies ?? [];
 
   const [active, setActive] = useState(0);
   const trackRef = useRef<HTMLUListElement>(null);
@@ -605,39 +599,25 @@ export function EngineeringCarousel() {
                     />
                   </div>
 
-                  {/* The point. It sits under the picture rather than over it:
-                    these are figures with units in them, and a caption laid over
-                    a photograph has to fight whatever is behind it at exactly
-                    the moment it is being read as data. */}
-                  <figcaption className="mt-5 text-lg leading-snug font-medium tracking-tight text-ink md:text-xl lg:text-2xl">
-                    {item}
+                  {/* The benefit, and under it the grades that back it. It
+                    sits under the picture rather than over it: the description
+                    has figures and units in it, and a caption laid over a
+                    photograph has to fight whatever is behind it.
 
-                    {/* THE HARDWARE NOTE, ON THE ONE CARD IT BELONGS TO.
-                        
-                        Read from `part.note` rather than written out here, and
-                        that is the whole reason this is three lines instead of
-                        one. The sentence already exists in `lib/content.ts` —
-                        and so do its Chinese and Malay translations. Pasting the
-                        English into the component would render the same card in
-                        English on all three locales, and would leave a second
-                        copy of a claim about named suppliers to drift out of
-                        step with the first.
-
-                        `LAST` picks the card it hangs off. The note is about the
-                        German hardware system, which is the last of the six, so
-                        it is keyed to that position rather than matched against
-                        the caption text — the text is translated and a string
-                        comparison would silently stop matching in Chinese.
-                        
-                        `block` on a span inside the figcaption rather than a
-                        `<p>`: a paragraph is not valid inside a figcaption's
-                        phrasing content, and the caption is one thought — the
-                        claim and what backs it — rather than two. */}
-                    {i === LAST && part.note ? (
-                      <span className="mt-2 block text-xs leading-relaxed font-normal tracking-normal text-ink-3 italic md:text-sm">
-                        {part.note}
+                    `block` spans rather than `<p>`s: a paragraph is not valid
+                    inside a figcaption's phrasing content. */}
+                  <figcaption className="mt-5">
+                    <span className="block text-lg leading-snug font-medium tracking-tight text-ink md:text-xl lg:text-2xl">
+                      {item}
+                    </span>
+                    {(bodies[i] ?? []).map((line) => (
+                      <span
+                        key={line}
+                        className="mt-2 block text-sm leading-relaxed text-ink-2 md:text-base"
+                      >
+                        {line}
                       </span>
-                    ) : null}
+                    ))}
                   </figcaption>
                 </figure>
               </li>
