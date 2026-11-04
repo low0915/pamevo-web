@@ -52,8 +52,18 @@ export function ClosingSheet({ children }: { children: ReactNode }) {
   if (!curtained) return <>{children}</>;
 
   return (
-    <div className="sheet relative" style={{ zIndex: Z.raised }}>
-      {children}
-    </div>
+    <>
+      {/* THE LINGER. An empty stretch of scroll between the held page and the
+          sheet, so the page's last screen (on the home page, the
+          testimonials) stays fully on view a while before the sheet starts to
+          cross it, rather than being covered the moment it settles. Invisible:
+          it is unraised, so the held page paints over it. Change the height to
+          hold longer or shorter; gone under reduced motion, where nothing is
+          held. */}
+      <div aria-hidden className="h-[35svh] motion-reduce:hidden" />
+      <div className="sheet relative" style={{ zIndex: Z.raised }}>
+        {children}
+      </div>
+    </>
   );
 }

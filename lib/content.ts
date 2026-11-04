@@ -682,6 +682,55 @@ export const BACKGROUND_BM: Partial<typeof BACKGROUND> = {
 };
 
 /**
+ * The home page's testimonials: Google reviews on a row of sliding cards,
+ * under the section title, with a link to the listing. See Testimonials.
+ *
+ * PLACEHOLDERS, EVERY REVIEW. To be replaced with real reviews
+ * pulled from the PA Projects Google listing:
+ *   - `text` exactly as the customer wrote it, never edited or tidied;
+ *   - `name` as Google shows it;
+ *   - `stars` and `when` as Google shows them ("2 months ago");
+ *   - `href`, the listing's own reviews link.
+ * Pick reviews that name something specific (the system, the install,
+ * after-sales, the showroom), of roughly similar length: the cards in a row
+ * share one height. Six to ten is the right number.
+ *
+ * The reviews are not translated: a quote is the customer's own words, in the
+ * language they wrote it.
+ */
+export type Review = { name: string; stars: number; when: string; text: string };
+
+export const TESTIMONIALS = {
+  eyebrow: "Testimonials",
+  heading: "What our customers say.",
+  googleLink: "See all on Google",
+  /** PLACEHOLDER: swap for the Google Business profile's review link. */
+  href: "https://www.google.com/maps/search/?api=1&query=PA%20Projects%20Marketing%20Sdn%20Bhd%20Shah%20Alam",
+  reviews: [
+    { name: "Customer Name", stars: 5, when: "2 weeks ago", text: "Placeholder review. We replaced every window in our terrace house with their sliding systems. The team measured, quoted and installed within the month, and the house is noticeably quieter." },
+    { name: "Customer Name", stars: 5, when: "1 month ago", text: "Placeholder review. Visited the Shah Alam showroom before deciding. Being able to open and close the actual doors made the choice easy." },
+    { name: "Customer Name", stars: 5, when: "1 month ago", text: "Placeholder review. Installers were punctual and careful, covered the floors and cleaned up after themselves. The panoramic door looks great." },
+    { name: "Customer Name", stars: 5, when: "2 months ago", text: "Placeholder review. Our living room used to be hot by the afternoon. Since the new glazing went in it stays cool, and the aircon runs less." },
+    { name: "Customer Name", stars: 4, when: "3 months ago", text: "Placeholder review. Good quality profiles and hardware for the price. Delivery took a little longer than planned, but they kept us updated throughout." },
+    { name: "Customer Name", stars: 5, when: "3 months ago", text: "Placeholder review. Had an issue with a handle after a year and after-sales came the next day to sort it out. That is why we would recommend them." },
+    { name: "Customer Name", stars: 5, when: "4 months ago", text: "Placeholder review. No more leaks during heavy rain. The casement windows seal properly and close smoothly." },
+    { name: "Customer Name", stars: 5, when: "5 months ago", text: "Placeholder review. Helpful sales team who explained the difference between each system honestly, without pushing the most expensive one." },
+  ] as Review[],
+};
+
+export const TESTIMONIALS_ZH: Partial<typeof TESTIMONIALS> = {
+  eyebrow: "客户评价",
+  heading: "听听客户怎么说。",
+  googleLink: "在 Google 查看全部",
+};
+
+export const TESTIMONIALS_BM: Partial<typeof TESTIMONIALS> = {
+  eyebrow: "Testimoni",
+  heading: "Kata pelanggan kami.",
+  googleLink: "Lihat semua di Google",
+};
+
+/**
  * The product band on the home page: six panes of glass over one photograph,
  * a product to a pane.
  *
@@ -750,11 +799,20 @@ export const PRODUCT_GRID_BM: Partial<typeof PRODUCT_GRID> = {
  * by system (window / door) and nothing finer, so there is no "interior doors
  * only" view to send a category to yet.
  */
+/**
+ * The home page's second section: five category panels, three door and two
+ * window. The client's copy was for doors only; the two window panels, and
+ * "door and window" in the title, description and closing line, are ours.
+ *
+ * `href` on a category is the English path its panel opens (the hero prefixes
+ * it per locale); a category without one opens the section's own `href`. The
+ * window panels open their product's row in the catalogue.
+ */
 export const DOOR_COLLECTION = {
-  title: "Explore Our Door Collection",
+  title: "Explore Our Door & Window Collection",
   subheading: "Different Styles. Endless Possibilities.",
   description:
-    "Discover MEVO’s range of modern door systems, thoughtfully designed to complement every space with elegance, functionality, and style.",
+    "Discover MEVO’s range of modern door and window systems, thoughtfully designed to complement every space with elegance, functionality, and style.",
   categories: [
     {
       name: "Modern Interior Doors",
@@ -780,22 +838,119 @@ export const DOOR_COLLECTION = {
       image: "/products/13.jpg",
       alt: "Black-framed arched French sliding doors in reeded glass closing off a kitchen",
     },
-  ],
+    {
+      name: "Casement Windows",
+      tagline: "Open Wide. Seal Tight.",
+      description:
+        "Thermally broken casement windows that swing fully open for fresh air, and close onto an unbroken perimeter seal that keeps out heat, rain and noise.",
+      image: "/products/01.jpg",
+      alt: "Living room with a tall dark-framed casement window opening onto a misty pine forest",
+      href: "/our-products#dm106-casement-window",
+    },
+    {
+      name: "Sliding Windows",
+      tagline: "Slim Lines. Smooth Glide.",
+      description:
+        "Space-saving sliding windows with slim sightlines and a quiet, smooth glide, secured by a double-hook lock with child lock and ready for an insect screen.",
+      image: "/products/04.jpg",
+      alt: "Pale living room with a wide sliding window, half of it covered by an insect screen, looking onto a forested hillside",
+      href: "/our-products#dm132-sliding-window",
+    },
+  ] as {
+    name: string;
+    tagline: string;
+    description: string;
+    image: string;
+    alt: string;
+    href?: string;
+  }[],
   explore: "Explore",
-  ctaHeading: "Find the Perfect Door for Your Space",
+  ctaHeading: "Find the Perfect Door or Window for Your Space",
   ctaBody:
-    "From modern simplicity to luxurious statement designs, explore door solutions that reflect your style.",
-  ctaButton: "View All Doors",
+    "From modern simplicity to luxurious statement designs, explore door and window solutions that reflect your style.",
+  ctaButton: "View All Products",
+  /** The door panels' link. The closing button opens the whole catalogue. */
   href: "/our-products#door",
+  allHref: "/our-products",
 };
 
 export const DOOR_COLLECTION_ZH: Partial<typeof DOOR_COLLECTION> = {
   href: "/zh/our-products#door",
+  allHref: "/zh/our-products",
 };
 
 export const DOOR_COLLECTION_BM: Partial<typeof DOOR_COLLECTION> = {
   href: "/bm/our-products#door",
+  allHref: "/bm/our-products",
 };
+
+/**
+ * The ten Core USPs' media and one-line notes, for CoreUspsPanel on
+ * /services. PARALLEL BY INDEX to WHY_CHOOSE.parts[1].items: the first entry
+ * belongs to the first USP, so the two lists move together or not at all.
+ *
+ * MEDIA ARE PLACEHOLDERS: the closest pictures already in the site's library.
+ * Each is to be replaced by a short, silent, landscape clip (4-8s, slow
+ * movement, no text in frame) or a photograph, shot or chosen for that USP.
+ * Give an entry a `video` (an .mp4 in /public) and it plays, with `image` as
+ * its poster; without one the image is shown.
+ *
+ * The notes restate claims the site makes elsewhere (the performance grades,
+ * the hardware, the warranty, the EPP plan, the install team); none is new.
+ */
+export type UspMedia = { image: string; alt: string; video?: string };
+
+export const CORE_USP_MEDIA: UspMedia[] = [
+  { image: "/engineering/acoustic.jpg", alt: "A quiet, softly lit living room beside a large glazed door" },
+  { image: "/engineering/thermal.jpg", alt: "Glazed office towers at dusk seen from above, their windows lit" },
+  { image: "/products/05-2.jpg", alt: "Cutaway of a thermally broken aluminium profile, its insulation strip and seals" },
+  { image: "/engineering/water-3.jpg", alt: "Heavy rain running in sheets down a pane of glass" },
+  { image: "/products/15.jpg", alt: "Sunlight through full-height sliding doors onto a pale living room" },
+  { image: "/products/18.jpg", alt: "A dark aluminium entry door set into a white facade" },
+  { image: "/products/05-1.jpg", alt: "A slimline panoramic sliding door framing a lake and mountains" },
+  { image: "/products/12.jpg", alt: "A living room opening onto a forest through full-height sliding doors" },
+  { image: "/products/06.jpg", alt: "A bright bathroom with a freestanding tub beside floor-to-ceiling glass" },
+  { image: "/services/04.jpg", alt: "An installer fixing a window frame in place with a cordless drill" },
+];
+
+export const CORE_USP_NOTES = [
+  "Profiles and glazing tested to cut outside noise by up to 43dB, so a busy road stays outside.",
+  "Thermally broken frames graded Level 8 (1.5 W/m²K) keep the afternoon heat out of the room.",
+  "Less heat coming in means less work for the air-conditioning, month after month.",
+  "Seals tested to Level 6 hold back driving rain at up to 700 Pa.",
+  "Glazing that filters UV, helping protect floors, fabrics and furniture from fading.",
+  "German Roto hardware and HOPPE handles, with locking built for a secure home.",
+  "Slim sightlines down to a 15mm interlock, in clean finishes for modern homes.",
+  "Up to 15 years of product warranty, with lifetime maintenance behind it.",
+  "Spread the cost with a 0% interest easy payment plan.",
+  "Our own team measures, installs and services every system, long after handover.",
+];
+
+export const CORE_USP_NOTES_ZH = [
+  "型材与玻璃经测试可降低外部噪音高达 43dB，让车流声留在窗外。",
+  "Level 8（1.5 W/m²K）断桥隔热窗框，把午后的热气挡在室外。",
+  "进入室内的热量更少，空调负担更轻，月月如此。",
+  "密封性能经测试达 Level 6，可抵御高达 700 Pa 的风雨。",
+  "可过滤紫外线的玻璃，帮助保护地板、布艺与家具不褪色。",
+  "德国 Roto 五金与 HOPPE 把手，锁闭系统为居家安全而设计。",
+  "细至 15mm 的纤细勾企，配以简洁饰面，契合现代住宅。",
+  "长达 15 年的产品保固，并享终身维护。",
+  "0% 利息分期付款计划，轻松分摊费用。",
+  "我们自己的团队负责测量、安装与维护每一套系统，交付之后依然在。",
+];
+
+export const CORE_USP_NOTES_BM = [
+  "Profil dan kaca diuji untuk mengurangkan bunyi luar sehingga 43dB, supaya bunyi jalan raya kekal di luar.",
+  "Bingkai penebat haba Level 8 (1.5 W/m²K) menghalang haba petang daripada masuk ke dalam bilik.",
+  "Kurang haba masuk bermakna penghawa dingin kurang bekerja, bulan demi bulan.",
+  "Kedap diuji pada Level 6, menahan hujan lebat sehingga 700 Pa.",
+  "Kaca yang menapis UV, membantu melindungi lantai, fabrik dan perabot daripada pudar.",
+  "Perkakasan Roto Jerman dan pemegang HOPPE, dengan sistem kunci untuk rumah yang selamat.",
+  "Garis pandangan nipis sehingga interlock 15mm, dengan kemasan bersih untuk rumah moden.",
+  "Waranti produk sehingga 15 tahun, disokong penyelenggaraan sepanjang hayat.",
+  "Bahagikan kos dengan pelan bayaran mudah faedah 0%.",
+  "Pasukan kami sendiri mengukur, memasang dan menyelenggara setiap sistem, lama selepas serahan.",
+];
 
 /**
  * Why Choose PA Projects. Copy supplied by the client; the company name was
@@ -1360,23 +1515,20 @@ export const PROFILE_HERO_BM: Partial<typeof PROFILE_HERO> = {
 
 /**
  * The last section of /our-profile: the sales team, as an edge-to-edge grid of
- * portraits, each revealing the person's name, role, languages and contact on
+ * portraits, each revealing the person's name, role and contact on
  * hover (or tap, on a touch screen).
  *
  * PLACEHOLDERS, ALL OF IT BELOW THE LEDE. The people are stand-ins until the
  * client sends, for each: name, role or area, a portrait (4:5, matched
- * background and crop across the team), the languages they speak, and the
+ * background and crop across the team), and the
  * number to reach them on. Until a member has a `photo`, the card draws a
  * neutral silhouette; until they have their own `whatsapp`/`phone`, the
  * buttons fall back to the company's (WHATSAPP, FOOTER).
- *
- * `languages` are shown as written, in every locale: "EN", "中文", "BM" read
- * the same to every reader of the page.
+
  */
 export type SalesMember = {
   name: string;
   role: string;
-  languages: string[];
   photo?: string;
   /** wa.me / api.whatsapp.com link; the company's when absent. */
   whatsapp?: string;
@@ -1391,10 +1543,10 @@ export const SALES_TEAM = {
   whatsapp: "WhatsApp",
   call: "Call",
   members: [
-    { name: "Team Member", role: "Sales Manager", languages: ["EN", "中文", "BM"] },
-    { name: "Team Member", role: "Sales Consultant, Residential", languages: ["EN", "中文"] },
-    { name: "Team Member", role: "Sales Consultant, Projects", languages: ["EN", "BM"] },
-    { name: "Team Member", role: "Showroom Consultant", languages: ["BM", "EN"] },
+    { name: "Team Member", role: "Sales Manager" },
+    { name: "Team Member", role: "Sales Consultant, Residential" },
+    { name: "Team Member", role: "Sales Consultant, Projects" },
+    { name: "Team Member", role: "Showroom Consultant" },
   ] as SalesMember[],
 };
 

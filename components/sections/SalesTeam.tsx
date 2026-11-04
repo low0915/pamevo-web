@@ -18,14 +18,14 @@ import { Reveal } from "@/components/ui/Reveal";
  *
  * The portraits carry no text until they are asked: hovering one (or giving
  * it focus, which is what a tap does on a touch screen) darkens it and brings
- * up the name, role, languages and the two ways to reach that person. The
+ * up the name, role and the two ways to reach that person. The
  * reveal is opacity only, never `display`, so the details are in the page for
  * screen readers and search engines the whole time, and tabbing to a button
  * reveals the card it is on (`focus-within`).
  *
  * On a screen with no hover the name and role are always shown along the
  * foot of each portrait, so a phone reader knows a tap does something and
- * whom it is on; the tap adds the languages and buttons.
+ * whom it is on; the tap adds the buttons.
  *
  * Four across from `md`, two on a phone. A server component, so the copy
  * arrives through `locale`, as on the rest of this page.
@@ -107,19 +107,9 @@ function Member({
           <p className="mt-1 text-sm leading-snug text-white/80">{member.role}</p>
         </div>
 
-        {/* Languages and the buttons: on hover or focus. On a touch screen they
-            take no room until the tap, so the name sits on the foot. */}
+        {/* The buttons: on hover or focus. On a touch screen they take no
+            room until the tap, so the name sits on the foot. */}
         <div className="opacity-0 transition-opacity duration-300 ease-out group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:hidden [@media(hover:none)]:group-focus-within:block">
-          <ul aria-label="Languages" className="mt-3 flex flex-wrap gap-1.5">
-            {member.languages.map((language) => (
-              <li
-                key={language}
-                className="rounded-full border border-white/40 px-2.5 py-0.5 text-xs font-medium tracking-wide"
-              >
-                {language}
-              </li>
-            ))}
-          </ul>
           <div className="mt-4 flex flex-wrap gap-2">
             <a
               href={member.whatsapp ?? WHATSAPP.url}

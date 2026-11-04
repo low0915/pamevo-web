@@ -5,14 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { DOOR_COLLECTION, DOOR_COLLECTION_ZH, DOOR_COLLECTION_BM } from "@/lib/content";
-import { useCopy } from "@/lib/locale";
+import { localePath, useCopy, useLocale } from "@/lib/locale";
 
 /** How much wider the open panel is than a closed one. */
 const OPEN_GROW = 4;
 
 /**
- * Explore Our Door Collection: a header, three category panels, and a closing
- * line with the way into the catalogue.
+ * Explore Our Door & Window Collection: a header, five category panels (three
+ * door, two window), and a closing line with the way into the catalogue.
  *
  * The panels share one row and one of them is always open. Pointing at a panel,
  * or focusing it, opens it: it widens and the other two narrow to a strip that
@@ -37,6 +37,7 @@ const OPEN_GROW = 4;
  */
 export function DoorCollection() {
   const copy = useCopy(DOOR_COLLECTION, { ZH: DOOR_COLLECTION_ZH, BM: DOOR_COLLECTION_BM });
+  const { locale } = useLocale();
   const [open, setOpen] = useState(0);
 
   return (
@@ -77,7 +78,7 @@ export function DoorCollection() {
                 }}
               >
                 <Link
-                  href={copy.href}
+                  href={category.href ? localePath(category.href, locale) : copy.href}
                   aria-label={`${category.name}: ${copy.explore}`}
                   /* Keyboard focus only. A tap focuses the link too, just
                      before its click, and opening on that would turn the tap
@@ -173,7 +174,7 @@ export function DoorCollection() {
             <p className="mt-1 text-sm text-ink-2">{copy.ctaBody}</p>
           </div>
           <Link
-            href={copy.href}
+            href={copy.allHref}
             className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0 md:w-auto"
           >
             {copy.ctaButton}

@@ -3,6 +3,7 @@ import { WhyMevo } from "@/components/sections/WhyMevo";
 import { ProductGrid } from "@/components/sections/ProductGrid";
 import { DoorCollection } from "@/components/sections/DoorCollection";
 import { Stats } from "@/components/sections/Stats";
+import { Testimonials } from "@/components/sections/Testimonials";
 import { JsonLd } from "@/components/site/JsonLd";
 import { homeGraph } from "@/lib/schema";
 import type { Locale } from "@/lib/locale";
@@ -47,15 +48,16 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             The two runways are the same 250svh on purpose: this pair is the
             only place on the page where one section is both ends of a handover,
             and matching them is what keeps that legible. */}
-        {/* Product first: the door collection opens the sheet, so the second
-            thing on the page is what is sold, and Why Choose follows as the
-            reason to buy it here. The door collection took WhyMevo's place at
-            the head of the chain (no pull-up, runway only), and WhyMevo took
-            the door collection's (pulled up 110svh over its pinned frame).
-            Both hold the same 250svh runway, so the chain is unchanged. */}
+        {/* Product first: the door collection opens the sheet and the product
+            grid follows it, so the first two things on the page are what is
+            sold, and Why Choose comes after as the reason to buy it here. The
+            door collection heads the chain (no pull-up, runway only); WhyMevo
+            and ProductGrid are both pulled up 110svh over a pinned frame and
+            both hold the same 250svh runway, so either order keeps the chain,
+            and Stats now rides over WhyMevo's frame. */}
         <DoorCollection />
-        <WhyMevo />
         <ProductGrid />
+        <WhyMevo />
         {/* WhyChoose stood here and Services stood between Stats and Projects.
             Background stood between ProductGrid and Stats. All three are out of
             the home page; all three still exist, and Background is still the
@@ -94,6 +96,10 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             is now the last band and is told so — see `last` in Stats.tsx. To
             bring it back: render <Projects /> here again and drop `last`. */}
         <Stats last />
+        {/* The testimonials close the page, in plain flow after the stat
+            band: no curtain, so Stats keeps its `last` runway and this
+            section is only as tall as its own content. See Testimonials. */}
+        <Testimonials />
       </div>
     </main>
   );

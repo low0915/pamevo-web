@@ -1,157 +1,267 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
-import { useCopy } from "@/lib/locale";
+import {
+  WHY_CHOOSE,
+  WHY_CHOOSE_ZH,
+  WHY_CHOOSE_BM,
+  CORE_USP_MEDIA,
+  CORE_USP_NOTES,
+  CORE_USP_NOTES_ZH,
+  CORE_USP_NOTES_BM,
+} from "@/lib/content";
+import { useCopy, useLocale } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
  * The index of the USP part inside WHY_CHOOSE.parts.
  *
  * IT LIVES HERE BECAUSE THIS IS THE SECTION THAT PRINTS THAT PART, and it is
- * exported because EngineeringCarousel counts its own index off it — the six
- * figures are the part directly after the ten USPs. One constant, so the two
- * bands cannot both claim the same entry when `parts` is reordered.
+ * exported because EngineeringCarousel counts its own index off it — the
+ * engineering figures are the part directly after the ten USPs. One constant,
+ * so the two bands cannot both claim the same entry when `parts` is reordered.
  */
 export const USP_PART = 1;
 
+/** How long each USP holds before the next, when nobody is choosing, in ms. */
+const INTERVAL = 6000;
+/** The crossfade between two USPs' media, in ms. */
+const FADE = 800;
+
 /**
- * Our 10 Core USPs, a second time: the ten in a glass panel on a dark photograph.
+ * Our 10 Core USPs: the ten in a dark glass panel on the left, and behind
+ * the section, full bleed, the picture or clip of whichever one is chosen.
  *
- * THIS IS THE ONLY PLACE THE TEN ARE PRINTED. There was a second band above it
- * — CoreUsps, which set the same ten as a ring of labels around a cut-out of
- * the profile — and the page carried both for a while. Two statements of one
- * list is once too many, so the ring is gone and this is what remains. The list
- * itself is still read from `WHY_CHOOSE.parts[USP_PART]`, so an eleventh USP
- * added to the content file appears here without this file being touched.
+ * ONE PICTURE AT A TIME, AND THE LIST CHOOSES IT. Pointing at a USP (or
+ * focusing it, or tapping it) crossfades the background to that USP's media
+ * and opens its one-line note under it. Left alone, the section walks through
+ * the ten on a timer, a thin line under the current one filling as it goes,
+ * the same language as the home hero. The timer only runs while the section is
+ * on screen, so a reader arrives at 01; it pauses while the pointer or focus
+ * is inside, and does not run at all under reduced motion.
  *
- * THE GROUND IS THE FIGMA FRAME'S OWN PHOTOGRAPH, and the gradient over it is
- * from the same frame. The design puts a black-to-transparent wash running from
- * the left edge, reaching full black by ~80% of its width — so the left of the
- * band is a near-solid dark field and the right stays picture. That is not
- * decoration: it is what makes a panel legible on the left while leaving the
- * profile corner visible on the right, and it is why the panel goes where it
- * goes. Reproduced here as a `bg-linear-to-r` in the same direction, in the
- * project's own token rather than the raw hex the export carried.
+ * Every picture is darkened and desaturated alike (`.usp-grade`), so ten
+ * pictures from ten sources read as one set, and the white type on the left
+ * holds over any of them. A video plays only while it is the one showing.
  *
- * WHY `.glass-dark` AND NOT `.glass`. The six-engineering panel this is modelled
- * on uses `.glass`, which is WHITE-tinted — it lightens what it covers, which is
- * right over that section's light ground and wrong here, where it would sit as a
- * pale slab on a near-black photograph. `.glass-dark` is the same material
- * calibrated the other way: see its note in globals.css, where the 0.50 tint is
- * set by the brightest patch of photography behind it holding white type at
- * 5.1:1. The panel's type is therefore white, not `text-ink`.
+ * On a phone the media is a band across the top of the section, fading into
+ * the ground, and the panel sits below it.
+ *
+ * The media and the notes are parallel to the USP list by index: see
+ * CORE_USP_MEDIA in lib/content.ts. The list itself is read from
+ * `WHY_CHOOSE.parts[USP_PART]`.
  */
 export function CoreUspsPanel() {
   const whyChoose = useCopy(WHY_CHOOSE, { ZH: WHY_CHOOSE_ZH, BM: WHY_CHOOSE_BM });
+  const { locale } = useLocale();
   const usps = whyChoose.parts[USP_PART];
+  const notes = { EN: CORE_USP_NOTES, ZH: CORE_USP_NOTES_ZH, BM: CORE_USP_NOTES_BM }[locale];
+  const count = usps.items.length;
+
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(false);
+  const [inView, setInView] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const videos = useRef<(HTMLVideoElement | null)[]>([]);
+
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    /* The first time it is really on screen, start the walk from 01, so a
+       timer that began on a brief earlier glimpse does not greet the reader
+       mid-list. */
+    let seen = false;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !seen) {
+          seen = true;
+          setActive(0);
+        }
+        setInView(entry.isIntersecting);
+      },
+      { threshold: 0.6 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const next = useCallback(() => setActive((i) => (i + 1) % count), [count]);
+
+  // Keyed on `active`, so choosing one restarts the full interval.
+  useEffect(() => {
+    if (paused || reduced || !inView) return;
+    const id = window.setTimeout(next, INTERVAL);
+    return () => window.clearTimeout(id);
+  }, [active, paused, reduced, inView, next]);
+
+  // Only the showing clip plays.
+  useEffect(() => {
+    videos.current.forEach((video, i) => {
+      if (!video) return;
+      if (i === active && inView && !reduced) video.play().catch(() => {});
+      else video.pause();
+    });
+  }, [active, inView, reduced]);
+
+  const running = !paused && !reduced && inView;
 
   return (
-    <section className="relative isolate flex min-h-[100svh] flex-col justify-center overflow-hidden bg-[#050607] py-20 md:py-24 lg:py-28">
-      {/* The photograph, full bleed.
+    <section
+      ref={sectionRef}
+      className="relative isolate flex min-h-[100svh] flex-col justify-center overflow-hidden bg-[#050607] pt-[40svh] pb-16 md:py-24 lg:py-28"
+      onMouseLeave={() => setPaused(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false);
+      }}
+    >
+      {/* The media: every USP's layer, stacked, only the chosen one shown. A
+          band across the top on a phone; the whole section from `md`. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[55svh] select-none md:inset-0 md:h-auto"
+      >
+        {CORE_USP_MEDIA.slice(0, count).map((media, i) => (
+          <div
+            key={media.image}
+            className="usp-grade absolute inset-0 transition-opacity ease-in-out"
+            style={{ opacity: i === active ? 1 : 0, transitionDuration: `${FADE}ms` }}
+          >
+            {media.video ? (
+              <video
+                ref={(el) => {
+                  videos.current[i] = el;
+                }}
+                src={media.video}
+                poster={media.image}
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <Image src={media.image} alt="" fill sizes="100vw" quality={75} className="object-cover" />
+            )}
+          </div>
+        ))}
 
-          `object-cover` with the focal point pushed right: the subject of this
-          frame is the profile corner on its right-hand side, and the panel
-          covers the left. Centred, a narrow viewport crops the corner out and
-          leaves the band a field of black with a panel on it. `object-right`
-          keeps the thing worth showing in frame at every width.
-
-          Not `graded`. That class is the site's near-monochrome wash for its
-          LIGHT photography, and this picture is already black-and-silver —
-          running it through a saturation cut would only flatten the metal it
-          is here to show. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 select-none">
-        <Image
-          src="/mevo-profile-corner-dark.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          quality={78}
-          className="object-cover object-right"
+        {/* Read against: dark on the left where the panel is, clear by the
+            right (from `md`); on a phone, the band fades into the ground at
+            its foot. And the section's own foot closes to the ground colour
+            so the join with the next band is not a seam. */}
+        {/* Kept to the panel's side and the very foot, so the picture right
+            of the panel is shown as it is: dark only up to ~45% across,
+            clear from ~62%; the foot's wash only the bottom fifth. */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{ background: "linear-gradient(to top, #050607 0%, rgb(5 6 7 / 0.5) 22%, transparent 45%)" }}
         />
-
-        {/* The Figma frame's own gradient: opaque at the left edge, clear by
-            the right. It is what the panel is read against — without it the
-            glass sits on whatever the photograph happens to put behind it,
-            which at the top left is a bright brushed highlight.
-
-            Two stops rather than one, because the design's single ramp leaves
-            the band's own bottom edge lighter than the section it butts onto.
-            The second, vertical wash closes the foot back to the ground colour
-            so the join is not a visible seam. */}
-        <div className="absolute inset-0 bg-linear-to-r from-[#050607] via-[#050607]/100 to-transparent md:via-[#050607]/20" />
-        <div className="absolute inset-0 bg-linear-to-t from-[#050607] via-transparent to-transparent" />
+        <div
+          className="absolute inset-0 hidden md:block"
+          style={{
+            background:
+              "linear-gradient(to right, rgb(5 6 7 / 0.92) 0%, rgb(5 6 7 / 0.7) 30%, rgb(5 6 7 / 0.25) 45%, transparent 62%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 hidden md:block"
+          style={{ background: "linear-gradient(to top, #050607 0%, transparent 20%)" }}
+        />
       </div>
 
       <div className="relative w-full px-6 md:px-8 lg:px-10">
-        {/*
-          THE PANEL IS ON THE LEFT AND IT IS CAPPED, NOT HALVED. `max-w` rather
-          than a percentage width: a percentage panel keeps growing with the
-          display, and at 2560 the same ten lines stretch to a measure nothing
-          can be read across. Capped, the panel stops and the extra width goes
-          to the photograph, which is the half of the band that benefits from
-          it.
-
-          The heading sits ABOVE the panel rather than inside it, per the brief.
-          Both are inside this one column, so they share a left edge — the
-          heading starts where the panel starts, and the two read as one block
-          against the picture rather than as two things that happen to be on the
-          same side.
-        */}
-        <div className="max-w-[640px]">
-          {/* Heading, then panel. Purpose: sequence. The two are one block
-              against the photograph, so they arrive in reading order rather
-              than together. */}
+        <div className="max-w-[560px]">
           <Reveal>
             <h2 className="text-3xl leading-[1.1] font-medium tracking-tighter text-white capitalize md:text-4xl lg:text-5xl">
               {usps.title}
             </h2>
           </Reveal>
 
-          {/* `glass-rim` alongside `glass-dark`, the pairing the header island
-              uses: the rim draws the refracted hairline that stops the panel
-              reading as a flat translucent box. It is an inset `::before`, so
-              the panel has to be `relative` or the pseudo-element escapes to
-              the nearest positioned ancestor and rims the wrong box. */}
           <Reveal delay={0.1}>
-            <div className="glass-dark glass-rim relative mt-8 rounded-[14px] p-6 md:mt-10 md:p-8">
-            <ul
-              role="list"
-              /* Two columns from `md`, and the order runs DOWN the first
-                 column before the second — `columns` rather than a grid,
-                 because a two-column grid would run the list across the
-                 rows and print 1,2 / 3,4, which is not how a list of ten
-                 is read. Ten items over two columns is five and five.
+            <div className="glass-dark glass-rim relative mt-8 rounded-[14px] p-4 md:mt-10 md:p-6">
+              <ol role="list" onMouseEnter={() => setPaused(true)}>
+                {usps.items.map((item, i) => {
+                  const on = i === active;
+                  return (
+                    <li key={item} className="border-b border-white/10 last:border-b-0">
+                      <button
+                        type="button"
+                        aria-expanded={on}
+                        onMouseEnter={() => setActive(i)}
+                        onFocus={() => {
+                          setPaused(true);
+                          setActive(i);
+                        }}
+                        onClick={() => setActive(i)}
+                        className="group block w-full py-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:py-3"
+                      >
+                        <span className="flex items-baseline gap-4">
+                          <span
+                            className={`w-6 shrink-0 text-xs font-medium tabular-nums transition-colors duration-300 ${
+                              on ? "text-white" : "text-white/40"
+                            }`}
+                          >
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          <span
+                            className={`text-sm leading-snug font-medium transition-colors duration-300 lg:text-[0.9375rem] ${
+                              on ? "text-white" : "text-white/60 group-hover:text-white/85"
+                            }`}
+                          >
+                            {item}
+                          </span>
+                        </span>
 
-                 `break-inside-avoid` on the item: a multi-line USP split
-                 across the column break otherwise, leaving an orphaned
-                 line at the top of the second column. */
-              className="space-y-3 md:columns-2 md:gap-x-8 md:space-y-0"
-            >
-              {usps.items.map((item) => (
-                <li
-                  key={item}
-                  className="flex break-inside-avoid items-start gap-3 py-1.5 md:py-2"
-                >
-                  {/* The same dot the ring band uses, so the two sections
-                      state the same list in the same voice. `mt-[0.45rem]`
-                      aligns it to the first line rather than centring it on
-                      the item, so a two-line USP still points at its own
-                      first line. */}
-                  <span
-                    aria-hidden
-                    className="mt-[0.45rem] size-1.5 shrink-0 rounded-full bg-white/70"
-                  />
-                  <p className="text-sm leading-relaxed font-medium text-white/90 lg:text-[0.9375rem]">
-                    {item}
-                  </p>
-                </li>
-              ))}
-              </ul>
+                        {/* The note, opening under the chosen one. */}
+                        <span
+                          className="grid transition-[grid-template-rows] duration-500 ease-out"
+                          style={{ gridTemplateRows: on ? "1fr" : "0fr" }}
+                        >
+                          <span className="overflow-hidden">
+                            <span className="block pt-2 pl-10 text-sm leading-relaxed text-white/70">
+                              {notes[i]}
+                            </span>
+                            {/* The timer, as a hairline filling under it. */}
+                            <span className="mt-3 ml-10 block h-px overflow-hidden bg-white/15">
+                              <span
+                                key={on ? `on-${active}-${running}` : "off"}
+                                className="block h-full origin-left bg-white/80"
+                                style={
+                                  on && running
+                                    ? { animation: `usp-progress ${INTERVAL}ms linear both` }
+                                    : { transform: on ? "scaleX(1)" : "scaleX(0)" }
+                                }
+                              />
+                            </span>
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
             </div>
           </Reveal>
         </div>
       </div>
+
+      <style>{`
+        @keyframes usp-progress {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .usp-grade { filter: saturate(0.88) brightness(0.94); }
+      `}</style>
     </section>
   );
 }
