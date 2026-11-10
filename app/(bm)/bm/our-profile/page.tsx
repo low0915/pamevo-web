@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Background } from "@/components/sections/Background";
 import { PageHero } from "@/components/sections/PageHero";
 import { ProfileFigures } from "@/components/sections/ProfileFigures";
-import { SalesTeam } from "@/components/sections/SalesTeam";
 import { VisionMission } from "@/components/sections/VisionMission";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SEO_BM, PROFILE_HERO, PROFILE_HERO_BM } from "@/lib/content";
@@ -51,8 +50,6 @@ export default function OurProfilePageBm() {
       {/* The group behind PA Projects, in four figures. See ProfileFigures. */}
       <ProfileFigures locale="BM" />
       <VisionMission locale="BM" />
-      {/* Who to talk to, last. See SalesTeam. */}
-      <SalesTeam locale="BM" />
     </main>
   );
 }

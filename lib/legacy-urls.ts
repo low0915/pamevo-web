@@ -44,6 +44,19 @@ const aliases = [
     destination: "/our-products",
     permanent: true,
   },
+  // DM80 was published as "dm80-biofold-door", the WordPress site's typo. The
+  // slug is now spelt correctly, so the old WordPress URL and this build's
+  // own old product page both need pointing at their new homes.
+  {
+    source: "/blog/dm80-biofold-door",
+    destination: "/our-products",
+    permanent: true,
+  },
+  {
+    source: "/our-products/dm80-biofold-door",
+    destination: "/our-products/dm80-bifold-door",
+    permanent: true,
+  },
 ];
 
 const pages = [

@@ -7,8 +7,8 @@ import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { PRODUCT_GRID, PRODUCT_GRID_ZH, PRODUCT_GRID_BM } from "@/lib/content";
-import { useCopy } from "@/lib/locale";
-import { PRODUCTS } from "@/lib/products";
+import { useCopy, useLocale } from "@/lib/locale";
+import { PRODUCTS, productTitle } from "@/lib/products";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -39,7 +39,7 @@ const FEATURED = [
   "dm15-slimline-panoramic-window",
   // Doors.
   "dm27-slimline-panoramic-door",
-  "dm80-biofold-door",
+  "dm80-bifold-door",
   "fortune-deer-entry-door",
 ];
 
@@ -127,6 +127,7 @@ const PANE_TOP_THEN_CLEAR = "pt-4 sm:pt-6 md:pt-28 lg:pt-32";
 export function ProductGrid() {
   const rootRef = useRef<HTMLElement>(null);
   const copy = useCopy(PRODUCT_GRID, { ZH: PRODUCT_GRID_ZH, BM: PRODUCT_GRID_BM });
+  const { locale } = useLocale();
 
   const products = FEATURED.map((slug) =>
     PRODUCTS.find((product) => product.slug === slug),
@@ -258,7 +259,7 @@ export function ProductGrid() {
               key={product.slug}
               data-pane
               href={copy.href(product.slug)}
-              aria-label={copy.aria(product.title)}
+              aria-label={copy.aria(productTitle(product, locale))}
               className={`group glass-tile relative flex min-h-[7rem] flex-col items-start justify-between px-4 pb-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white sm:px-6 sm:pb-6 md:px-8 md:pb-8 lg:px-10 lg:pb-10 ${
                 i < 2 ? CLEAR_HEADER : i === 2 ? PANE_TOP_THEN_CLEAR : PANE_TOP
               }`}
@@ -314,7 +315,7 @@ export function ProductGrid() {
                 data-pane-body
                 className="relative max-w-[15ch] text-[1.125rem] leading-[1.15] font-medium tracking-tight text-white sm:text-[1.25rem] md:text-2xl lg:text-[1.75rem]"
               >
-                {product.title}
+                {productTitle(product, locale)}
               </span>
 
               {/* The one mark that says the pane is a way through rather than a

@@ -17,11 +17,8 @@ export const metadata: Metadata = pageMetadataBm(SEO_BM.products);
  * need nothing passed to them — the BM root layout above has already provided
  * it.
  *
- * The specifications themselves are the seam in this page, and it is worth
- * naming: lib/products.ts carries English and Chinese on every bullet and
- * renders both in every locale, so a Malay reader gets Malay chrome around
- * bilingual EN/ZH specs. Translating 86 spec bullets is the client's call and
- * their data to supply; the page is built to take it the day it exists.
+ * The specifications render in Malay here, from the `ms` lines in
+ * lib/products.ts, transcribed from the client's e-catalogue.
  */
 export default function OurProductsPageBm() {
   return (

@@ -84,6 +84,17 @@ export function Hero() {
               sizes="100vw"
               draggable={false}
               className="graded-hero object-cover"
+              /* A slide may nudge its photograph: `shift` is a percentage of
+                 the image's own size, and the 1.16 zoom is the margin that
+                 keeps an edge from showing when it moves. Only slides that
+                 ask for a shift are zoomed. */
+              style={
+                "shift" in slide && slide.shift
+                  ? {
+                      transform: `scale(1.16) translate(${("x" in slide.shift ? slide.shift.x : 0) ?? 0}%, ${("y" in slide.shift ? slide.shift.y : 0) ?? 0}%)`,
+                    }
+                  : undefined
+              }
             />
           ),
           content: (

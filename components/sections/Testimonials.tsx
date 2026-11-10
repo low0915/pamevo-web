@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
-import { ArrowUpRight, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { TESTIMONIALS, TESTIMONIALS_ZH, TESTIMONIALS_BM, type Review } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
@@ -47,6 +47,16 @@ export function Testimonials() {
     const track = trackRef.current;
     const card = track?.querySelector("li");
     if (!track || !card) return;
+    /* LOOPS: past the last card, next returns to the first; before the first,
+       previous jumps to the last. */
+    if (direction === 1 && atEnd) {
+      track.scrollTo({ left: 0, behavior: "smooth" });
+      return;
+    }
+    if (direction === -1 && atStart) {
+      track.scrollTo({ left: track.scrollWidth, behavior: "smooth" });
+      return;
+    }
     const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
     track.scrollBy({ left: direction * (card.getBoundingClientRect().width + gap), behavior: "smooth" });
   };
@@ -92,20 +102,13 @@ export function Testimonials() {
               </h2>
             </div>
             <div className="flex items-center gap-2">
-              <a
-                href={copy.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group mr-2 inline-flex items-center gap-1.5 text-sm font-medium tracking-tight text-ink underline-offset-4 hover:underline"
-              >
-                <GoogleG />
-                {copy.googleLink}
-                <ArrowUpRight size={14} />
-              </a>
-              <Arrow label="Previous reviews" disabled={atStart} onClick={() => step(-1)}>
+              {/* The "See all on Google" link is hidden for now (copy.href /
+                  copy.googleLink and GoogleG are kept for when the listing
+                  link is supplied). */}
+              <Arrow label="Previous reviews" onClick={() => step(-1)}>
                 <CaretLeftIcon size={18} weight="bold" />
               </Arrow>
-              <Arrow label="Next reviews" disabled={atEnd} onClick={() => step(1)}>
+              <Arrow label="Next reviews" onClick={() => step(1)}>
                 <CaretRightIcon size={18} weight="bold" />
               </Arrow>
             </div>
@@ -165,7 +168,7 @@ function Card({ review }: { review: Review }) {
         </span>
         <span className="flex flex-col">
           <span className="font-medium tracking-tight text-ink">{review.name}</span>
-          <span className="text-ink-2">{review.when}</span>
+          {review.when ? <span className="text-ink-2">{review.when}</span> : null}
         </span>
       </figcaption>
     </figure>
@@ -174,12 +177,10 @@ function Card({ review }: { review: Review }) {
 
 function Arrow({
   label,
-  disabled,
   onClick,
   children,
 }: {
   label: string;
-  disabled: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -187,9 +188,8 @@ function Arrow({
     <button
       type="button"
       aria-label={label}
-      disabled={disabled}
       onClick={onClick}
-      className="flex size-11 items-center justify-center rounded-full border border-ink/15 bg-white/60 text-ink transition-[background-color,opacity,scale] duration-150 ease-out hover:bg-white active:scale-95 disabled:pointer-events-none disabled:opacity-35"
+      className="flex size-11 items-center justify-center rounded-full border border-ink/15 bg-white/60 text-ink transition-[background-color,opacity,scale] duration-150 ease-out hover:bg-white active:scale-95 "
     >
       {children}
     </button>

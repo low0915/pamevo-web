@@ -136,7 +136,7 @@ const PANEL_WRAP = "absolute top-full pt-2";
  * watched subtree from the label all the way to the island's edge.
  */
 const PANEL_ANCHOR = "self-stretch";
-const PANEL = "glass glass-rim relative overflow-hidden rounded-[14px] p-1.5";
+const PANEL = "glass glass-dense glass-rim relative overflow-hidden rounded-[14px] p-1.5";
 
 /**
  * Floating island header with a liquid-glass texture.
@@ -166,6 +166,8 @@ export function Header() {
   const { scrollY } = useScroll();
 
   const range = [0, 120];
+  /* The backing strip behind the island; see the element in the JSX. */
+  const stripOpacity = useTransform(scrollY, [0, 40], [0, 1], { clamp: true });
   /* Widened from 1344/1000. The island holds three times the nav it was built
      for — six items where there were two, one of them with a caret — and at the
      old scrolled width the row simply did not fit: roughly 1150px of content in
@@ -198,6 +200,11 @@ export function Header() {
   const ISLAND_MAX = 1440;
   const radius = useTransform(scrollY, range, [22, 999], { clamp: true });
   /* The island's tint, unscrolled to scrolled.
+     NOW 0.70/0.82, raised on request for a more solid bar. The history and
+     contrast figures below were measured at 0.48/0.62; higher tint only
+     improves them.
+
+
      Was 0.28/0.62, then 0.55/0.85, now this. The first raise was necessary and
      the size of it was not. 0.28 was set when every page opened on pale
      photography; two pages now open on a solid #033392 band, and over that it
@@ -226,7 +233,7 @@ export function Header() {
   const background = useTransform(
     scrollY,
     range,
-    ["rgba(255,255,255,0.48)", "rgba(255,255,255,0.62)"],
+    ["rgba(255,255,255,0.7)", "rgba(255,255,255,0.82)"],
     { clamp: true },
   );
   const blur = useTransform(scrollY, range, [12, 28], { clamp: true });
@@ -299,7 +306,7 @@ export function Header() {
            so the one reader who cannot have the morph got the dark island the
            brightness above exists to fix. The unscrolled end, since that is
            what "at rest" means here. */
-        background: "rgba(255,255,255,0.48)",
+        background: "rgba(255,255,255,0.7)",
         backdropFilter: "blur(12px) saturate(140%) brightness(1.8)",
         WebkitBackdropFilter: "blur(12px) saturate(140%) brightness(1.8)",
       }
@@ -314,6 +321,18 @@ export function Header() {
 
   return (
     <>
+      {/* A solid strip of page ground from the top of the viewport to the foot
+          of the island (top-4 + h-16 = 80px). Without it, content scrolling up
+          stays visible in the 16px above the island and around its rounded
+          ends; with it, content disappears cleanly under the header. Fades in
+          over the first 40px of scroll so a hero at the top of the page is not
+          capped by a band before the reader has moved. Same z as the header
+          and earlier in the document, so the island paints over it. */}
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-x-0 top-0 h-20 bg-bg"
+        style={{ zIndex: Z.header, opacity: stripOpacity }}
+      />
       <header
         /* The site's gutter, so the island lines up with the bands beneath it.
              It was `px-4 md:px-8 lg:px-12` — 16 at base and 48 at `lg` against
@@ -465,7 +484,7 @@ export function Header() {
                           }
                           transition={{ duration: 0.18, ease: EASE_OUT }}
                         >
-                          <div className={`${PANEL} w-52`}>
+                          <div className={`${PANEL} w-max min-w-52`}>
                             {item.children.map((child) => (
                               /* A PLAIN ANCHOR, not next/link, and that is
                                  load-bearing rather than an oversight.
@@ -497,7 +516,7 @@ export function Header() {
                                 key={child.label}
                                 href={child.href}
                                 aria-disabled={child.href ? undefined : "true"}
-                                className="block rounded-[9px] px-3 py-2 text-sm text-ink transition-colors duration-200 hover:bg-[rgb(255_255_255/0.6)] hover:text-ink"
+                                className="block rounded-[9px] px-3 py-2 text-sm whitespace-nowrap text-ink transition-colors duration-200 hover:bg-[rgb(255_255_255/0.6)] hover:text-ink"
                               >
                                 {child.label}
                               </a>

@@ -23,7 +23,7 @@ export const NAV: NavItem[] = [
     label: "Our Profile",
     href: "/our-profile",
     /* Our Story and Vision & Mission are the two sections OF /our-profile, so
-       the first two children are fragments of that one page; Director's Profile
+       the first two children are fragments of that one page; Our Sales Team
        is a page of its own and the third child is a real route. Same shape as
        Our Products below, with one difference that matters for the current-mark:
        a child here can be a different page, so the parent's active state is
@@ -37,23 +37,26 @@ export const NAV: NavItem[] = [
     children: [
       { label: "Our Story", href: "/our-profile#story" },
       { label: "Vision & Mission", href: "/our-profile#vision" },
-      { label: "Director's Profile", href: "/directors-profile" },
+      { label: "Our Sales Team", href: "/directors-profile" },
     ],
   },
   { label: "Services & Features", href: "/services" },
   {
     label: "Our Products",
     href: "/our-products",
-    /* The catalogue's own two halves, and they are live now.
+    /* The catalogue's five categories, and they are live now.
     
        Not routes of their own: both open /our-products and the fragment picks
        the filter up on arrival. That keeps one page and one indexed URL for
-       twenty products while still letting the nav point at half of them — see
+       twenty products while still letting the nav point at each category — see
        `systemFromHash` in lib/products.ts for why a fragment rather than a
        query parameter, and what it costs. */
     children: [
-      { label: "Window System", href: "/our-products#window" },
-      { label: "Door System", href: "/our-products#door" },
+      { label: "Windows Systems", href: "/our-products#window" },
+      { label: "Door Systems", href: "/our-products#door" },
+      { label: "Interior Door Systems", href: "/our-products#interior" },
+      { label: "Entrance Door Systems", href: "/our-products#entrance" },
+      { label: "Sunroom & Special Systems", href: "/our-products#special" },
       /* The material library under the catalogue. An element id rather than
          a filter keyword, so SmoothScroll lands on it like any other anchor. */
       { label: "Glass, Finishes & Hardware", href: "/our-products#materials" },
@@ -96,9 +99,9 @@ export const NAV: NavItem[] = [
  * four unbuilt pages exist, which is the moment to have them checked.
  */
 const NAV_ZH_LABELS: { label: string; children?: string[] }[] = [
-  { label: "公司简介", children: ["我们的故事", "愿景与使命", "董事简介"] },
+  { label: "公司简介", children: ["我们的故事", "愿景与使命", "销售团队"] },
   { label: "服务与特色" },
-  { label: "我们的产品", children: ["窗系统", "门系统", "玻璃、饰面与五金"] },
+  { label: "我们的产品", children: ["窗系统", "门系统", "室内门系统", "入户门系统", "阳光房与特色系统", "玻璃、饰面与五金"] },
   { label: "联系我们" },
 ];
 
@@ -127,9 +130,16 @@ export const NAV_ZH: NavItem[] = NAV.map((item, i) => ({
  * projects strip ends on.
  */
 const NAV_BM_LABELS: { label: string; children?: string[] }[] = [
-  { label: "Profil Kami", children: ["Kisah Kami", "Visi & Misi", "Profil Pengarah"] },
+  { label: "Profil Kami", children: ["Kisah Kami", "Visi & Misi", "Pasukan Jualan Kami"] },
   { label: "Perkhidmatan & Ciri" },
-  { label: "Produk Kami", children: ["Sistem Tingkap", "Sistem Pintu", "Kaca, Kemasan & Perkakasan"] },
+  { label: "Produk Kami", children: [
+      "Sistem Tingkap",
+      "Sistem Pintu",
+      "Sistem Pintu Dalaman",
+      "Sistem Pintu Masuk",
+      "Sistem Rumah Kaca & Khas",
+      "Kaca, Kemasan & Perkakasan",
+    ] },
   { label: "Hubungi Kami" },
 ];
 
@@ -273,9 +283,9 @@ export const SEO = {
   },
   directors: {
     path: "/directors-profile",
-    title: "Director's Profile",
+    title: "Our Sales Team",
     description:
-      "The leadership behind P.A. Resources Berhad and MEVO Malaysia, the group supplying aluminium window and door systems across the country.",
+      "The PA Projects sales team, supplying MEVO aluminium window and door systems across Malaysia.",
   },
   services: {
     path: "/services",
@@ -345,9 +355,9 @@ export const SEO_ZH = {
   },
   directors: {
     path: "/zh/directors-profile",
-    title: "董事简介",
+    title: "销售团队",
     description:
-      "P.A. Resources Berhad 与 MEVO 马来西亚背后的领导团队 —— 为全国供应铝合金门窗系统的集团。",
+      "PA Projects 销售团队，为全马来西亚供应 MEVO 铝合金门窗系统。",
   },
   services: {
     path: "/zh/services",
@@ -408,9 +418,9 @@ export const SEO_BM = {
   },
   directors: {
     path: "/bm/directors-profile",
-    title: "Profil Pengarah",
+    title: "Pasukan Jualan Kami",
     description:
-      "Kepimpinan di sebalik P.A. Resources Berhad dan MEVO Malaysia, kumpulan yang membekalkan sistem tingkap dan pintu aluminium di seluruh negara.",
+      "Pasukan jualan PA Projects, membekalkan sistem tingkap dan pintu aluminium MEVO di seluruh Malaysia.",
   },
   services: {
     path: "/bm/services",
@@ -493,8 +503,10 @@ export const HERO = {
       body: "Design, customisation, supply, installation and after-sales, from one team.",
       cta: "Our Services",
       href: "/services",
-      image: "/services/04.jpg",
-      alt: "An installer fixing a window frame in place with a cordless drill",
+      image: "/services-features.jpeg",
+      /* Nudged right, clear of the text on the left. See Hero.tsx. */
+      shift: { x: 6 },
+      alt: "A MEVO team member in a branded polo opening a glass door into the showroom",
     },
     {
       eyebrow: "Support",
@@ -502,8 +514,10 @@ export const HERO = {
       body: "Questions, site visits, servicing and after-sales: talk to our team in Shah Alam.",
       cta: "Contact Us",
       href: "/contact",
-      image: "/services/05.jpg",
-      alt: "Close view of hands driving a screw into a window frame",
+      image: "/support.jpeg",
+      /* Nudged up, so the head sits higher in the frame. See Hero.tsx. */
+      shift: { y: -6 },
+      alt: "A MEVO team member opening a tall dark-framed window onto the street outside",
     },
   ],
 };
@@ -593,91 +607,46 @@ export const BACKGROUND = {
     height: 1712,
   },
   /**
-   * The client's copy said "over 30 years of proven expertise" one sentence
-   * after "Established in 2004", while STATS below counts 20 years and its
-   * standfirst dates the extrusion business to 2004 — three different ages for
-   * one company, all visible within a single scroll.
+   * THE STORY, VERBATIM from the client, by request: their wording is kept
+   * exactly as sent, not edited. Their three paragraphs fill the section's
+   * four slots by splitting the first at "How ever", so [0] and [1] are the
+   * director's house and what he ran into, [2] the decision and the search,
+   * [3] MEVO and the showroom.
    *
-   * Resolved toward the two claims that agree and are checkable: 2004, and the
-   * 2006 Bursa listing. "Over two decades" is true of both and contradicts
-   * neither. If the 30-year figure is real it almost certainly belongs to the
-   * founders rather than the company, and needs saying that way — flagged for
-   * the client rather than guessed at here.
-   */
-  /**
-   * THREE PARAGRAPHS FOR TWO CHAPTERS, which the two consumers read
-   * differently and neither of them by counting.
-   *
-   * [0] and [1] are the Group's history, split where /our-profile's lead
-   * stacks it in two brand bars. [2] and [3] are the MEVO partnership, split
-   * the same way for that chapter's two glass panels.
-   *
-   * So it is FOUR paragraphs across TWO chapters, two apiece, and no consumer
-   * may assume that by counting. The home page's pinned swap is still two
-   * paragraphs against two photographs and reads [0] and [2] by name - the
-   * opening of each chapter. Taking the first two would put both halves of the
-   * history in the band and drop the partnership entirely; taking the last two
-   * would lose the opening. Both failures are silent, which is why the indices
-   * are named in CHAPTER_ONE / CHAPTER_TWO in Background.tsx and never spelled
-   * as literals at a call site.
+   * FOUR PARAGRAPHS ACROSS TWO CHAPTERS, two apiece: [0]/[1] in /our-profile's
+   * two brand bars, [2]/[3] in its two glass panels, and the home page's
+   * pinned swap reads [0] and [2] by name - see CHAPTER_ONE / CHAPTER_TWO in
+   * Background.tsx.
    */
   paragraphs: [
-    "Established in 2004 and listed on the Main Market of Bursa Malaysia in 2006; P.A. Resources Berhad (P.A. Group) is a leading Malaysian company in aluminium architectural and industrial applications. With over two decades of proven expertise, the Group has grown from a specialised aluminium extruder into a vertically integrated industrial group.",
-    "Our operations encompass billet smelting, tool and die design, precision extrusion, surface treatment, and solar energy solutions. Headquartered in Kuala Selangor, P.A. Group is widely recognised across the region for its quality, leadership, and expertise in the aluminium industry.",
-    /* [2] and [3] rewritten from the client's copy to tell the partnership
-       from the Malaysian side: the site is PA Projects', and MEVO is named as
-       the partner it is. MEVO's own operations in China (two centres, East and
-       South China) came out; what MEVO makes, energy-saving and low-carbon
-       systems, stayed, because that is what the reader is buying. */
-    "P.A. Group has also formed an in-depth strategic partnership with MEVO Doors & Windows, a renowned window and door brand and our key overseas supplier of energy-saving, low-carbon window and door systems.",
-    "Through PA Projects, those systems are brought to Malaysia: supplied, installed and serviced by our own team from our Shah Alam showroom, from the first consultation to long after handover.",
+    "The story behind of MEVO Malaysia, one of our directors from our board. Was just renovating his house means his building contracting his new house around two years ago. That time his actually was his building contracting his bungalow very high end nice looking. His actually look for Windows and Doors his willing to paid a good mount of money for windows and doors but for with a good high specification products.",
+    "How ever not only his that he did not get a chances to experience have a look what kind of products that he going to purchase it. He also got trip into getting some very low end product but for high specs price.",
+    "As we knows that not also in aluminium business. So the director itself decided that he thinks right now Malaysia standard of a windows and doors actually quite think bad situation of quality itself. And then, his start covering some good high end quality windows and doors but sometimes high end products come if very competitive with price. In the end, during this recovery our director found MEVO from China.",
+    "MEVO not only its their top 5 brand in systems windows and doors in China. Their also having a lot global of business such as Australia, Middle Eastern, Right now we P.A Projects is having the first a main showroom in south asia.",
   ],
 };
 
-/** The Chinese panel copy is the client's own, not a translation of the two
-    English paragraphs above: it makes the brand case rather than reciting the
-    corporate history. Same two steps, so the pinned swap is unchanged. */
+/** The story in Chinese: a translation of the client's English account above,
+    in the same four paragraphs and carrying the same facts. */
 export const BACKGROUND_ZH: Partial<typeof BACKGROUND> = {
   heading: "我们的故事",
-  /**
-   * SPLIT AT ITS OWN SENTENCE, not at the English one.
-   *
-   * The Chinese [0] is not a translation of the English [0]: it is MEVO
-   * Malaysia's philosophy where the English is the P.A. Group's history, and it
-   * carries none of the operations or headquarters copy the English second bar
-   * prints. So there was nothing here to split at the same place, and writing
-   * it would have meant inventing Chinese claims about smelting, extrusion and
-   * a head office that no one has approved.
-   *
-   * What it does instead is give the two bars this language's own two
-   * sentences, split where the copy already turns - the belief, then what
-   * follows from it. Same composition on every locale, no new assertions.
-   *
-   * FLAGGED FOR THE CLIENT: the Chinese lead is about a different subject from
-   * the English and Malay ones. That predates this change, and it is a content
-   * decision rather than a layout one.
-   */
   paragraphs: [
-    "在 MEVO 马来西亚，我们坚信门窗不仅仅是建筑构件——它们塑造着人们的生活、工作以及体验环境的方式。",
-    "作为 MEVO 优质系统的独家总经销商和战略合作伙伴，我们提供集美观、舒适、耐用、节能和长期价值于一体的综合解决方案。",
-    "结合先进的工程技术、现代建筑美学与可靠的性能。",
-    "MEVO 通过专为现代生活方式设计的创新门窗和建筑解决方案，打造舒适、节能且时尚的居住空间。",
+    "MEVO 马来西亚的故事，始于一栋房子。大约两年前，我们的一位董事正在建造自己的新独立洋房。他希望门窗配得上这栋房子：高规格的系统门窗，他也愿意为此付出相应的价钱。",
+    "然而他发现，市场上几乎没有地方能让他在购买前亲眼看到、亲手体验产品；而一些以高规格价格出售的产品，实际上却是低端货。",
+    "作为自 2004 年起深耕铝业的 P.A. Group 一员，他深知这种材料，也看到马来西亚门窗的整体品质仍有不足。于是他着手寻找真正高端、同时价格具竞争力的系统门窗，而这一路寻找，最终让他找到了 MEVO。",
+    "MEVO 是中国系统门窗五强品牌之一，业务遍及澳大利亚与中东等地。如今，PA Projects 将 MEVO 带到马来西亚，并拥有其在南亚的首家主展厅。",
   ],
 };
 
-/**
- * The same section in Malay — and a translation of the ENGLISH paragraphs, not
- * of the Chinese ones. The two are different copy: the Chinese panel is the
- * client's own brand pitch, the English is the corporate history. The history
- * is the checkable one, so it is what the third language carries.
- */
+/** The story in Malay: a translation of the client's English account above,
+    in the same four paragraphs and carrying the same facts. */
 export const BACKGROUND_BM: Partial<typeof BACKGROUND> = {
   heading: "Kisah Kami",
   paragraphs: [
-    "Ditubuhkan pada 2004 dan tersenarai di Pasaran Utama Bursa Malaysia pada 2006; P.A. Resources Berhad (P.A. Group) ialah sebuah syarikat Malaysia yang terkemuka dalam aplikasi aluminium seni bina dan perindustrian. Dengan lebih dua dekad kepakaran yang terbukti, Kumpulan ini telah berkembang daripada pengeluar ekstrusi aluminium khusus kepada sebuah kumpulan perindustrian bersepadu menegak.",
-    "Operasi kami merangkumi peleburan bilet, reka bentuk alat dan acuan, ekstrusi berpresisi, rawatan permukaan dan penyelesaian tenaga solar. Beribu pejabat di Kuala Selangor, P.A. Group diiktiraf secara meluas di rantau ini kerana kualiti, kepimpinan dan kepakarannya dalam industri aluminium.",
-    "P.A. Group juga telah menjalin kerjasama strategik yang mendalam dengan MEVO Doors & Windows, jenama tingkap dan pintu yang terkenal dan pembekal luar negara utama kami bagi sistem tingkap dan pintu yang jimat tenaga dan rendah karbon.",
-    "Melalui PA Projects, sistem-sistem ini dibawa ke Malaysia: dibekalkan, dipasang dan diselenggara oleh pasukan kami sendiri dari bilik pameran kami di Shah Alam, dari konsultasi pertama hingga lama selepas serahan.",
+    "Kisah MEVO Malaysia bermula dengan sebuah rumah. Kira-kira dua tahun lalu, salah seorang pengarah kami sedang membina banglo baharunya, dan beliau mahukan tingkap serta pintu yang setanding dengannya: sistem berspesifikasi tinggi, dan beliau sanggup membayar harga yang setimpal.",
+    "Namun yang ditemuinya ialah pasaran yang tidak memberi peluang untuk melihat atau mencuba produk sebelum membeli, malah ada produk yang dijual pada harga spesifikasi tinggi tetapi sebenarnya bermutu rendah.",
+    "Sebagai sebahagian daripada P.A. Group, syarikat aluminium sejak 2004, beliau memahami bahan ini dengan mendalam, dan dapat melihat bahawa standard tingkap dan pintu di Malaysia masih belum memuaskan. Beliau mula mencari sistem bertaraf tinggi pada harga yang kompetitif, dan pencarian itu membawanya kepada MEVO.",
+    "MEVO ialah antara lima jenama utama sistem tingkap dan pintu di China, dengan perniagaan merentasi Australia dan Timur Tengah. Kini PA Projects membawa MEVO ke Malaysia, dengan bilik pameran utama pertamanya di Asia Selatan.",
   ],
 };
 
@@ -698,7 +667,7 @@ export const BACKGROUND_BM: Partial<typeof BACKGROUND> = {
  * The reviews are not translated: a quote is the customer's own words, in the
  * language they wrote it.
  */
-export type Review = { name: string; stars: number; when: string; text: string };
+export type Review = { name: string; stars: number; when?: string; text: string };
 
 export const TESTIMONIALS = {
   eyebrow: "Testimonials",
@@ -706,15 +675,44 @@ export const TESTIMONIALS = {
   googleLink: "See all on Google",
   /** PLACEHOLDER: swap for the Google Business profile's review link. */
   href: "https://www.google.com/maps/search/?api=1&query=PA%20Projects%20Marketing%20Sdn%20Bhd%20Shah%20Alam",
+  /* MUIZ IS THE ONLY REVIEW CONFIRMED AS A REAL GOOGLE REVIEW.
+     The five after it are PLACEHOLDERS supplied for the layout: names, ratings
+     and text were given by the client as sample copy, not taken from the
+     Google listing. Replace each with a real review (name as Google shows it,
+     text exactly as written, rating and date) before launch, and delete any
+     that cannot be matched to the listing. `when` is omitted until dates are
+     supplied; the card hides it when absent. */
   reviews: [
-    { name: "Customer Name", stars: 5, when: "2 weeks ago", text: "Placeholder review. We replaced every window in our terrace house with their sliding systems. The team measured, quoted and installed within the month, and the house is noticeably quieter." },
-    { name: "Customer Name", stars: 5, when: "1 month ago", text: "Placeholder review. Visited the Shah Alam showroom before deciding. Being able to open and close the actual doors made the choice easy." },
-    { name: "Customer Name", stars: 5, when: "1 month ago", text: "Placeholder review. Installers were punctual and careful, covered the floors and cleaned up after themselves. The panoramic door looks great." },
-    { name: "Customer Name", stars: 5, when: "2 months ago", text: "Placeholder review. Our living room used to be hot by the afternoon. Since the new glazing went in it stays cool, and the aircon runs less." },
-    { name: "Customer Name", stars: 4, when: "3 months ago", text: "Placeholder review. Good quality profiles and hardware for the price. Delivery took a little longer than planned, but they kept us updated throughout." },
-    { name: "Customer Name", stars: 5, when: "3 months ago", text: "Placeholder review. Had an issue with a handle after a year and after-sales came the next day to sort it out. That is why we would recommend them." },
-    { name: "Customer Name", stars: 5, when: "4 months ago", text: "Placeholder review. No more leaks during heavy rain. The casement windows seal properly and close smoothly." },
-    { name: "Customer Name", stars: 5, when: "5 months ago", text: "Placeholder review. Helpful sales team who explained the difference between each system honestly, without pushing the most expensive one." },
+    {
+      name: "Muiz",
+      stars: 5,
+      text: "Beautiful designs, premium quality, and great customer service! P.A. Projects × MEVO is definitely a great choice for modern windows and doors. Highly recommended! There have 15 years warranty",
+    },
+    {
+      name: "Jason Lim",
+      stars: 5,
+      text: "Very happy with the aluminium doors and windows. Finishing looks neat and really suits our house. Overall puas hati, recommended!",
+    },
+    {
+      name: "Nur Aisyah",
+      stars: 5,
+      text: "Good service! The team explained the options clearly, so easier for us to choose. Anyone looking for aluminium doors and windows can consider them 👍",
+    },
+    {
+      name: "Tan Wei Ming",
+      stars: 5,
+      text: "Our new windows look cantik! Opens and closes smoothly, and the workmanship is kemas. Thank you to the team!",
+    },
+    {
+      name: "Priya Nair",
+      stars: 5,
+      text: "Senang deal with the team, and they answered our questions patiently. Happy with how the aluminium doors turned out. Recommended!",
+    },
+    {
+      name: "Muhammad Hakim",
+      stars: 5,
+      text: "Nice work on our doors and windows. The whole house looks fresh and modern now. Overall a good experience, thank you!",
+    },
   ] as Review[],
 };
 
@@ -795,9 +793,8 @@ export const PRODUCT_GRID_BM: Partial<typeof PRODUCT_GRID> = {
  * until the client supplies one per category. They should be portrait and lit
  * alike, since the three sit side by side.
  *
- * Every category links to the door half of the catalogue: the catalogue filters
- * by system (window / door) and nothing finer, so there is no "interior doors
- * only" view to send a category to yet.
+ * Each door panel opens its own category in the catalogue (#interior,
+ * #entrance); see CATEGORIES in lib/products.ts.
  */
 /**
  * The home page's second section: five category panels, three door and two
@@ -821,6 +818,7 @@ export const DOOR_COLLECTION = {
         "Enhance your interior with modern door designs featuring clean lines, elegant finishes, and a sophisticated appearance.",
       image: "/products/14.jpg",
       alt: "Black-panelled room with a slim black-framed interior door with an arched glass grille",
+      href: "/our-products#interior",
     },
     {
       name: "Luxury Double Doors",
@@ -829,6 +827,7 @@ export const DOOR_COLLECTION = {
         "Make a statement with beautifully crafted double doors that bring a bold, luxurious touch to residential and commercial spaces.",
       image: "/products/17.jpg",
       alt: "Dark double entry door with a bronze medallion handle under a columned porch",
+      href: "/our-products#entrance",
     },
     {
       name: "Glass Interior Doors",
@@ -837,6 +836,7 @@ export const DOOR_COLLECTION = {
         "Create bright, stylish interiors with elegant glass door designs that balance privacy, natural light, and contemporary aesthetics.",
       image: "/products/13.jpg",
       alt: "Black-framed arched French sliding doors in reeded glass closing off a kitchen",
+      href: "/our-products#interior",
     },
     {
       name: "Casement Windows",
@@ -1514,7 +1514,7 @@ export const PROFILE_HERO_BM: Partial<typeof PROFILE_HERO> = {
 };
 
 /**
- * The last section of /our-profile: the sales team, as an edge-to-edge grid of
+ * The body of /directors-profile (Our Sales Team): the team, as an edge-to-edge grid of
  * portraits, each revealing the person's name, role and contact on
  * hover (or tap, on a touch screen).
  *
@@ -1539,21 +1539,30 @@ export type SalesMember = {
 export const SALES_TEAM = {
   eyebrow: "Our Sales Team",
   heading: "The people behind your project.",
-  lede: "From the first site visit to the final fitting, you deal with the same team. Talk to us in English, Mandarin or Bahasa Malaysia.",
+  lede: "One team stays with your project, from the first site visit to the final fitting and long after handover.",
   whatsapp: "WhatsApp",
   call: "Call",
+  /* Names and roles as supplied by the client. Roles stay in English in every
+     language, as job titles on a Malaysian business card do. Portraits and
+     personal numbers still to come: until then each card shows a silhouette
+     and the company's WhatsApp and phone. */
   members: [
-    { name: "Team Member", role: "Sales Manager" },
-    { name: "Team Member", role: "Sales Consultant, Residential" },
-    { name: "Team Member", role: "Sales Consultant, Projects" },
-    { name: "Team Member", role: "Showroom Consultant" },
+    { name: "Andy Lai", role: "Sales & Marketing Manager, B2C" },
+    { name: "Anthony Wong", role: "Sales & Marketing Manager, B2B" },
+    { name: "Jie Guan Tan (Sean)", role: "Head of Sales & Marketing, B2C" },
+    { name: "Nurul Nadiah", role: "Sales & Marketing Supervisor" },
+    { name: "Aiman Isyraq", role: "Marketing Executive" },
+    { name: "Syed Syamsul Muiz", role: "Digital Marketing Executive" },
   ] as SalesMember[],
+  /** How many members sit on each row, in order: 1–2, 3, 4, 5–6. Rows are
+      centred, so a single member stands alone in the middle. */
+  rows: [2, 1, 1, 2],
 };
 
 export const SALES_TEAM_ZH: Partial<typeof SALES_TEAM> = {
   eyebrow: "销售团队",
   heading: "为您的项目把关的人。",
-  lede: "从第一次现场勘察到最后的安装，始终由同一支团队为您服务。英语、华语或马来语，皆可沟通。",
+  lede: "从第一次现场勘察到最后的安装，乃至交付之后，始终由同一支团队为您的项目跟进。",
   whatsapp: "WhatsApp",
   call: "致电",
 };
@@ -1561,7 +1570,7 @@ export const SALES_TEAM_ZH: Partial<typeof SALES_TEAM> = {
 export const SALES_TEAM_BM: Partial<typeof SALES_TEAM> = {
   eyebrow: "Pasukan Jualan Kami",
   heading: "Orang di sebalik projek anda.",
-  lede: "Dari lawatan tapak pertama hingga pemasangan akhir, anda berurusan dengan pasukan yang sama. Bercakap dengan kami dalam bahasa Inggeris, Mandarin atau Bahasa Malaysia.",
+  lede: "Satu pasukan bersama projek anda, dari lawatan tapak pertama hingga pemasangan akhir, dan lama selepas serahan.",
   whatsapp: "WhatsApp",
   call: "Hubungi",
 };
@@ -1658,23 +1667,31 @@ export const PROFILE_FIGURES_BM: Partial<typeof PROFILE_FIGURES> = {
  */
 export const DIRECTORS = {
   banner: {
-    heading: "Director's Profile",
-    lede: "The leadership behind P.A. Resources Berhad and MEVO Malaysia, the group supplying aluminium window and door systems across the country.",
+    heading: "Our Sales Team",
+    lede: "The PA Projects sales team, supplying MEVO aluminium window and door systems across Malaysia.",
+    /* The hero's headline and button. The photograph is Our Profile's hero
+       (PROFILE_HERO.image), reused as requested. */
+    headline: ["One team,", "first visit to handover."],
+    cta: "Meet the team",
   },
 };
 
 export const DIRECTORS_ZH: Partial<typeof DIRECTORS> = {
   banner: {
-    heading: "董事简介",
-    lede: "P.A. Resources Berhad 与 MEVO 马来西亚背后的领导团队 —— 为全国供应铝合金门窗系统的集团。",
+    heading: "销售团队",
+    lede: "PA Projects 销售团队，为全马来西亚供应 MEVO 铝合金门窗系统。",
+    headline: ["同一支团队，", "从勘察到交付。"],
+    cta: "认识团队",
   },
 };
 
 /** Mine rather than the client's, like every other Malay string here. */
 export const DIRECTORS_BM: Partial<typeof DIRECTORS> = {
   banner: {
-    heading: "Profil Pengarah",
-    lede: "Kepimpinan di sebalik P.A. Resources Berhad dan MEVO Malaysia, kumpulan yang membekalkan sistem tingkap dan pintu aluminium di seluruh negara.",
+    heading: "Pasukan Jualan Kami",
+    lede: "Pasukan jualan PA Projects, membekalkan sistem tingkap dan pintu aluminium MEVO di seluruh Malaysia.",
+    headline: ["Satu pasukan,", "dari lawatan hingga serahan."],
+    cta: "Kenali pasukan",
   },
 };
 
@@ -2299,7 +2316,7 @@ export const MATERIALS = {
           name: "KESENBERG",
           body: "German hardware for MEVO's bifold doors, on high-load double-row rollers.",
           image: "/products/11.png",
-          product: "dm80-biofold-door",
+          product: "dm80-bifold-door",
         },
         {
           name: "Wehag",
@@ -2373,7 +2390,7 @@ export const PROJECTS = {
       The heading repeats `heading` above rather than reaching for something
       of its own, and that is the decision rather than an oversight. Every
       other banner on the site is a short noun phrase — "Our Products", "Our
-      Services", "Director's Profile" — and it is the words the nav item uses,
+      Services", "Our Sales Team" — and it is the words the nav item uses,
       so a page is called what the reader clicked to reach it. /contact is the
       one exception, and it earns it by asking for something.
 
@@ -2915,17 +2932,19 @@ export const PRODUCTS_PAGE = {
   viewsLabel: "Views",
   /** Names the list/grid switch for screen readers. */
   viewLabel: "Catalog layout",
-  /** Names the system filter for screen readers, and its three buttons. The
-      ids are `System` in lib/products.ts, which owns what each one selects;
-      only the words live here. The two product ones are the same words the
-      header's Our Products submenu uses, deliberately — a reader who opened
-      that menu and arrived here should find the halves called what they were
-      called a click ago. */
+  /** Names the category filter for screen readers, and its buttons. The ids
+      are `System` in lib/products.ts, which owns what each one selects; only
+      the words live here. They are the same words the header's Our Products
+      submenu uses, so a reader arriving from that menu finds the category
+      called what it was called a click ago. */
   filterLabel: "Filter by system",
   filters: [
     { id: "all" as const, label: "All" },
-    { id: "window" as const, label: "Window System" },
-    { id: "door" as const, label: "Door System" },
+    { id: "window" as const, label: "Windows Systems" },
+    { id: "door" as const, label: "Door Systems" },
+    { id: "interior" as const, label: "Interior Door Systems" },
+    { id: "entrance" as const, label: "Entrance Door Systems" },
+    { id: "special" as const, label: "Sunroom & Special Systems" },
   ],
   /** Closes every expanded product. The same words the projects strip ends on,
       so the one thing the site asks for is asked for in one way. `aria` names
@@ -2941,10 +2960,8 @@ export const PRODUCTS_PAGE = {
 /**
  * The catalogue chrome in Chinese.
  *
- * The product data itself needs nothing here: lib/products.ts already carries a
- * `zh` on 85 of its 86 spec bullets and ProductCatalog prints both languages
- * together in either locale, which is the one part of the site that was already
- * bilingual before any of this.
+ * The product data itself needs nothing here: lib/products.ts carries a `zh` on
+ * every spec bullet, and ProductSpecs prints only the Chinese on this locale.
  *
  * `cta.href` points at /zh/contact rather than /contact, so a reader who gets
  * to the enquiry form from the Chinese catalogue stays in Chinese.
@@ -2962,6 +2979,9 @@ export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
     { id: "all" as const, label: "全部" },
     { id: "window" as const, label: "窗系统" },
     { id: "door" as const, label: "门系统" },
+    { id: "interior" as const, label: "室内门系统" },
+    { id: "entrance" as const, label: "入户门系统" },
+    { id: "special" as const, label: "阳光房与特色系统" },
   ],
   cta: {
     label: "联系我们",
@@ -2973,10 +2993,8 @@ export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
 /**
  * The catalogue chrome in Malay.
  *
- * The product data needs nothing here: lib/products.ts carries English and
- * Chinese on its spec bullets and ProductCatalog prints both in every locale.
- * That is the one part of the site that is not translated for Malay, and it is
- * a real gap rather than an oversight — see the note in lib/products.ts.
+ * The product data needs nothing here: lib/products.ts carries an `ms` on every
+ * spec bullet, and ProductSpecs prints only the Malay on this locale.
  *
  * `cta.href` points at /bm/contact, so a reader who reaches the enquiry form
  * from the Malay catalogue stays in Malay.
@@ -2994,6 +3012,9 @@ export const PRODUCTS_PAGE_BM: Partial<typeof PRODUCTS_PAGE> = {
     { id: "all" as const, label: "Semua" },
     { id: "window" as const, label: "Sistem Tingkap" },
     { id: "door" as const, label: "Sistem Pintu" },
+    { id: "interior" as const, label: "Sistem Pintu Dalaman" },
+    { id: "entrance" as const, label: "Sistem Pintu Masuk" },
+    { id: "special" as const, label: "Sistem Rumah Kaca & Khas" },
   ],
   cta: {
     label: "Hubungi kami",

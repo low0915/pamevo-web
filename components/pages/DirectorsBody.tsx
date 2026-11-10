@@ -1,20 +1,21 @@
-import { DIRECTORS, DIRECTORS_ZH, DIRECTORS_BM } from "@/lib/content";
+import {
+  DIRECTORS,
+  DIRECTORS_ZH,
+  DIRECTORS_BM,
+  PROFILE_HERO,
+} from "@/lib/content";
 import type { Locale } from "@/lib/paths";
-import { PageBanner } from "@/components/sections/PageBanner";
+import { PageHero } from "@/components/sections/PageHero";
+import { SalesTeam } from "@/components/sections/SalesTeam";
 
 /**
- * /directors-profile, /bm/directors-profile and /zh/directors-profile.
+ * Our Sales Team: /directors-profile, /bm/directors-profile and
+ * /zh/directors-profile. The URL keeps the WordPress slug; the page is now the
+ * sales team's.
  *
- * THE BANNER AND NOTHING ELSE, DELIBERATELY. No profiles were supplied, and a
- * director's name, title or biography is not a thing to invent: it is a
- * statement about a real person published under the company's name, and a
- * plausible-sounding placeholder is worse than an empty page because nobody
- * notices it is wrong.
- *
- * So the route is real — heading, lede, metadata, hreflang, sitemap entry, its
- * place in the nav — and the part that needs the client is simply absent rather
- * than faked. Adding the profiles is a `people` array in DIRECTORS and a block
- * below this banner; nothing structural has to move for it.
+ * Opens on the same hero as Our Profile (PageHero, with PROFILE_HERO's
+ * photograph) carrying this page's own words, then the team grid that used to
+ * close the profile page. The hero's button glides down to the grid.
  *
  * A server component, so the copy arrives as a prop rather than through the
  * locale context, the same shape ContactBody and ServicesBody take.
@@ -32,18 +33,18 @@ export function DirectorsBody({ locale = "EN" }: { locale?: Locale }) {
 
   return (
     <main className="flex-1">
-      <PageBanner
-        heading={copy.banner.heading}
-        subheading={copy.banner.lede}
-        /* /contact's banner exactly, as on /services and the profile page. */
-        overlay={{ src: "/pa mevo_up.png", position: "50% 15%" }}
-        figure={{
-          src: "/Camada 1.png",
-          position: "55% 50%",
-          scale: 1.1,
-          offsetY: "5%",
+      <PageHero
+        eyebrow={copy.banner.heading}
+        headline={copy.banner.headline}
+        body={copy.banner.lede}
+        cta={{ label: copy.banner.cta, href: "#sales-team" }}
+        image={{
+          src: PROFILE_HERO.image,
+          alt: PROFILE_HERO.alt,
+          position: "50% 42%",
         }}
       />
+      <SalesTeam locale={locale} />
     </main>
   );
 }

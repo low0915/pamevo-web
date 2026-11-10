@@ -15,8 +15,8 @@ export const metadata: Metadata = pageMetadataZh(SEO_ZH.products);
  *
  * Both sections are client components reading the locale from context, so they
  * need nothing passed to them — the ZH root layout above has already provided
- * it. The product specs themselves were bilingual before any of this: they
- * render English and Chinese together in either locale.
+ * it. The product specs render in Chinese only, from the `zh` lines in
+ * lib/products.ts.
  */
 export default function OurProductsPageZh() {
   return (

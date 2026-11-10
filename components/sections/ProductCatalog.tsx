@@ -4,20 +4,22 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { CaretDown, Rows, SquaresFour } from "@phosphor-icons/react/dist/ssr";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 
 import {
   PRODUCTS,
   inSystem,
   productFromHash,
+  productTitle,
   systemFromHash,
   systemHash,
   type Product,
   type System,
 } from "@/lib/products";
+import { CategoryIcon } from "@/components/product/CategoryIcon";
 import { ProductSpecs } from "@/components/product/ProductSpecs";
 import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH, PRODUCTS_PAGE_BM } from "@/lib/content";
-import { useCopy } from "@/lib/locale";
+import { useCopy, useLocale } from "@/lib/locale";
 import { Z } from "@/lib/z";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -36,16 +38,13 @@ const LAYERS: Layer[] = PRODUCTS.flatMap((p) =>
 );
 
 const FIRST = PRODUCTS[0];
+
 const FIRST_KEY = `${FIRST.slug}-0`;
 
-/** The two ways to read the catalogue. List is the default: it holds the most
- *  titles on screen at once, which is what a twenty-item spec list is for. */
-const VIEWS = [
-  { id: "list", label: "List view", Icon: Rows },
-  { id: "grid", label: "Grid view", Icon: SquaresFour },
-] as const;
-
-type View = (typeof VIEWS)[number]["id"];
+/** The two layouts the catalogue can render. Only list is offered: the
+ *  list/grid switch was removed on request. The grid layout's code is kept
+ *  behind `view` so it can be brought back by restoring a switch. */
+type View = "list" | "grid";
 
 /**
  * The two-column product browser: photograph left, catalogue right.
@@ -77,12 +76,13 @@ export function ProductCatalog() {
      the English constants directly, so /zh/our-products rendered an English
      "Our Products" over Chinese specifications. */
   const copy = useCopy(PRODUCTS_PAGE, { ZH: PRODUCTS_PAGE_ZH, BM: PRODUCTS_PAGE_BM });
+  const { locale } = useLocale();
 
   /** Which row is expanded. Null is a legal state: rows close on re-click. */
   const [open, setOpen] = useState<string | null>(FIRST.no);
   /** Which image layer is visible. */
   const [shown, setShown] = useState(FIRST_KEY);
-  const [view, setView] = useState<View>("list");
+  const [view] = useState<View>("list");
   const [system, setSystem] = useState<System>("all");
   /** Which layers have been mounted, and so fetched. Never shrinks. */
   const [mounted, setMounted] = useState<ReadonlySet<string>>(
@@ -185,7 +185,7 @@ export function ProductCatalog() {
    * This is where the home page's product grid now sends a reader. A pane there
    * used to open that product's own page, which is a dead end with one product
    * on it, and someone who has just picked one pane out of six is browsing
-   * rather than deciding. `/our-products#dm80-biofold-door` puts them in the
+   * rather than deciding. `/our-products#dm80-bifold-door` puts them in the
    * catalogue with that row open and the other nineteen underneath it.
    *
    * The filter is cleared rather than left alone. A slug says nothing about a
@@ -244,80 +244,45 @@ export function ProductCatalog() {
        to the effect above exactly as before the handler existed. */
     <section
       data-hash-managed
-      className="mb-[4em] px-4 pt-16 pb-24 md:px-8 md:pt-20 md:pb-36 lg:px-12"
+      className="mb-[4em] px-4 pt-6 pb-24 md:px-8 md:pt-8 md:pb-36 lg:px-12"
     >
       <div className="mx-auto w-full max-w-[1440px]">
         <h2 className="sr-only">{copy.catalogLabel}</h2>
 
-        {/* The catalogue's toolbar: what is listed on the left, how it is
-            listed on the right. Above the grid rather than inside the right
-            column, so the first entry starts level with the top of the
-            photograph.
-
-            Sticky, because the thing it controls is twenty products long and a
-            filter that scrolls away is a filter you have to go back up to reach.
-
-            `top-20` is the fixed header island, which owns the first 80px of
-            the viewport. The height below it is deliberate and not free: the
-            bar is 48px tall - a 32px control in `py-2` - which lands its foot
-            at exactly 128px, which is where the photograph beside the list
-            pins (`lg:top-32`). Any taller and the two overlap; the bar is
-            earlier in the document and would be painted over by the figure.
-
-            `bg-bg` rather than glass. Rows pass underneath it, and this is the
-            one surface on the page that has to hide what is behind it rather
-            than suggest it - a translucent bar with product titles sliding
-            through it reads as a rendering fault. `Z.raised` because the rows
-            are `relative` and would otherwise paint over a bar that comes
-            before them in the document.
-
-            Two groups, both `aria-pressed` per button rather than one control
-            that flips: a screen reader hears which one is active without having
-            to infer it from a label that changes underneath it. */}
+        {/* The categories, as tiles: a line drawing of the system, its name,
+            Three across on a phone, six on a
+            wide screen. The selected tile inverts to ink. */}
         <div
-          style={{ zIndex: Z.raised }}
-          className="sticky top-20 mb-5 flex flex-wrap items-center justify-between gap-3 bg-bg py-2"
+          role="group"
+          aria-label={copy.filterLabel}
+          /* Flush tiles, no gaps and square corners. The container draws the
+             top and left rule and each tile its right and bottom, so every
+             shared edge is one line rather than two at any column count. */
+          className="mb-5 grid grid-cols-3 border-t border-l border-[var(--line)] md:grid-cols-6"
         >
-          <div
-            role="group"
-            aria-label={copy.filterLabel}
-            className="flex items-center gap-0.5 rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.35)] p-0.5"
-          >
-            {copy.filters.map(({ id, label }) => (
+          {copy.filters.map(({ id, label }) => {
+            const active = system === id;
+            return (
               <button
                 key={id}
                 type="button"
-                aria-pressed={system === id}
+                aria-pressed={active}
                 onClick={() => setFilter(id)}
-                className={`h-8 rounded-full px-3.5 text-sm whitespace-nowrap transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
-                  system === id ? "bg-ink text-bg" : "text-ink-2"
+                className={`flex min-h-[7.5rem] flex-col items-center justify-center gap-3 rounded-none border-r border-b border-[var(--line)] p-3 text-center transition-[background-color,color] duration-200 ease-[var(--ease-out)] md:min-h-[8.5rem] md:p-4 ${
+                  active
+                    ? "bg-ink text-bg"
+                    : "bg-[rgb(255_255_255/0.35)] text-ink hover:bg-[rgb(255_255_255/0.8)]"
                 }`}
               >
-                {label}
+                <CategoryIcon
+                  system={id}
+                  size={44}
+                  className={active ? "" : "text-ink-2"}
+                />
+                <span className="text-sm leading-snug text-balance">{label}</span>
               </button>
-            ))}
-          </div>
-
-          <div
-            role="group"
-            aria-label={copy.viewLabel}
-            className="flex items-center gap-0.5 rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.35)] p-0.5"
-          >
-            {VIEWS.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                aria-pressed={view === id}
-                aria-label={label}
-                onClick={() => setView(id)}
-                className={`grid size-8 place-items-center rounded-full transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] ${
-                  view === id ? "bg-ink text-bg" : "text-ink-3"
-                }`}
-              >
-                <Icon size={15} weight="regular" />
-              </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
         {/* items-start is what lets the figure be shorter than the column and
@@ -535,7 +500,7 @@ export function ProductCatalog() {
                                 : "flex-1 xl:text-lg"
                             }`}
                           >
-                            {p.title}
+                            {productTitle(p, locale)}
                           </span>
                           <CaretDown
                             size={14}
@@ -622,6 +587,7 @@ export function ProductCatalog() {
                             /our-products/[slug]; see components/product. */}
                         <ProductSpecs
                           groups={p.groups}
+                          locale={locale}
                           gutter={gutter}
                           reserveOnLastLine={!hasViews}
                         />
@@ -680,7 +646,7 @@ export function ProductCatalog() {
                         >
                           <Link
                             href={copy.cta.href}
-                            aria-label={copy.cta.aria(p.title)}
+                            aria-label={copy.cta.aria(productTitle(p, locale))}
                             className="inline-flex items-center rounded-full bg-ink px-5 py-2.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
                           >
                             {copy.cta.label}

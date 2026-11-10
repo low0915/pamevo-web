@@ -395,7 +395,7 @@ export function Background({
                 island, which owns the first 80px of the screen. Gutters are the
                 home page's own, and there is no max-width, so the heading sits
                 the same distance from the edge here as it does there. */}
-            <div className="relative w-full px-6 py-20 md:px-8 lg:px-10">
+            <div className="relative w-full px-6 py-20 md:px-8 lg:px-10 lg:pb-36">
               {/* Down 10% of its own height.
 
                   A TRANSLATE and not a margin, which is what makes the number

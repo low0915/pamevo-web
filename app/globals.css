@@ -134,6 +134,15 @@ body {
     inset 0 -1px 0 rgb(126 133 140 / 0.18);
 }
 
+/* Heavier tint of the light glass, for the header's dropdown menus, which
+   float over whatever the page is showing and must read as solid enough to
+   hold a list of links. Declared after .glass so it wins on source order. */
+.glass-dense {
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.1)),
+    rgb(255 255 255 / 0.82);
+}
+
 /* Dark variant of the same material, for panels sitting on photography.
    Heavier blur than the light glass: it has more image to dissolve.
 

@@ -8,7 +8,7 @@ import {
   SITE,
 } from "./content";
 import { LOCALE_PREFIX, type Locale } from "./paths";
-import { describe, PRODUCTS, type Product } from "./products";
+import { describe, PRODUCTS, productTitle, type Product } from "./products";
 
 /**
  * schema.org graphs.
@@ -226,7 +226,7 @@ export function productsGraph(locale: Locale = "EN") {
       itemListElement: PRODUCTS.map((product, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        name: product.title,
+        name: productTitle(product, locale),
         url: `${base}#${product.slug}`,
       })),
     },

@@ -13,22 +13,13 @@ import type { Locale } from "@/lib/paths";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
- * The sales team, closing /our-profile: the title and description on the site
- * gutter, then the team as portraits laid edge to edge, with no gaps.
+ * The sales team, on Our Sales Team (/directors-profile): the introduction and
+ * the company's WhatsApp and Call buttons on the left, pinned on desktop, and
+ * the team as a small org chart on the right in the client's order (2, 1, 1,
+ * 2), joined by connector lines. Each card is a portrait with the name and
+ * role beneath it; no hover state and no per-person contact yet.
  *
- * The portraits carry no text until they are asked: hovering one (or giving
- * it focus, which is what a tap does on a touch screen) darkens it and brings
- * up the name, role and the two ways to reach that person. The
- * reveal is opacity only, never `display`, so the details are in the page for
- * screen readers and search engines the whole time, and tabbing to a button
- * reveals the card it is on (`focus-within`).
- *
- * On a screen with no hover the name and role are always shown along the
- * foot of each portrait, so a phone reader knows a tap does something and
- * whom it is on; the tap adds the buttons.
- *
- * Four across from `md`, two on a phone. A server component, so the copy
- * arrives through `locale`, as on the rest of this page.
+ * A server component, so the copy arrives through `locale`.
  */
 export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
   const TRANSLATIONS: Record<Locale, Partial<typeof SALES_TEAM>> = {
@@ -39,99 +30,127 @@ export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
   const copy = { ...SALES_TEAM, ...TRANSLATIONS[locale] };
 
   return (
-    <section aria-labelledby="sales-team-heading" className="border-t border-line bg-surface pt-20 md:pt-24 lg:pt-28">
-      <div className="px-6 md:px-8 lg:px-10">
-        <Reveal>
-          <p className="text-xs font-medium tracking-[0.2em] text-ink-2 uppercase md:text-sm">
-            {copy.eyebrow}
-          </p>
-          <h2
-            id="sales-team-heading"
-            className="mt-4 max-w-[24ch] text-[clamp(1.75rem,3.4vw,3rem)] leading-[1.05] font-medium tracking-tighter text-balance text-ink"
-          >
-            {copy.heading}
-          </h2>
-          <p className="mt-5 max-w-[60ch] text-[1.0625rem] leading-[1.5] text-ink-2 md:mt-6">
-            {copy.lede}
-          </p>
-        </Reveal>
-      </div>
+    <section
+      id="sales-team"
+      aria-labelledby="sales-team-heading"
+      className="border-t border-line bg-surface px-6 pt-20 pb-20 md:px-8 md:pt-24 md:pb-24 lg:px-10 lg:pt-28 lg:pb-28"
+    >
+      {/* Two columns from `lg`: the introduction on the left, pinned while the
+          chart scrolls past it, and the chart on the right. Stacked below
+          `lg`. Splitting the width is what stops the chart, which is only two
+          portraits wide at its widest, from floating in an empty page. */}
+      <div className="mx-auto max-w-[1440px] lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
+        <div className="lg:sticky lg:top-28 lg:self-start">
+          <Reveal>
+            <p className="text-xs font-medium tracking-[0.2em] text-ink-2 uppercase md:text-sm">
+              {copy.eyebrow}
+            </p>
+            <h2
+              id="sales-team-heading"
+              className="mt-4 max-w-[24ch] text-[clamp(1.75rem,3.4vw,3rem)] leading-[1.05] font-medium tracking-tighter text-balance text-ink"
+            >
+              {copy.heading}
+            </h2>
+            <p className="mt-5 max-w-[60ch] text-[1.0625rem] leading-[1.5] text-ink-2 md:mt-6">
+              {copy.lede}
+            </p>
+            {/* The whole team at once: the company's WhatsApp and phone, the
+                same ones every card falls back to until members have their
+                own numbers. */}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href={WHATSAPP.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-ink px-5 text-sm font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out active:scale-[0.97]"
+              >
+                <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" aria-hidden>
+                  <path d={siWhatsapp.path} />
+                </svg>
+                {copy.whatsapp}
+              </a>
+              <a
+                href={FOOTER.phoneHref}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[rgb(16_18_21/0.2)] px-5 text-sm font-medium tracking-tight text-ink transition-transform duration-[160ms] ease-out active:scale-[0.97]"
+              >
+                <PhoneIcon size={16} weight="bold" aria-hidden />
+                {copy.call}
+              </a>
+            </div>
+          </Reveal>
+        </div>
 
-      <ul className="mt-14 grid grid-cols-2 md:mt-16 md:grid-cols-4">
-        {copy.members.map((member, i) => (
-          <Member key={`${member.role}-${i}`} member={member} copy={copy} />
-        ))}
-      </ul>
+        {/* One centred row per entry in `rows` (2, 1, 1, 2), in the client's
+            order, joined by org-chart connectors: a bracket where two meet one,
+            a straight line between two singles. */}
+        <div className="mt-14 md:mt-16 lg:mt-0">
+          {copy.rows.map((count, r) => {
+            const start = copy.rows.slice(0, r).reduce((a, b) => a + b, 0);
+            const next = copy.rows[r + 1];
+            return (
+              <div key={r}>
+                <ul className="flex justify-center gap-4 md:gap-6">
+                  {copy.members.slice(start, start + count).map((member) => (
+                    <Member key={member.name} member={member} />
+                  ))}
+                </ul>
+                {next ? <Connector from={count} to={next} /> : null}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }
 
-function Member({
-  member,
-  copy,
-}: {
-  member: SalesMember;
-  copy: typeof SALES_TEAM;
-}) {
+/**
+ * The line between two rows of the chart. Drawn with borders rather than an
+ * SVG so it follows the cards' widths at every breakpoint: a bracket spans
+ * from the centre of one card to the centre of its neighbour, which is one
+ * card width plus the gap - the same arithmetic as the row above it.
+ *
+ *   2 -> 1   a U under the pair, then a stem down to the single
+ *   1 -> 1   a straight stem
+ *   1 -> 2   a stem, then an upturned U over the pair
+ */
+const BRACKET =
+  "mx-auto h-5 w-[min(calc(50%+0.5rem),15rem)] border-[rgb(16_18_21/0.18)] md:w-[15.5rem] lg:w-[16.5rem]";
+const STEM = "mx-auto h-5 w-px bg-[rgb(16_18_21/0.18)]";
+
+function Connector({ from, to }: { from: number; to: number }) {
   return (
-    <li
-      /* Focusable, so a tap on a touch screen (which focuses it) reveals it
-         the way a hover does with a mouse. */
-      tabIndex={0}
-      className="group relative aspect-[4/5] overflow-hidden bg-surface outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-inset"
-    >
-      {member.photo ? (
-        <Image
-          src={member.photo}
-          alt=""
-          fill
-          sizes="(min-width: 768px) 25vw, 50vw"
-          className="object-cover transition-transform duration-700 ease-out group-focus-within:scale-105 group-hover:scale-105 motion-reduce:transition-none"
-        />
-      ) : (
-        <Silhouette />
-      )}
+    <div aria-hidden className="py-3">
+      {from === 2 ? <div className={`${BRACKET} border-x border-b`} /> : <div className={STEM} />}
+      {to === 2 ? <div className={`${BRACKET} border-x border-t`} /> : <div className={STEM} />}
+    </div>
+  );
+}
 
-      {/* The darkening, under the text. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/45 to-ink/10 opacity-0 transition-opacity duration-300 ease-out group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-75 [@media(hover:none)]:group-focus-within:opacity-100"
-      />
-
-      <div className="absolute inset-x-0 bottom-0 p-4 text-white md:p-6">
-        {/* Name and role: on hover with a mouse; always, on a touch screen. */}
-        <div className="opacity-0 transition-[opacity,translate] duration-300 ease-out group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 md:translate-y-2 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
-          <p className="text-lg leading-tight font-medium tracking-tight md:text-xl">
-            {member.name}
-          </p>
-          <p className="mt-1 text-sm leading-snug text-white/80">{member.role}</p>
-        </div>
-
-        {/* The buttons: on hover or focus. On a touch screen they take no
-            room until the tap, so the name sits on the foot. */}
-        <div className="opacity-0 transition-opacity duration-300 ease-out group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:hidden [@media(hover:none)]:group-focus-within:block">
-          <div className="mt-4 flex flex-wrap gap-2">
-            <a
-              href={member.whatsapp ?? WHATSAPP.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-10 items-center gap-2 rounded-full bg-white px-4 text-sm font-medium tracking-tight text-ink transition-transform duration-[160ms] ease-out active:scale-[0.97]"
-            >
-              <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" aria-hidden>
-                <path d={siWhatsapp.path} />
-              </svg>
-              {copy.whatsapp}
-            </a>
-            <a
-              href={member.phone ?? FOOTER.phoneHref}
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/50 px-4 text-sm font-medium tracking-tight text-white transition-transform duration-[160ms] ease-out active:scale-[0.97]"
-            >
-              <PhoneIcon size={16} weight="bold" aria-hidden />
-              {copy.call}
-            </a>
-          </div>
-        </div>
+function Member({ member }: { member: SalesMember }) {
+  /* A plain card: portrait, name, role. No hover state and no per-person
+     contact buttons for now; the section's own WhatsApp and Call buttons
+     reach the team. `whatsapp` / `phone` on SalesMember are kept for when
+     individual numbers are supplied. */
+  return (
+    <li className="w-[calc(50%-0.5rem)] max-w-56 md:w-56 lg:w-60">
+      <div className="relative aspect-[4/5] overflow-hidden bg-surface">
+        {member.photo ? (
+          <Image
+            src={member.photo}
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 240px, (min-width: 768px) 224px, 50vw"
+            className="object-cover"
+          />
+        ) : (
+          <Silhouette />
+        )}
       </div>
+      <p className="mt-3 text-center text-base leading-tight font-medium tracking-tight text-ink md:text-lg">
+        {member.name}
+      </p>
+      <p className="mt-1 text-center text-sm leading-snug text-ink-2">{member.role}</p>
     </li>
   );
 }
@@ -143,7 +162,7 @@ function Silhouette() {
       aria-hidden
       viewBox="0 0 400 500"
       preserveAspectRatio="xMidYMax slice"
-      className="absolute inset-0 h-full w-full transition-transform duration-700 ease-out group-focus-within:scale-105 group-hover:scale-105 motion-reduce:transition-none"
+      className="absolute inset-0 h-full w-full"
     >
       <rect width="400" height="500" fill="#e3e6ea" />
       <circle cx="200" cy="200" r="78" fill="#cfd4da" />

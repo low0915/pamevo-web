@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { ProductSpecs } from "@/components/product/ProductSpecs";
 import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH, SEO, SEO_ZH } from "@/lib/content";
-import { neighbours, related, type Product } from "@/lib/products";
+import { neighbours, productTitle, related, type Product } from "@/lib/products";
 import type { Locale } from "@/lib/paths";
 
 /**
@@ -11,7 +11,7 @@ import type { Locale } from "@/lib/paths";
  *
  * Deliberately NOT a new design. Everything here is the catalogue row's own
  * markup at a larger size: the same `glass glass-flat glass-rim` panel, the
- * same mono/underlined group headings, the same bilingual bullets (through the
+ * same mono/underlined group headings, the same bullets (through the
  * shared ProductSpecs), the same pill CTA. What the page adds is what a row
  * cannot hold — a heading of its own, a breadcrumb, the prose, every photograph
  * at full size rather than a thumbnail strip, and links out to its siblings.
@@ -60,7 +60,7 @@ export function ProductDetail({
               {/* The last crumb is the page itself, so it is not a link — the
                   same rule the JSON-LD follows by omitting `item`. */}
               <li aria-current="page" className="text-ink-2 normal-case">
-                {product.title}
+                {productTitle(product, locale)}
               </li>
             </ol>
           </nav>
@@ -71,7 +71,7 @@ export function ProductDetail({
                 {product.no} — {product.category}
               </p>
               <h1 className="mt-3 max-w-[18ch] text-5xl leading-[1.04] font-medium tracking-tighter text-ink md:text-6xl">
-                {product.title}
+                {productTitle(product, locale)}
               </h1>
 
               {product.blurb ? (
@@ -111,12 +111,12 @@ export function ProductDetail({
             {/* The catalogue row's panel, unchanged but for its width. */}
             <div className="lg:sticky lg:top-28 lg:self-start">
               <div className="glass glass-flat glass-rim relative overflow-hidden rounded-[8px] p-5">
-                <ProductSpecs groups={product.groups} />
+                <ProductSpecs groups={product.groups} locale={locale} />
 
                 <div className="mt-8 flex justify-end">
                   <Link
                     href={copy.cta.href}
-                    aria-label={copy.cta.aria(product.title)}
+                    aria-label={copy.cta.aria(productTitle(product, locale))}
                     className="inline-flex items-center rounded-full bg-ink px-5 py-2.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-[var(--ease-out)] hover:-translate-y-0.5 active:translate-y-0"
                   >
                     {copy.cta.label}
@@ -152,7 +152,7 @@ export function ProductDetail({
                         />
                       </span>
                       <span className="block p-4 text-base leading-snug tracking-tight text-ink">
-                        {sibling.title}
+                        {productTitle(sibling, locale)}
                       </span>
                     </Link>
                   </li>
@@ -173,7 +173,7 @@ export function ProductDetail({
                   href={`${base}/${previous.slug}`}
                   className="text-ink-2 hover:text-ink"
                 >
-                  ← {previous.title}
+                  ← {productTitle(previous, locale)}
                 </Link>
               )}
             </div>
@@ -183,7 +183,7 @@ export function ProductDetail({
                   href={`${base}/${next.slug}`}
                   className="text-ink-2 hover:text-ink"
                 >
-                  {next.title} →
+                  {productTitle(next, locale)} →
                 </Link>
               )}
             </div>
