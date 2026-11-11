@@ -32,7 +32,7 @@ export function Footer() {
          gutters and left the footer's content 96px narrower than the section
          directly above it on any viewport past the cap. The border still spans
          the full width, because it is on the footer and not on this box. */
-      className="relative border-t border-line bg-surface px-4 pt-20 pb-10 md:px-8 md:pt-24 lg:px-12"
+      className="relative border-t border-line bg-surface px-6 pt-20 pb-10 md:px-8 md:pt-24 lg:px-10"
       style={{ zIndex: Z.raised }}
     >
       <div className="mx-auto w-full max-w-[1440px]">
@@ -55,24 +55,20 @@ export function Footer() {
             <h2 className="text-sm font-medium text-ink-3">
               {FOOTER.reachHeading}
             </h2>
-            <ul className="mt-5 grid gap-2 text-base text-ink-2">
+            <ul className="mt-4 grid text-base text-ink-2 lg:mt-5 lg:gap-2">
               <li>
-                <a href={FOOTER.phoneHref} className="hover:text-ink">
+                <a href={FOOTER.phoneHref} className="inline-block py-2 hover:text-ink lg:py-0">
                   {FOOTER.phone}
                 </a>
               </li>
               <li>
-                <a href={FOOTER.emailHref} className="hover:text-ink">
+                <a href={FOOTER.emailHref} className="inline-block py-2 hover:text-ink lg:py-0">
                   {FOOTER.email}
                 </a>
               </li>
             </ul>
-          </div>
-
-          <div className="lg:col-span-3">
-            <h2 className="text-sm font-medium text-ink-3">
-              {FOOTER.brand}
-            </h2>
+            {/* The registered name and the showroom address, under the
+                phone and email. */}
             <p className="mt-5 text-base leading-relaxed text-ink-2">
               {FOOTER.company}
             </p>
@@ -81,11 +77,31 @@ export function Footer() {
             </p>
           </div>
 
+          <div className="lg:col-span-3">
+            <h2 className="text-sm font-medium text-ink-3">
+              {FOOTER.mapHeading}
+            </h2>
+            {/* The showroom on Google Maps, in the column the address used to
+                fill. Lazy, so it is only fetched when the footer is near the
+                screen. */}
+            <iframe
+              src={FOOTER.mapEmbed}
+              title={FOOTER.mapTitle}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="mt-5 aspect-[4/3] w-full rounded-[4px] border border-line"
+            />
+          </div>
+
           <div className="lg:col-span-2">
             <h2 className="text-sm font-medium text-ink-3">
               {FOOTER.connectHeading}
             </h2>
-            <ul className="mt-5 flex flex-wrap gap-2">
+            {/* One row of five below `lg`, where the column is the full width
+                of the screen or half of it and all five fit at 44px. Three to a
+                row from `lg`, where this is the narrowest of four columns:
+                WhatsApp, Facebook, Instagram over TikTok and Xiaohongshu. */}
+            <ul className="mt-5 flex gap-2 lg:grid lg:w-max lg:grid-cols-3">
               {FOOTER.socials.map(({ name, url }) => {
                 const mark = MARKS[name as keyof typeof MARKS];
                 return (
@@ -95,7 +111,7 @@ export function Footer() {
                       target="_blank"
                       rel="noreferrer"
                       aria-label={name}
-                      className="grid size-9 place-items-center rounded-full border border-line text-ink-2 transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink"
+                      className="grid size-11 place-items-center rounded-full border border-line lg:size-9 text-ink-2 transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink"
                     >
                       <svg
                         viewBox="0 0 24 24"
@@ -116,11 +132,11 @@ export function Footer() {
 
         <MetalRule className="mt-16 w-full" />
 
-        <div className="mt-6 flex flex-col gap-3 text-sm text-ink-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-1 text-sm sm:gap-3 text-ink-3 sm:flex-row sm:items-center sm:justify-between">
           <p>{FOOTER.copyright}</p>
 
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <Link href="/privacy" className="hover:text-ink">
+            <Link href="/privacy" className="py-2 hover:text-ink lg:py-0">
               {FOOTER.privacy}
             </Link>
 
@@ -131,7 +147,7 @@ export function Footer() {
             <button
               type="button"
               data-cc="show-preferencesModal"
-              className="transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink"
+              className="py-2 transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] hover:text-ink lg:py-0"
             >
               {FOOTER.cookiePreferences}
             </button>

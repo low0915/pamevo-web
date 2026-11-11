@@ -487,7 +487,7 @@ export function WhyMevo() {
       */}
       <div
         ref={frameRef}
-        className="sticky flex min-h-[100lvh] w-full flex-col overflow-hidden bg-bg motion-reduce:static motion-reduce:min-h-0"
+        className="sticky flex min-h-[100lvh] w-full flex-col overflow-hidden bg-bg motion-reduce:relative motion-reduce:min-h-0"
         style={{ top: "min(0px, calc(100lvh - var(--frame-h, 100lvh)))" }}
       >
         {/* The glow, and it is the designer's own asset rather than a CSS
@@ -603,7 +603,7 @@ export function WhyMevo() {
               <article
                 key={item}
                 data-card
-                className={`flex h-full flex-row items-center gap-3 border border-line bg-white p-[max(0.625rem,1.4svh)] sm:flex-col sm:items-stretch sm:justify-between sm:gap-0 lg:p-[max(1rem,2.6svh)] ${PLACES[i]}`}
+                className={`flex h-full flex-col items-start gap-3 border border-line bg-white p-4 text-left sm:items-stretch sm:justify-between sm:gap-0 sm:p-[max(0.625rem,1.4svh)] lg:p-[max(1rem,2.6svh)] ${PLACES[i]}`}
                 /* Flat, square and unshadowed, as drawn. The radius was 10px,
                    then 4, and the drawing has none: at any radius at all a
                    panel this size reads as a tile, and these are sheets with
@@ -625,15 +625,15 @@ export function WhyMevo() {
                   aria-hidden
                   role="presentation"
                   viewBox="0 0 168 56"
-                  /* Beside the text on a phone and above it from `sm` up. Held
-                     to its own ratio either way, so the stroke stays
-                     proportional to the sheet it is drawn on. */
-                  className="h-auto w-10 shrink-0 sm:w-full sm:max-w-[min(300px,30svh)]"
+                  /* Above the text at every width, left-aligned with it on a
+                     phone. Held to its own ratio either way, so the stroke
+                     stays proportional to the sheet it is drawn on. */
+                  className="h-auto w-28 shrink-0 sm:w-full sm:max-w-[min(300px,30svh)]"
                 >
                   {MARKS[i]}
                 </svg>
 
-                <div className="min-w-0">
+                <div className="w-full min-w-0">
                   {/* The rule between the drawing and the claim, and it is the
                       one that draws itself. Zero-height with a border rather
                       than a 1px background box: a background hairline rounds up
@@ -646,7 +646,7 @@ export function WhyMevo() {
                     data-rule
                     className="mt-[max(0.625rem,1.8svh)] hidden h-0 w-full origin-left border-t border-line sm:block"
                   />
-                  <p className="text-[clamp(0.8125rem,1.7svh,0.9375rem)] leading-[1.2] font-medium tracking-tight text-balance text-ink sm:mt-[max(0.5rem,1.5svh)] lg:text-[clamp(0.9375rem,2.1svh,1.125rem)]">
+                  <p className="text-[0.9375rem] leading-[1.2] sm:text-[clamp(0.8125rem,1.7svh,0.9375rem)] font-medium tracking-tight text-balance text-ink sm:mt-[max(0.5rem,1.5svh)] lg:text-[clamp(0.9375rem,2.1svh,1.125rem)]">
                     {item}
                   </p>
                   {/* The note. Every one of these restates a fact the site
@@ -654,7 +654,7 @@ export function WhyMevo() {
                       content.ts, where each line names its source. */}
                   <p
                     data-note
-                    className="mt-[max(0.25rem,0.7svh)] text-[clamp(0.6875rem,1.3svh,0.8125rem)] leading-[1.4] text-ink-2 lg:text-[clamp(0.75rem,1.6svh,0.875rem)]"
+                    className="mt-[max(0.25rem,0.7svh)] text-[0.8125rem] leading-[1.4] text-ink-2 sm:text-[clamp(0.6875rem,1.3svh,0.8125rem)] lg:text-[clamp(0.75rem,1.6svh,0.875rem)]"
                   >
                     {notes[i]}
                   </p>

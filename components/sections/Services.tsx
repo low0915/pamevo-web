@@ -54,7 +54,7 @@ export function Services() {
   const services = useCopy(SERVICES, { ZH: SERVICES_ZH, BM: SERVICES_BM });
 
   return (
-    <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden bg-surface py-16 md:py-20 lg:py-24">
+    <section className="relative flex flex-col justify-center overflow-hidden bg-surface py-16 sm:min-h-[100svh] md:py-20 lg:py-24">
       {/*
         THE FACADE WASH, and it is the only thing in this section that is not
         content. A light band needs something behind the type or it reads as a
@@ -144,6 +144,11 @@ export function Services() {
           </h2>
         </Reveal>
 
+        {/* The list reveals as one piece rather than card by card. Below `sm`
+            it is a horizontal slider, and a per-card reveal there waits for a
+            card to be 25% inside the TRACK's scrollport: the cards parked off
+            to the right would sit blank and only fade in mid-swipe. */}
+        <Reveal delay={0.06}>
         <ul
           role="list"
           /* `mt-16`/`mt-20` where this was `mt-10`/`mt-12`. A hairline rule
@@ -154,22 +159,23 @@ export function Services() {
              tighter than the heading and the index have ever been and reads as
              the two running together. The separation was never the line; it was
              the space the line sat in. */
-          className="mt-16 grid grid-flow-dense grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-6 md:mt-20 lg:grid-cols-5 lg:gap-x-8"
+          /* BELOW `sm` A SLIDER: one card and the edge of the next, swiped
+             and snapped to the gutter, the same track the testimonials use.
+             Five stacked services were five screens of scrolling on a phone.
+             The track runs to the screen edges (`-mx-6 px-6`) so a card slides
+             out under the edge rather than being cut at the gutter, and
+             `scroll-pl-6` keeps a snapped card on the gutter. From `sm` it is
+             the grid described below, unchanged. */
+          className="-mx-6 mt-16 flex snap-x snap-mandatory scroll-pl-6 gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:snap-none sm:grid-flow-dense sm:grid-cols-6 sm:gap-x-6 sm:gap-y-10 sm:overflow-visible sm:px-0 sm:pb-0 md:mt-20 lg:grid-cols-5 lg:gap-x-8 [&::-webkit-scrollbar]:hidden"
         >
           {services.items.map((service, i) => (
-            /* `as="li"` RATHER THAN A WRAPPER, and that is not a style choice.
-               The card is `sm:row-span-3 sm:grid sm:grid-rows-subgrid`, and a
-               subgrid only works against its own parent's tracks — put a plain
-               `<div>` between the `<ul>` and this `<li>` and the shared rows
-               that keep every title and body aligned across a row collapse.
-               `Reveal` renders the tag it is given, so the animation lands on
-               the grid item itself and the layout is untouched. */
-            <Reveal
-              as="li"
-              /* Stagger by position, capped. 60ms reads as a sequence; left
-                 uncapped, the fifth card would wait 300ms after the first and
-                 the row would finish visibly late. */
-              delay={Math.min(i, 4) * 0.06}
+            /* NOTHING BETWEEN THE `<ul>` AND THIS `<li>`. The card is
+               `sm:row-span-3 sm:grid sm:grid-rows-subgrid`, and a subgrid only
+               works against its own parent's tracks — put a wrapper between
+               the two and the shared rows that keep every title and body
+               aligned across a row collapse. The reveal sits outside the
+               `<ul>` for that reason. */
+            <li
               key={i}
               /*
                 Six columns below `lg`, five at `lg` and up.
@@ -185,7 +191,7 @@ export function Services() {
                 not of the service itself, so putting it in SERVICES.items would
                 mean three translated files had to agree about layout.
 
-                Single column below `sm`, where any split is a thumbnail.
+                A slider below `sm`, where any split is a thumbnail.
 
                 THE SUBGRID IS WHAT KEEPS THE BODIES ON ONE LINE. A card is
                 three stacked things and the middle one is a title that wraps to
@@ -209,7 +215,7 @@ export function Services() {
                 and its own title. The spacing inside the card is the `mt-*` on
                 the two blocks below instead, which is not subject to that.
               */
-              className={`group sm:row-span-3 sm:grid sm:grid-rows-subgrid sm:gap-y-0 ${
+              className={`group w-[calc(100vw-4.5rem)] shrink-0 snap-start sm:w-auto sm:row-span-3 sm:grid sm:grid-rows-subgrid sm:gap-y-0 ${
                 i < 3 ? "sm:col-span-2" : "sm:col-span-3"
               } lg:col-span-1`}
             >
@@ -230,7 +236,7 @@ export function Services() {
                 - and the section reads bottom-heavy. 2:1 over their own wider
                 box lands them at 183px, within six pixels of the top row.
 
-                16:9 on a phone, where the cards are one column and the crop is
+                16:9 on a phone, where the cards are one slide and the crop is
                 the whole cost of the section. 4:3 at 358px wide is a 268px
                 photograph and only one service fits a screen; 16:9 is 201px and
                 the next title clears the fold. A phone cannot show five
@@ -266,9 +272,10 @@ export function Services() {
               <p className="mt-2.5 text-sm leading-relaxed text-ink-2">
                 {service.body}
               </p>
-            </Reveal>
+            </li>
           ))}
         </ul>
+        </Reveal>
       </div>
     </section>
   );

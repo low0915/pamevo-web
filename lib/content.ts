@@ -1009,6 +1009,20 @@ export const WHY_CHOOSE = {
         ["Superior German Hardware System: German Roto Hardware System, HOPPE Handle, TECTUS / TPEO Transmission Rod System"],
         ["Wind Resistance Level 9 (≥5000 Pa = 500 kgf/m²)"],
       ],
+      /* The pop-up copy for each card, parallel to `items`. The dialog prints
+         the grades from `bodies` directly above it, so this does not restate
+         them: it says what they mean, in plain terms, and adds no figure of its
+         own - every number here is already in `bodies`. The "-67% to 96%" airflow figure is
+         deliberately not restated, and "several points" / "forced entry" on the
+         hardware card describe what a transmission-rod system does in general.
+         NEEDS THE CLIENT'S SIGN-OFF, like WHY_CHOOSE.home below. */
+      details: [
+        "Outside noise is cut by up to 43dB. Traffic, construction and the neighbours fade into the background, so bedrooms stay restful and a home office stays focused.",
+        "The lower the W/m²K figure, the less heat passes through the window. Under the Malaysian sun that means cooler rooms, less work for the air-conditioner and lower electricity bills. A CRF of 75 or more means the frame resists the condensation that forms where cold indoor air meets humid outdoor air.",
+        "Draughts, dust and cooled air stay where they belong, and wind-driven rain is held back at 700 Pa and above, built for monsoon downpours.",
+        "The transmission rods lock the sash at several points along the frame. Built to resist forced entry, and to keep opening smoothly for years.",
+        "5000 Pa is about 500 kg of force on every square metre. Built for high-rise facades and exposed sites, where storms push hardest.",
+      ],
     },
   ],
   tagline: [
@@ -1087,6 +1101,13 @@ export const WHY_CHOOSE_ZH: Partial<typeof WHY_CHOOSE> = {
         ["卓越德国五金系统：德国 Roto 五金系统、HOPPE 把手、TECTUS / TPEO 传动杆系统"],
         ["抗风压性能 Level 9（≥5000 Pa = 500 kgf/m²）"],
       ],
+      details: [
+        "室外噪音最多可降低 43dB。车流、施工与邻里声响都退居背景，卧室更安宁，居家办公也更专注。",
+        "W/m²K 数值越低，穿过窗户的热量越少。在马来西亚的烈日下，这意味着室内更凉爽、冷气负担更轻、电费更低。CRF ≥75 表示窗框能抵抗冷气与潮湿室外空气交汇处形成的冷凝。",
+        "把风尘挡在外面，把冷气留在室内；在 700 Pa 及以上的压力下抵御风雨，为季风暴雨而生。",
+        "传动杆沿窗框多点锁闭窗扇。坚固防撬，多年开合依然顺滑。",
+        "5000 Pa 相当于每平方米约 500 公斤的力。专为高层幕墙与开阔受风的环境而设计，风暴最猛烈之处同样稳固。",
+      ],
     },
   ],
   tagline: ["我们的承诺很简单：", "创新与性能交融。尊贵生活，触手可及。"],
@@ -1157,6 +1178,13 @@ export const WHY_CHOOSE_BM: Partial<typeof WHY_CHOOSE> = {
         ["Kalis Udara Level 8 (Kebocoran Aliran Udara -67% hingga 96%)", "Kalis Air Level 6 (≥700 Pa)"],
         ["Sistem Perkakasan Jerman Unggul: Sistem Perkakasan Roto Jerman, Pemegang HOPPE, Sistem Rod Transmisi TECTUS / TPEO"],
         ["Rintangan Angin Level 9 (≥5000 Pa = 500 kgf/m²)"],
+      ],
+      details: [
+        "Bunyi luar dikurangkan sehingga 43dB. Bunyi trafik, kerja pembinaan dan jiran menjadi sayup, jadi bilik tidur kekal tenang dan pejabat di rumah kekal fokus.",
+        "Semakin rendah angka W/m²K, semakin sedikit haba yang menembusi tingkap. Di bawah terik matahari Malaysia, ini bermakna bilik lebih sejuk, penghawa dingin kurang terbeban dan bil elektrik lebih rendah. CRF ≥75 bermaksud bingkai menahan pemeluwapan yang terbentuk apabila udara sejuk di dalam bertemu udara lembap di luar.",
+        "Angin, habuk dan udara sejuk kekal di tempatnya, dan hujan yang ditiup angin ditahan pada 700 Pa dan ke atas, dibina untuk hujan lebat musim tengkujuh.",
+        "Rod transmisi mengunci selempang di beberapa titik sepanjang bingkai. Dibina untuk menahan pecah masuk dan kekal lancar dibuka selama bertahun-tahun.",
+        "5000 Pa ialah kira-kira 500 kg daya pada setiap meter persegi. Dibina untuk fasad bangunan tinggi dan tapak terdedah, di mana ribut paling kuat menolak.",
       ],
     },
   ],
@@ -2608,7 +2636,7 @@ export const PROJECTS_BM: Partial<typeof PROJECTS> = {
 };
 
 export const FOOTER = {
-  brand: "MEVO MALAYSIA",
+  brand: "PA PROJECTS",
   /**
    * This was "We are dedicated to providing innovative solutions that empower
    * businesses to excel in their respective industries" — WordPress-template
@@ -2618,7 +2646,7 @@ export const FOOTER = {
    * sentence every page repeated to a crawler.
    */
   blurb:
-    "Aluminium window and door systems engineered for the Malaysian climate — supplied, installed and serviced by MEVO Malaysia from our Shah Alam showroom.",
+    "Aluminium window and door systems engineered for the Malaysian climate — supplied, installed and serviced by PA Projects from our Shah Alam showroom.",
   reachHeading: "Reach Out to Us",
   phone: "014 - 879 7371",
   /** The number as dialled: spaces and the leading zero are for reading, the
@@ -2629,6 +2657,19 @@ export const FOOTER = {
   company: "PA PROJECTS MARKETING SDN BHD (847136-X)",
   address:
     "19, Jalan 15/23, Taman Perindustrian Tiong Nam, Seksyen 15, 40200 Shah Alam, Selangor Darul Ehsan, Malaysia. (Showroom & Office)",
+  /** The Google Maps embed under the email: Google's keyless embed URL. It
+      searches the BUSINESS LISTING by its Google name plus the address, so the
+      pin lands on "P.A. PROJECTS X MEVO MALAYSIA" itself; the bare address
+      dropped it on a neighbouring unit. No API key and no script, just an
+      iframe; next.config.ts allows google.com as a frame source for it. */
+  mapEmbed:
+    "https://www.google.com/maps?q=" +
+    encodeURIComponent(
+      "P.A. PROJECTS X MEVO MALAYSIA, 19, Jalan 15/23, Taman Perindustrian Tiong Nam, 40200 Shah Alam",
+    ) +
+    "&output=embed",
+  mapTitle: "Map: PA Projects showroom and office, Shah Alam",
+  mapHeading: "Our Showroom",
   connectHeading: "Connect with Us",
   /** Order is the order they are shown in. WhatsApp reuses the same link as
       the header's chat button, so there is one number to change, not two. */
@@ -2642,7 +2683,7 @@ export const FOOTER = {
       url: "https://www.xiaohongshu.com/user/profile/Mevo_Malaysia",
     },
   ],
-  copyright: "\u00a9 2026 MEVO MALAYSIA",
+  copyright: "\u00a9 2026 PA PROJECTS",
   privacy: "Privacy & Cookies",
   cookiePreferences: "Cookie preferences",
 };
@@ -2656,14 +2697,14 @@ export const FOOTER_ZH: Partial<typeof FOOTER> = {
       Flagged for the client to confirm rather than left describing a sentence
       the site no longer says. */
   blurb:
-    "专为马来西亚气候打造的铝合金门窗系统 —— 由 MEVO 马来西亚莎阿南展厅提供供应、安装与售后服务。",
+    "专为马来西亚气候打造的铝合金门窗系统 —— 由 PA Projects 莎阿南展厅提供供应、安装与售后服务。",
 };
 
 /** Only the standfirst, for the reason the Chinese overlay gives: everything
     else in the footer is a proper noun, an address or a number. */
 export const FOOTER_BM: Partial<typeof FOOTER> = {
   blurb:
-    "Sistem tingkap dan pintu aluminium yang direka untuk iklim Malaysia — dibekal, dipasang dan diselenggara oleh MEVO Malaysia dari bilik pameran kami di Shah Alam.",
+    "Sistem tingkap dan pintu aluminium yang direka untuk iklim Malaysia — dibekal, dipasang dan diselenggara oleh PA Projects dari bilik pameran kami di Shah Alam.",
 };
 
 /**

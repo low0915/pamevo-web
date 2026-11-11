@@ -327,10 +327,13 @@ export function Header() {
           ends; with it, content disappears cleanly under the header. Fades in
           over the first 40px of scroll so a hero at the top of the page is not
           capped by a band before the reader has moved. Same z as the header
-          and earlier in the document, so the island paints over it. */}
+          and earlier in the document, so the island paints over it.
+
+          Not on a phone: there the island floats free over the page as it
+          scrolls, with nothing painted behind it. */}
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 h-20 bg-bg"
+        className="pointer-events-none fixed inset-x-0 top-0 hidden h-20 bg-bg md:block"
         style={{ zIndex: Z.header, opacity: stripOpacity }}
       />
       <header
@@ -697,7 +700,7 @@ export function Header() {
             rel="noopener noreferrer"
             aria-label={WHATSAPP.label}
             style={{ backgroundColor: `#${siWhatsapp.hex}` }}
-            className="ml-auto grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.55)] text-white transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] xl:ml-2"
+            className="relative ml-auto grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.55)] before:absolute before:-inset-1 before:content-[''] text-white transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] xl:ml-2"
           >
             <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor" aria-hidden>
               <path d={siWhatsapp.path} />
@@ -708,7 +711,7 @@ export function Header() {
             type="button"
             onClick={() => setOpenMenu(true)}
             aria-label="Open menu"
-            className="grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.4)] text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] xl:hidden"
+            className="relative grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.4)] before:absolute before:-inset-1 before:content-[''] text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97] xl:hidden"
           >
             <List size={17} weight="regular" />
           </button>

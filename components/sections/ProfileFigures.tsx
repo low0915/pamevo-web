@@ -45,7 +45,7 @@ export function ProfileFigures({ locale = "EN" }: { locale?: Locale }) {
           </p>
         </Reveal>
 
-        <dl className="mt-14 grid gap-x-8 gap-y-12 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
+        <dl className="mt-14 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:gap-y-12 md:mt-16 lg:grid-cols-4">
           {copy.figures.map((figure, i) => (
             /* The Reveal is the group itself: a <dl> may hold <div> groups,
                but only one level of them. */

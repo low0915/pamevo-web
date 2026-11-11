@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { WORKMANSHIP } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
@@ -57,6 +57,86 @@ export function Workmanship() {
   /** A part's opacity: everything at full until one is picked, then only it. */
   const dim = (n: number) => (active === null || active === n ? 1 : 0.22);
 
+  /* BELOW `lg` THE FIVE ARE A SIDEWAYS SLIDER, not a list. The section stacks
+     there - intro, drawing, components - and five rows of body copy under the
+     drawing pushed it a full screen away from the parts they describe. As
+     cards swiped beside each other they take one card's height, right under
+     the drawing.
+
+     The drawing follows the slider: once a swipe settles, the card at the
+     gutter becomes `active` and its part is the one left at full strength.
+     Nothing is highlighted until the reader first moves the slider or taps a
+     card, the same as the list, which starts with the whole drawing shown. */
+  const trackRef = useRef<HTMLOListElement>(null);
+  const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const touched = useRef(false);
+  /* The card a tap (on a card or on a number in the drawing) is sending the
+     track to. While set, a settling scroll adopts it rather than measuring:
+     the last card cannot reach the gutter - the track runs out of room first -
+     so measuring would name the card before it and undo the tap. */
+  const pending = useRef<number | null>(null);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let t = 0;
+    const settle = () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
+        if (pending.current !== null) {
+          setActive(pending.current);
+          pending.current = null;
+          return;
+        }
+        if (!touched.current) return;
+        const base =
+          track.getBoundingClientRect().left +
+          (parseFloat(getComputedStyle(track).paddingLeft) || 0);
+        let best = 0;
+        let bestD = Infinity;
+        cardRefs.current.forEach((el, i) => {
+          if (!el) return;
+          const d = Math.abs(el.getBoundingClientRect().left - base);
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        });
+        setActive(best);
+      }, 120);
+    };
+    track.addEventListener("scroll", settle, { passive: true });
+    return () => {
+      window.clearTimeout(t);
+      track.removeEventListener("scroll", settle);
+    };
+  }, []);
+
+  /* Bring card `i` to the gutter and light its part. Driven by a tap on a
+     card and by a tap on its number in the drawing. Above `lg` the track is
+     `display: none` and has no box, so only the highlight happens there. */
+  const showCard = (i: number) => {
+    touched.current = true;
+    setActive(i);
+    const track = trackRef.current;
+    const card = cardRefs.current[i];
+    if (!track || !card || track.offsetParent === null) return;
+    const pad = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+    const max = track.scrollWidth - track.clientWidth;
+    const left = Math.min(
+      max,
+      Math.max(
+        0,
+        track.scrollLeft +
+          (card.getBoundingClientRect().left - track.getBoundingClientRect().left) -
+          pad,
+      ),
+    );
+    if (Math.abs(left - track.scrollLeft) < 2) return;
+    pending.current = i;
+    track.scrollTo({ left, behavior: "smooth" });
+  };
+
   return (
     <section
       id={copy.id}
@@ -72,7 +152,7 @@ export function Workmanship() {
           From `lg` the left column is one block: the heading and description
           held at the top of the screen, and the list scrolling up under them,
           beside the drawing held on the right. Only the list moves. */}
-      <div className="grid w-full gap-10 px-6 md:px-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-x-16 lg:px-10">
+      <div className="grid w-full grid-cols-1 gap-10 px-6 md:px-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-x-16 lg:px-10">
         <div className="contents lg:col-start-1 lg:row-start-1 lg:block">
           {/* Held from the very top of the screen (the padding pulls its
             background up over the section's own), so a list item passing
@@ -104,7 +184,11 @@ export function Workmanship() {
             />
           </div>
 
-          <div className="order-3 lg:pb-[12svh]">
+          {/* `min-w-0`, and `grid-cols-1` on the grid, because the slider below is
+              a single unwrapped row: left to the grid's default `auto` column,
+              its full length became the column's minimum width and the whole
+              page scrolled sideways. */}
+          <div className="order-3 min-w-0 lg:pb-[12svh]">
             <Reveal delay={0.1}>
               <h3 className="mt-2 lg:mt-4 text-xl leading-snug font-medium tracking-tight text-ink md:text-2xl">
                 {copy.subheading}
@@ -112,8 +196,64 @@ export function Workmanship() {
               <p className="mt-3 text-base text-ink-2">{copy.lead}</p>
             </Reveal>
 
+            {/* Below `lg`: the slider. The track runs to the screen edges so a
+                card slides out under them, and snaps to the gutter. */}
             <ol
-              className="mt-8 border-t border-line"
+              ref={trackRef}
+              onTouchStart={() => {
+                touched.current = true;
+              }}
+              className="-mx-6 mt-6 flex snap-x snap-mandatory scroll-pl-6 gap-3 overflow-x-auto px-6 pb-1 [scrollbar-width:none] md:-mx-8 md:scroll-pl-8 md:px-8 lg:hidden [&::-webkit-scrollbar]:hidden"
+            >
+              {copy.components.map((component, i) => (
+                <li
+                  key={component.title}
+                  ref={(el) => {
+                    cardRefs.current[i] = el;
+                  }}
+                  className="w-[calc(100vw-4.5rem)] max-w-[22rem] shrink-0 snap-start"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={active === i}
+                    onClick={() => showCard(i)}
+                    className={`flex h-full w-full flex-col rounded-[14px] border bg-white p-5 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                      active === i ? "border-ink/40" : "border-line"
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      <Badge n={i + 1} on={active === i} />
+                      <span className="text-xs font-medium text-ink-2 tabular-nums">
+                        {String(i + 1).padStart(2, "0")} / {String(copy.components.length).padStart(2, "0")}
+                      </span>
+                    </span>
+                    <span className="mt-4 block text-lg leading-snug font-medium tracking-tight text-ink">
+                      {component.title}
+                    </span>
+                    <span className="mt-1 block flex-1 text-sm leading-relaxed text-ink-2">
+                      {component.body}
+                    </span>
+                    <span className="mt-4 inline-block self-start rounded-full border border-ink/15 px-3 py-1 text-xs font-medium tracking-wide text-ink tabular-nums">
+                      {component.spec}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div aria-hidden className="mt-4 flex gap-1.5 lg:hidden">
+              {copy.components.map((component, i) => (
+                <span
+                  key={component.title}
+                  className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                    active === i ? "bg-ink/80" : "bg-ink/15"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* `lg` and up: the list, scrolling beside the held drawing. */}
+            <ol
+              className="mt-8 hidden border-t border-line lg:block"
               onMouseLeave={() => setActive(null)}
             >
               {copy.components.map((component, i) => (
@@ -468,10 +608,16 @@ export function Workmanship() {
                       key={i}
                       onMouseEnter={() => setActive(i)}
                       onMouseLeave={() => setActive(null)}
-                      onClick={() => setActive(i)}
+                      /* Below `lg` this also slides the component cards to
+                         this number's card. */
+                      onClick={() => showCard(i)}
                       className="cursor-pointer"
                       opacity={dim(i)}
                     >
+                      {/* The touch target: an invisible disc about twice the
+                          visible badge, so a fingertip does not have to land
+                          on an 18px circle. */}
+                      <circle cx={at[0]} cy={at[1]} r="30" fill="transparent" />
                       <line
                         x1={at[0]}
                         y1={at[1]}

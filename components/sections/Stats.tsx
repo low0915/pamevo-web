@@ -76,7 +76,7 @@ const PAD_EDGE = "lg:pl-[2.5rem]";
     is placed off the width too. The 13rem floor is what 16px copy needs to
     stay copy on a small laptop; the photograph slides right there to leave
     room for it. */
-const CELL_BODY = "mt-10 max-w-[46ch] lg:mt-0 lg:max-w-[min(max(18.2vw,13rem),350px)]";
+const CELL_BODY = "mt-3 max-w-[46ch] lg:mt-0 lg:max-w-[min(max(18.2vw,13rem),350px)]";
 
 /* A rule of the plan: zero on one axis with a border on that edge, so it is a
    hairline that snaps to the device pixel grid the way a box border does - a

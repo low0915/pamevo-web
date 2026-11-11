@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
@@ -138,7 +138,22 @@ export function DoorCollection() {
                       isOpen ? "opacity-100 delay-300 duration-500" : "pointer-events-none opacity-0 duration-200"
                     }`}
                   >
-                    <span className="block w-[min(34rem,calc(100vw-6rem))]">
+                    {/* Fixed, but to the OPEN PANEL's width rather than the screen's. On
+                        a phone the panels stack full width and the two are the
+                        same; from `md` the row is split by flex-grow, so the
+                        open panel is only OPEN_GROW / (OPEN_GROW + n - 1) of
+                        the row less its gaps (12px each), and a screen-sized
+                        caption was cropped at the panel edge on a tablet.
+                        The trailing rem is the caption's own padding. */}
+                    <span
+                      className="block w-[min(34rem,calc(100vw-6rem))] md:w-[min(34rem,calc((100vw-4rem-var(--gaps))*var(--share)-4rem))] lg:w-[min(34rem,calc((100vw-5rem-var(--gaps))*var(--share)-5rem))]"
+                      style={
+                        {
+                          "--share": OPEN_GROW / (OPEN_GROW + copy.categories.length - 1),
+                          "--gaps": `${(copy.categories.length - 1) * 12}px`,
+                        } as CSSProperties
+                      }
+                    >
                       <span className="block text-xs font-medium tabular-nums opacity-80">
                         {String(i + 1).padStart(2, "0")}
                       </span>

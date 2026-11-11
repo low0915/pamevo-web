@@ -41,6 +41,9 @@ const CSP = [
   // public/hero-video.mp4, played by the hero.
   "media-src 'self'",
   `connect-src 'self'${isDev ? " ws:" : ""}`,
+  // The footer's Google Maps embed (FOOTER.mapEmbed). Frames only; no Google
+  // script runs on the page itself.
+  "frame-src https://www.google.com https://maps.google.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

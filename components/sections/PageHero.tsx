@@ -17,6 +17,12 @@ import { Scrim } from "@/components/sections/Hero";
  * width of the window.
  *
  * /contact opens on ContactHero instead: the same look, as a two-slide slider.
+ *
+ * BELOW `md` IT FOLLOWS THE SLIDER'S PHONE LAYOUT: the copy sits at the foot
+ * rather than the middle, the white rises from the foot so the top of the
+ * photograph reads clear (`Scrim mobile="foot"`), the rows are set close and
+ * the button is the smaller 40px pill. `pb-12` rather than the slider's
+ * `pb-28`, since there are no slide controls here to clear.
  */
 export function PageHero({
   eyebrow,
@@ -47,11 +53,11 @@ export function PageHero({
         className="graded-hero object-cover"
         style={image.position ? { objectPosition: image.position } : undefined}
       />
-      <Scrim />
+      <Scrim mobile="foot" />
 
-      <div className="absolute inset-0 flex items-center">
+      <div className="absolute inset-0 flex items-end pb-12 md:items-center md:pb-0">
         <div className="w-full px-6 text-center md:px-8 md:text-left lg:px-10">
-          <p className="mb-6 text-sm font-medium tracking-[0.2em] text-ink-2 uppercase md:mb-8 md:text-base">
+          <p className="mb-3 text-sm font-medium tracking-[0.2em] text-ink-2 uppercase md:mb-8 md:text-base">
             {eyebrow}
           </p>
           <h1 className="text-[clamp(1.875rem,3.5vw,5rem)] leading-[1] font-medium tracking-tighter text-ink">
@@ -65,19 +71,18 @@ export function PageHero({
               </span>
             ))}
           </h1>
-          <p className="mx-auto mt-6 max-w-[52ch] text-base leading-relaxed text-ink md:mx-0 md:text-lg">
+          <p className="mx-auto mt-3 max-w-[52ch] text-base leading-relaxed text-ink md:mx-0 md:mt-6 md:text-lg">
             {body}
           </p>
           {cta && (
-            <div className="mt-8 flex justify-center md:justify-start">
+            <div className="mt-5 flex justify-center md:mt-8 md:justify-start">
               <a
                 href={cta.href}
-                className="group inline-flex h-12 items-center gap-2 rounded-full bg-ink px-7 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0"
+                className="group inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 text-sm font-medium md:h-12 md:px-7 md:text-base tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0"
               >
                 {cta.label}
                 <ArrowDown
-                  size={18}
-                  className="transition-transform duration-200 ease-out group-hover:translate-y-0.5"
+                  className="size-4 md:size-[18px] transition-transform duration-200 ease-out group-hover:translate-y-0.5"
                 />
               </a>
             </div>

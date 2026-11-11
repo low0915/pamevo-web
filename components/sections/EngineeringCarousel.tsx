@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import Image from "next/image";
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { CaretLeftIcon, CaretRightIcon, PlusIcon } from "@phosphor-icons/react";
 import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
 import { USP_PART } from "@/components/sections/CoreUspsPanel";
-import { useCopy } from "@/lib/locale";
+import { useCopy, useLocale } from "@/lib/locale";
+import { HighlightDialog, type HighlightLabels } from "@/components/sections/HighlightDialog";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
@@ -167,6 +168,21 @@ export function EngineeringCarousel() {
   const items = source.items;
   /* Each card's description: the test grades behind the benefit in its title. */
   const bodies = source.bodies ?? [];
+  /* The pop-up's plain-language copy, parallel to `items`. */
+  const details = source.details ?? [];
+
+  /* Which highlight's pop-up is open. Separate from `active`: the dialog walks
+     the five on its own, and closing it should not have moved the carousel. */
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const closeDialog = useCallback(() => setOpenIndex(null), []);
+  const { locale } = useLocale();
+  const labels = DIALOG_LABELS[locale] ?? DIALOG_LABELS.EN;
+  const highlights = items.map((title, i) => ({
+    title,
+    grades: bodies[i] ?? [],
+    detail: details[i],
+    image: SLIDES[i],
+  }));
 
   const [active, setActive] = useState(0);
   const trackRef = useRef<HTMLUListElement>(null);
@@ -579,8 +595,23 @@ export function EngineeringCarousel() {
                  most room for them. Viewport units keep the card the same size
                  whatever the indent does, and the cap stops it becoming a
                  billboard on an ultrawide display. */
-                className="group w-[calc(100vw-3rem)] shrink-0 snap-start sm:w-[64vw] lg:w-[min(46vw,720px)]"
+                className="group relative w-[calc(100vw-3rem)] shrink-0 snap-start sm:w-[64vw] lg:w-[min(46vw,720px)]"
               >
+                {/* THE WHOLE CARD OPENS ITS POP-UP, through one button laid
+                    over it. Over the figure rather than wrapping it, because a
+                    button may only hold phrasing content and a figure is not.
+                    A drag that ends on a card is still not a click: the track's
+                    `onClickCapture` swallows it before it gets here. The copies
+                    either side of the middle set are `aria-hidden`, so their
+                    buttons are taken out of the tab order too. */}
+                <button
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-label={`${item}: ${labels.open}`}
+                  tabIndex={set === 1 ? undefined : -1}
+                  onClick={() => setOpenIndex(i)}
+                  className="absolute inset-0 z-[1] cursor-pointer rounded-[16px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+                />
                 <figure className="flex h-full flex-col">
                   <div className="relative aspect-16/10 w-full overflow-hidden rounded-[16px] bg-ink/5">
                     <Image
@@ -597,6 +628,15 @@ export function EngineeringCarousel() {
                       draggable={false}
                     className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                     />
+                    {/* The visible cue that the card opens: a glass "+" in the
+                        photograph's corner. Decorative - the button over the
+                        card is what is announced. */}
+                    <span
+                      aria-hidden
+                      className="glass absolute top-3 right-3 grid size-10 place-items-center rounded-full text-ink transition-transform duration-300 ease-[var(--ease-out)] group-hover:rotate-90 md:top-4 md:right-4 md:size-11"
+                    >
+                      <PlusIcon size={18} weight="bold" />
+                    </span>
                   </div>
 
                   {/* The benefit, and under it the grades that back it. It
@@ -618,6 +658,13 @@ export function EngineeringCarousel() {
                         {line}
                       </span>
                     ))}
+                    <span
+                      aria-hidden
+                      className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink underline decoration-ink/30 underline-offset-4 transition-colors group-hover:decoration-ink"
+                    >
+                      {labels.open}
+                      <PlusIcon size={12} weight="bold" />
+                    </span>
                   </figcaption>
                 </figure>
               </li>
@@ -697,6 +744,22 @@ export function EngineeringCarousel() {
           </p>
         </Reveal>
       </div>
+
+      <HighlightDialog
+        items={highlights}
+        index={openIndex}
+        onIndex={setOpenIndex}
+        onClose={closeDialog}
+        labels={labels}
+      />
     </section>
   );
 }
+
+/* The pop-up's own controls, in each language. `open` is also the cue under
+   every card. */
+const DIALOG_LABELS: Record<string, HighlightLabels & { open: string }> = {
+  EN: { open: "View details", close: "Close", previous: "Previous highlight", next: "Next highlight" },
+  BM: { open: "Lihat butiran", close: "Tutup", previous: "Sorotan sebelumnya", next: "Sorotan seterusnya" },
+  ZH: { open: "查看详情", close: "关闭", previous: "上一项", next: "下一项" },
+};

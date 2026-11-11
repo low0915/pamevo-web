@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { X } from "@phosphor-icons/react/dist/ssr";
-import { NAV, NAV_ZH, NAV_BM, LOCALE_MENU, LOGO_ALT } from "@/lib/content";
+import { CaretDown, X } from "@phosphor-icons/react/dist/ssr";
+import { NAV, NAV_ZH, NAV_BM, LOCALE_MENU, LOGO_ALT, type NavItem } from "@/lib/content";
 import { counterpart, isNavItemCurrent, useLocale } from "@/lib/locale";
 import { Flag } from "@/components/ui/Flag";
 import { Z } from "@/lib/z";
@@ -91,6 +91,14 @@ export function MobileNav({
   /* See the note in Header: NAV is a bare array, so this is a swap rather than
      an overlay. Both surfaces read the same two lists. */
   const nav = active === "ZH" ? NAV_ZH : active === "BM" ? NAV_BM : NAV;
+  /* Which parent has its sub-items showing, by route. One at a time, and none
+     on opening: the sheet should first read as the six destinations. Reset on
+     close so it opens the same way every time. */
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const close = () => {
+    setExpanded(null);
+    onClose();
+  };
 
   // The page is held still for as long as the menu is up. Three things, and
   // all three are needed: the body overflow refuses a reader's gesture, the
@@ -106,7 +114,10 @@ export function MobileNav({
     lockScroll();
     holdAutoplay();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        setExpanded(null);
+        onClose();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -150,7 +161,7 @@ export function MobileNav({
             />
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
               aria-label="Close menu"
               className="grid size-9 place-items-center rounded-full border border-[rgb(255_255_255/0.7)] bg-[rgb(255_255_255/0.5)] text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.97]"
             >
@@ -195,7 +206,22 @@ export function MobileNav({
                     ease: EASE_OUT,
                   }}
                 >
-                  {item.href ? (
+                  {item.children ? (
+                    <NavGroup
+                      item={item}
+                      current={isNavItemCurrent(pathname, item)}
+                      open={expanded === (item.href ?? item.label)}
+                      onToggle={() =>
+                        setExpanded((v) =>
+                          v === (item.href ?? item.label)
+                            ? null
+                            : (item.href ?? item.label),
+                        )
+                      }
+                      onNavigate={close}
+                      reduce={!!reduce}
+                    />
+                  ) : item.href ? (
                     <Link
                       href={item.href}
                       /* The sheet said nothing about where the reader was. It
@@ -204,7 +230,7 @@ export function MobileNav({
                       aria-current={
                         isNavItemCurrent(pathname, item) ? "page" : undefined
                       }
-                      onClick={onClose}
+                      onClick={close}
                       className={NAV_LINK}
                     >
                       {item.label}
@@ -214,31 +240,12 @@ export function MobileNav({
                     <a
                       href="#"
                       aria-disabled="true"
-                      onClick={onClose}
+                      onClick={close}
                       className={NAV_LINK}
                     >
                       {item.label}
                     </a>
                   )}
-                  {/* NO SUBMENU HERE, DELIBERATELY.
-
-                      `item.children` is still read by the header island, which
-                      opens it as a dropdown on a pointer. This sheet used to
-                      print the same children inline under their parent, always
-                      expanded — so the two items that have them (Our Profile,
-                      Our Products) each carried a nested list nobody had asked
-                      to see, and the menu was a mix of destinations and
-                      sub-destinations at two type sizes.
-
-                      They are dropped rather than made collapsible: a parent
-                      here already navigates somewhere that lists its own
-                      children, so an accordion would be a control to reach a
-                      control — the same reasoning the language row below gives
-                      for being chips rather than a menu inside a menu.
-
-                      It also buys back the height the note at the top of this
-                      file is fighting for. The list is six destinations now,
-                      with nothing nested under them. */}
                 </motion.li>
               ))}
             </ul>
@@ -297,7 +304,7 @@ export function MobileNav({
                     key={entry.code}
                     href="#"
                     aria-disabled="true"
-                    onClick={onClose}
+                    onClick={close}
                     className={className}
                   >
                     {body}
@@ -310,7 +317,7 @@ export function MobileNav({
                   key={entry.code}
                   href={counterpart(pathname, entry.locale)}
                   hrefLang={entry.lang}
-                  onClick={onClose}
+                  onClick={close}
                   className={className}
                 >
                   {body}
@@ -321,5 +328,114 @@ export function MobileNav({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+/**
+ * A parent with sub-items: the label still navigates to its own page, and the
+ * caret beside it drops the sub-items open underneath, as the header island's
+ * dropdown does on a pointer.
+ *
+ * Expand first, then go. The first tap on the label opens the sub-items, the
+ * same as the caret, so a reader sees what is under the parent before leaving
+ * the menu; a second tap on the label, with them showing, goes to the page.
+ * The caret only ever toggles, so it is also the way to close the group again.
+ *
+ * Height animates to `auto` through motion, clipped by the list's own
+ * `overflow-hidden`. Reduced motion gets the change without the travel.
+ */
+function NavGroup({
+  item,
+  current,
+  open,
+  onToggle,
+  onNavigate,
+  reduce,
+}: {
+  item: NavItem;
+  current: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onNavigate: () => void;
+  reduce: boolean;
+}) {
+  const id = `mnav-${(item.href ?? item.label).replace(/[^a-z0-9]+/gi, "-")}`;
+  const children = item.children ?? [];
+  return (
+    <>
+      <div className="flex items-center justify-between gap-4">
+        {item.href ? (
+          <Link
+            href={item.href}
+            aria-current={current ? "page" : undefined}
+            onClick={(e) => {
+              if (!open) {
+                e.preventDefault();
+                onToggle();
+                return;
+              }
+              onNavigate();
+            }}
+            className={`${NAV_LINK} flex-1`}
+          >
+            {item.label}
+            {current && CURRENT_MARK}
+          </Link>
+        ) : (
+          <span className={`${NAV_LINK} flex-1`}>{item.label}</span>
+        )}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-controls={id}
+          aria-label={item.label}
+          className="-mr-2.5 grid size-11 shrink-0 place-items-center rounded-full text-ink transition-transform duration-[160ms] ease-[var(--ease-out)] active:scale-[0.94]"
+        >
+          <CaretDown
+            size={18}
+            weight="bold"
+            className={`transition-transform duration-200 ease-[var(--ease-out)] ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+      </div>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.ul
+            id={id}
+            key="sub"
+            className="overflow-hidden"
+            initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={reduce ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+            exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            transition={{ duration: reduce ? 0.12 : 0.26, ease: EASE_OUT }}
+          >
+            {children.map((child, i) => (
+              <li
+                key={child.label}
+                className={i === children.length - 1 ? "pb-3" : undefined}
+              >
+                {child.href ? (
+                  <Link
+                    href={child.href}
+                    onClick={onNavigate}
+                    className="block py-2.5 pl-4 text-base leading-snug text-ink-2 transition-colors hover:text-ink"
+                  >
+                    {child.label}
+                  </Link>
+                ) : (
+                  <span
+                    aria-disabled="true"
+                    className="block py-2.5 pl-4 text-base leading-snug text-ink-3"
+                  >
+                    {child.label}
+                  </span>
+                )}
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

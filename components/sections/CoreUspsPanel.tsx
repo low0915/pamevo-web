@@ -115,6 +115,62 @@ export function CoreUspsPanel() {
 
   const running = !paused && !reduced && inView;
 
+  /* THE PHONE SLIDER. Below `md` the ten are a row of cards swiped sideways
+     rather than a list that expands downward: ten notes opening one under
+     another made the section jump in height every six seconds on a screen with
+     no room to give.
+
+     `active` stays the single source of truth for both layouts. The timer and
+     a tap move it and the track follows (`scrollTo` on the track, never
+     `scrollIntoView`, which would scroll the page too); a swipe moves the track
+     and `active` follows once it settles. Following a settled scroll back into
+     `active` cannot loop: the track is then already on that card, so the
+     effect below finds nothing to move. */
+  const trackRef = useRef<HTMLOListElement>(null);
+  const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    const card = cardRefs.current[active];
+    if (!track || !card || track.offsetParent === null) return;
+    const pad = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+    const left =
+      track.scrollLeft +
+      (card.getBoundingClientRect().left - track.getBoundingClientRect().left) -
+      pad;
+    if (Math.abs(left - track.scrollLeft) < 2) return;
+    track.scrollTo({ left, behavior: reduced ? "auto" : "smooth" });
+  }, [active, reduced]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    /* Debounced rather than `scrollend`, which Safari before 26 does not fire. */
+    let t = 0;
+    const settle = () => {
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
+        const base = track.getBoundingClientRect().left + (parseFloat(getComputedStyle(track).paddingLeft) || 0);
+        let best = 0;
+        let bestD = Infinity;
+        cardRefs.current.forEach((el, i) => {
+          if (!el) return;
+          const d = Math.abs(el.getBoundingClientRect().left - base);
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        });
+        setActive((cur) => (cur === best ? cur : best));
+      }, 120);
+    };
+    track.addEventListener("scroll", settle, { passive: true });
+    return () => {
+      window.clearTimeout(t);
+      track.removeEventListener("scroll", settle);
+    };
+  }, []);
+
   return (
     <section
       ref={sectionRef}
@@ -187,7 +243,70 @@ export function CoreUspsPanel() {
             </h2>
           </Reveal>
 
-          <Reveal delay={0.1}>
+          {/* Phones: the slider. One card and the edge of the next, snapped to
+              the gutter; the track runs to the screen edges so a card slides
+              out under them rather than being cut at the gutter. A touch hands
+              control to the reader for good - the timer stops rather than
+              pulling a card away from someone reading it. */}
+          <Reveal delay={0.1} className="md:hidden">
+            <ol
+              ref={trackRef}
+              role="list"
+              onTouchStart={() => setPaused(true)}
+              className="-mx-6 mt-8 flex snap-x snap-mandatory scroll-pl-6 gap-3 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {usps.items.map((item, i) => {
+                const on = i === active;
+                return (
+                  <li
+                    key={item}
+                    ref={(el) => {
+                      cardRefs.current[i] = el;
+                    }}
+                    className="w-[calc(100vw-4.5rem)] max-w-[22rem] shrink-0 snap-start"
+                  >
+                    <div className="glass-dark glass-rim relative flex h-full flex-col rounded-[14px] p-5">
+                      <span className="text-xs font-medium text-white/60 tabular-nums">
+                        {String(i + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
+                      </span>
+                      <span className="mt-3 text-base leading-snug font-medium text-white">
+                        {item}
+                      </span>
+                      <span className="mt-2 flex-1 text-sm leading-relaxed text-white/70">
+                        {notes[i]}
+                      </span>
+                      {/* The timer, the same hairline the list draws. */}
+                      <span aria-hidden className="mt-5 block h-px overflow-hidden bg-white/15">
+                        <span
+                          key={on ? `m-on-${active}-${running}` : "m-off"}
+                          className="block h-full origin-left bg-white/80"
+                          style={
+                            on && running
+                              ? { animation: `usp-progress ${INTERVAL}ms linear both` }
+                              : { transform: on ? "scaleX(1)" : "scaleX(0)" }
+                          }
+                        />
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+            {/* Where the reader is among the ten. */}
+            <div aria-hidden className="mt-5 flex gap-1.5">
+              {usps.items.map((item, i) => (
+                <span
+                  key={item}
+                  className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                    i === active ? "bg-white/85" : "bg-white/20"
+                  }`}
+                />
+              ))}
+            </div>
+          </Reveal>
+
+          {/* `md` and up: the list, each note opening under its own row. */}
+          <Reveal delay={0.1} className="hidden md:block">
             <div className="glass-dark glass-rim relative mt-8 rounded-[14px] p-4 md:mt-10 md:p-6">
               <ol role="list" onMouseEnter={() => setPaused(true)}>
                 {usps.items.map((item, i) => {

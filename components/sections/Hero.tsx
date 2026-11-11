@@ -234,7 +234,7 @@ export function HeroCarousel({
       {slides.map((slide, i) => (
         <Slide key={slide.key} active={index === i} label={`${i + 1} / ${count}`}>
           {slide.media}
-          <Scrim />
+          <Scrim mobile="foot" />
           <SlideBody active={index === i} dragX={dragX} leaveX={leaveX}>
             {slide.content}
           </SlideBody>
@@ -361,7 +361,11 @@ function SlideBody({
   }
 
   return (
-    <div className="absolute inset-0 flex items-center">
+    /* Below `md` the block sits at the FOOT of the slide, just over the
+       controls (`pb-28` clears their 32px row and its 32px inset with room to
+       spare), so the top of the photograph is left clear. From `md` it centres
+       as before. */
+    <div className="absolute inset-0 flex items-end pb-28 md:items-center md:pb-0">
       <div
         className="w-full px-6 text-center md:px-8 md:text-left lg:px-10"
         style={{ translate: `${x}px 0`, transition }}
@@ -382,6 +386,12 @@ function SlideBody({
  * so it reserves three lines' height there, and a shorter headline leaves the
  * space under itself rather than shifting the whole block. The button row is
  * a fixed height too, and held empty on the first slide, which has no button.
+ *
+ * BELOW `md` NONE OF THAT HOLDS, on purpose. There the block sits on the foot
+ * of the slide rather than centring, so reserved space reads as gaps rather
+ * than alignment: the headline takes only the lines it needs, the rows are
+ * set close, the empty button row on the first slide is dropped, and the
+ * button is the smaller 40px pill.
  * With every row the same height on every slide, each slide's block centres
  * to the same place, and each row of one sits exactly where the same row of
  * the others was.
@@ -401,26 +411,29 @@ function Lockup({
 }) {
   return (
     <>
-      <div className="mb-6 flex h-6 items-end justify-center md:mb-8 md:h-9 md:justify-start lg:h-11">
+      <div className="mb-3 flex h-6 items-end justify-center md:mb-8 md:h-9 md:justify-start lg:h-11">
         {mark}
       </div>
-      <p className="min-h-[3em] text-[clamp(1.875rem,3.5vw,5rem)] leading-[1] font-medium tracking-tighter text-ink md:min-h-0 md:whitespace-nowrap">
+      <p className="text-[clamp(1.875rem,3.5vw,5rem)] leading-[1] font-medium tracking-tighter text-ink md:whitespace-nowrap">
         {headline}
       </p>
-      <p className="mt-5 text-base leading-relaxed text-ink md:text-lg lg:whitespace-nowrap">
+      <p className="mt-3 text-base leading-relaxed text-ink md:mt-5 md:text-lg lg:whitespace-nowrap">
         {body}
       </p>
-      <div className="mt-8 flex h-12 items-center justify-center md:justify-start">
+      <div
+        className={`mt-5 h-10 items-center justify-center md:mt-8 md:flex md:h-12 md:justify-start ${
+          cta ? "flex" : "hidden"
+        }`}
+      >
         {cta && (
           <Link
             href={cta.href}
             draggable={false}
-            className="group inline-flex h-12 items-center gap-2 rounded-full bg-ink px-7 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0"
+            className="group inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 text-sm font-medium md:h-12 md:px-7 md:text-base tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0"
           >
             {cta.label}
             <ArrowRight
-              size={18}
-              className="transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+              className="size-4 transition-transform md:size-[18px] duration-200 ease-out group-hover:translate-x-0.5"
             />
           </Link>
         )}
@@ -429,9 +442,16 @@ function Lockup({
   );
 }
 
-/** Two scrims, because the text sits differently on each: centred and full
-    width on mobile, weighted left from `md` up. */
-export function Scrim() {
+/** Two scrims, because the text sits differently on each: full width on
+    mobile, weighted left from `md` up.
+
+    Mobile has two forms. `wash` is an even veil over the whole picture, for
+    the static inner-page heroes whose copy is centred on it. `foot` is for the
+    carousel, whose copy sits at the bottom on a phone: the white rises from the
+    foot and is gone by about the upper third, so the photograph reads clear
+    above the copy and the copy still holds on near-solid ground (ink on 0.92 of
+    the page ground is well past AA whatever is behind it). */
+export function Scrim({ mobile = "wash" }: { mobile?: "wash" | "foot" }) {
   return (
     <>
       <div
@@ -439,7 +459,9 @@ export function Scrim() {
         className="absolute inset-0 md:hidden"
         style={{
           background:
-            "linear-gradient(to right, rgb(244 245 246 / 0.9) 0%, rgb(244 245 246 / 0.8) 60%, rgb(244 245 246 / 0.7) 100%)",
+            mobile === "foot"
+              ? "linear-gradient(to top, rgb(244 245 246 / 0.96) 0%, rgb(244 245 246 / 0.92) 42%, rgb(244 245 246 / 0.6) 56%, rgb(244 245 246 / 0.15) 68%, rgb(244 245 246 / 0) 76%)"
+              : "linear-gradient(to right, rgb(244 245 246 / 0.9) 0%, rgb(244 245 246 / 0.8) 60%, rgb(244 245 246 / 0.7) 100%)",
         }}
       />
       <div

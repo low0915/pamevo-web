@@ -26,8 +26,9 @@ import { SEO, SITE } from "@/lib/content";
  * `icons` is absent too, and for a different reason: it used to point at
  * /logo.png, which is the 2220x174 co-branded wordmark and renders as a smear
  * at 16px. Dropping the key lets Next's file conventions take over —
- * app/favicon.ico, and app/icon.png / app/apple-icon.png once a square mark
- * exists — which cannot go stale the way a hand-written path can.
+ * app/favicon.ico, app/icon.png and app/apple-icon.png, all three cut from
+ * the red emblem at the left of /logo.png — which cannot go stale the way a
+ * hand-written path can.
  */
 export const metadata: Metadata = {
   /** Every relative canonical, og:image and hreflang below resolves against
