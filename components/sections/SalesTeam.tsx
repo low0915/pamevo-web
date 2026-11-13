@@ -15,8 +15,8 @@ import { Reveal } from "@/components/ui/Reveal";
 /**
  * The sales team, on Our Sales Team (/directors-profile): the introduction and
  * the company's WhatsApp and Call buttons on the left, pinned on desktop, and
- * the team as a small org chart on the right in the client's order (2, 1, 1,
- * 2), joined by connector lines. Each card is a portrait with the name and
+ * the team as small org charts on the right, one per manager with their
+ * direct reports beneath, joined by connector lines. Each card is a portrait with the name and
  * role beneath it; no hover state and no per-person contact yet.
  *
  * A server component, so the copy arrives through `locale`.
@@ -80,24 +80,23 @@ export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
           </Reveal>
         </div>
 
-        {/* One centred row per entry in `rows` (2, 1, 1, 2), in the client's
-            order, joined by org-chart connectors: a bracket where two meet one,
-            a straight line between two singles. */}
-        <div className="mt-14 md:mt-16 lg:mt-0">
-          {copy.rows.map((count, r) => {
-            const start = copy.rows.slice(0, r).reduce((a, b) => a + b, 0);
-            const next = copy.rows[r + 1];
-            return (
-              <div key={r}>
-                <ul className="flex justify-center gap-4 md:gap-6">
-                  {copy.members.slice(start, start + count).map((member) => (
-                    <Member key={member.name} member={member} />
-                  ))}
-                </ul>
-                {next ? <Connector from={count} to={next} /> : null}
-              </div>
-            );
-          })}
+        {/* One small chart per manager, in the client's order: the manager
+            alone and centred, joined by an org-chart connector to the row of
+            people who report to them. */}
+        <div className="mt-14 space-y-16 md:mt-16 md:space-y-20 lg:mt-0">
+          {copy.teams.map((team) => (
+            <div key={team.lead.name}>
+              <ul className="flex justify-center gap-4 md:gap-6">
+                <Member member={team.lead} />
+              </ul>
+              <Connector to={team.reports.length} />
+              <ul className="flex justify-center gap-4 md:gap-6">
+                {team.reports.map((member) => (
+                  <Member key={member.name} member={member} size={team.reports.length === 3 ? "third" : "half"} />
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -105,35 +104,51 @@ export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
 }
 
 /**
- * The line between two rows of the chart. Drawn with borders rather than an
- * SVG so it follows the cards' widths at every breakpoint: a bracket spans
- * from the centre of one card to the centre of its neighbour, which is one
- * card width plus the gap - the same arithmetic as the row above it.
+ * The line from a manager down to their reports. Drawn with borders rather
+ * than an SVG so it follows the cards' widths at every breakpoint: a bracket
+ * spans from the centre of the first report to the centre of the last, which
+ * is (n - 1) card widths plus (n - 1) gaps - the same arithmetic as the row
+ * beneath it.
  *
- *   2 -> 1   a U under the pair, then a stem down to the single
  *   1 -> 1   a straight stem
  *   1 -> 2   a stem, then an upturned U over the pair
+ *   1 -> 3   a stem, then an upturned U over the three with a tick to the middle
  */
-const BRACKET =
-  "mx-auto h-5 w-[min(calc(50%+0.5rem),15rem)] border-[rgb(16_18_21/0.18)] md:w-[15.5rem] lg:w-[16.5rem]";
+const LINE = "border-[rgb(16_18_21/0.18)]";
 const STEM = "mx-auto h-5 w-px bg-[rgb(16_18_21/0.18)]";
+const BRACKET: Record<number, string> = {
+  2: "w-[min(calc(50%+0.5rem),15rem)] md:w-[15.5rem] lg:w-[16.5rem]",
+  3: "w-[min(calc(66.667%+0.667rem),30rem)] md:w-[27rem] lg:w-[29rem]",
+};
 
-function Connector({ from, to }: { from: number; to: number }) {
+function Connector({ to }: { to: number }) {
   return (
     <div aria-hidden className="py-3">
-      {from === 2 ? <div className={`${BRACKET} border-x border-b`} /> : <div className={STEM} />}
-      {to === 2 ? <div className={`${BRACKET} border-x border-t`} /> : <div className={STEM} />}
+      <div className={STEM} />
+      {BRACKET[to] ? (
+        <div className={`relative mx-auto h-5 border-x border-t ${LINE} ${BRACKET[to]}`}>
+          {to === 3 ? <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[rgb(16_18_21/0.18)]" /> : null}
+        </div>
+      ) : (
+        <div className={STEM} />
+      )}
     </div>
   );
 }
 
-function Member({ member }: { member: SalesMember }) {
+/** Card widths: a pair, as before, or three abreast under one manager. */
+const MEMBER_WIDTH = {
+  half: "w-[calc(50%-0.5rem)] max-w-56 md:w-56 lg:w-60",
+  third: "w-[calc((100%-2rem)/3)] max-w-56 md:w-48 lg:w-52",
+};
+
+function Member({ member, size = "half" }: { member: SalesMember; size?: keyof typeof MEMBER_WIDTH }) {
   /* A plain card: portrait, name, role. No hover state and no per-person
      contact buttons for now; the section's own WhatsApp and Call buttons
      reach the team. `whatsapp` / `phone` on SalesMember are kept for when
      individual numbers are supplied. */
   return (
-    <li className="w-[calc(50%-0.5rem)] max-w-56 md:w-56 lg:w-60">
+    <li className={MEMBER_WIDTH[size]}>
       <div className="relative aspect-[4/5] overflow-hidden bg-surface">
         {member.photo ? (
           <Image
@@ -141,7 +156,7 @@ function Member({ member }: { member: SalesMember }) {
             alt=""
             fill
             sizes="(min-width: 1024px) 240px, (min-width: 768px) 224px, 50vw"
-            className="object-cover"
+            className="object-cover object-[50%_20%]"
           />
         ) : (
           <Silhouette />

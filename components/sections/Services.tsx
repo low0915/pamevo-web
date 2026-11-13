@@ -257,6 +257,7 @@ export function Services() {
                      full-width source these files are stored at. */
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
                   quality={80}
+                  style={{ objectPosition: service.image.position }}
                   className="graded-soft object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-105"
                 />
               </div>

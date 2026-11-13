@@ -1571,20 +1571,26 @@ export const SALES_TEAM = {
   whatsapp: "WhatsApp",
   call: "Call",
   /* Names and roles as supplied by the client. Roles stay in English in every
-     language, as job titles on a Malaysian business card do. Portraits and
-     personal numbers still to come: until then each card shows a silhouette
-     and the company's WhatsApp and phone. */
-  members: [
-    { name: "Andy Lai", role: "Sales & Marketing Manager, B2C" },
-    { name: "Anthony Wong", role: "Sales & Marketing Manager, B2B" },
-    { name: "Jie Guan Tan (Sean)", role: "Head of Sales & Marketing, B2C" },
-    { name: "Nurul Nadiah", role: "Sales & Marketing Supervisor" },
-    { name: "Aiman Isyraq", role: "Marketing Executive" },
-    { name: "Syed Syamsul Muiz", role: "Digital Marketing Executive" },
-  ] as SalesMember[],
-  /** How many members sit on each row, in order: 1–2, 3, 4, 5–6. Rows are
-      centred, so a single member stands alone in the middle. */
-  rows: [2, 1, 1, 2],
+     language, as job titles on a Malaysian business card do. Portraits live in
+     /public/team; anyone without one yet shows a silhouette. Personal
+     numbers still to come, so the section uses the company's WhatsApp and
+     phone. */
+  /** The reporting lines as supplied by the client: each manager with the
+      people who report to them, drawn as one small chart per manager. */
+  teams: [
+    {
+      lead: { name: "Andy Lai", role: "Sales & Marketing Manager, B2C", photo: "/team/andy-lai.jpg" },
+      reports: [
+        { name: "Nurul Nadiah", role: "Sales & Marketing Supervisor" },
+        { name: "Aiman Isyraq", role: "Marketing Executive" },
+        { name: "Syed Syamsul Muiz", role: "Digital Marketing Executive", photo: "/team/syed-syamsul-muiz.jpg" },
+      ],
+    },
+    {
+      lead: { name: "Anthony Wong", role: "Sales & Marketing Manager, B2B", photo: "/team/anthony-wong.jpg" },
+      reports: [{ name: "Jie Guan Tan (Sean)", role: "Head of Sales & Marketing, B2C", photo: "/team/sean-tan.jpg" }],
+    },
+  ] as { lead: SalesMember; reports: SalesMember[] }[],
 };
 
 export const SALES_TEAM_ZH: Partial<typeof SALES_TEAM> = {
@@ -2037,16 +2043,16 @@ export const SERVICES = {
       title: "Architectural Consultation",
       body: "We provide professional consultation to understand your design requirements, project needs, and performance expectations for homeowners, architects, interior designers and developers.",
       image: {
-        src: "/services/01.jpg",
-        alt: "Two people reading a printed floor plan across a table",
+        src: "/services/consultation.jpg",
+        alt: "A PA Projects consultant talking a client couple through a quotation at the showroom table",
       },
     },
     {
       title: "Custom Design & System Selection",
       body: "Every project is unique. Our team provides customised solutions to match architectural concepts and lifestyle requirements.",
       image: {
-        src: "/services/02.jpg",
-        alt: "A window system held open at its cross-section while a hand points at the profile",
+        src: "/services/system-selection.jpg",
+        alt: "A consultant showing a visitor a window system on the showroom's storm-test wall",
       },
     },
     {
@@ -2061,8 +2067,11 @@ export const SERVICES = {
       title: "Installation & Technical Support",
       body: "Our installation team, all Certified MEVO Installers, ensures every system performs according to design expectations.",
       image: {
-        src: "/services/04.jpg",
-        alt: "An installer fixing a window frame in place with a cordless drill",
+        src: "/services/installation.jpg",
+        alt: "The installation team guiding a large glass panel into a shopfront with a crane and vacuum lifter",
+        /* A tall photo in a wide card: crop low so the crew and the glass
+           stay in frame rather than the crane hook. */
+        position: "50% 80%",
       },
     },
     {
