@@ -1581,7 +1581,7 @@ export const SALES_TEAM = {
     {
       lead: { name: "Andy Lai", role: "Sales & Marketing Manager, B2C", photo: "/team/andy-lai.jpg" },
       reports: [
-        { name: "Nurul Nadiah", role: "Sales & Marketing Supervisor" },
+        { name: "Nurul Nadiah", role: "Sales & Marketing Supervisor", photo: "/team/nurul-nadiah.jpg" },
         { name: "Aiman Isyraq", role: "Marketing Executive", photo: "/team/aiman-isyraq.jpg" },
         { name: "Syed Syamsul Muiz", role: "Digital Marketing Executive", photo: "/team/syed-syamsul-muiz.jpg" },
       ],
