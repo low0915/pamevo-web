@@ -1,6 +1,5 @@
 import { Hero } from "@/components/sections/Hero";
 import { WhyMevo } from "@/components/sections/WhyMevo";
-import { ProductGrid } from "@/components/sections/ProductGrid";
 import { DoorCollection } from "@/components/sections/DoorCollection";
 import { Stats } from "@/components/sections/Stats";
 import { Testimonials } from "@/components/sections/Testimonials";
@@ -56,7 +55,9 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
             both hold the same 250svh runway, so either order keeps the chain,
             and Stats now rides over WhyMevo's frame. */}
         <DoorCollection />
-        <ProductGrid />
+        {/* The six-product grid is hidden for now. To bring it back, import
+            ProductGrid and render <ProductGrid /> here again; WhyMevo now
+            rides over the door collection's runway instead. */}
         <WhyMevo />
         {/* WhyChoose stood here and Services stood between Stats and Projects.
             Background stood between ProductGrid and Stats. All three are out of
