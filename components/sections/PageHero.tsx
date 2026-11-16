@@ -71,8 +71,14 @@ export function PageHero({
               </span>
             ))}
           </h1>
-          <p className="mx-auto mt-3 max-w-[52ch] text-base leading-relaxed text-ink md:mx-0 md:mt-6 md:text-lg">
-            {body}
+          <p className="mx-auto mt-3 max-w-[52ch] md:max-w-[72ch] text-base leading-relaxed text-ink md:mx-0 md:mt-6 md:text-lg">
+            {/* Paragraphs split on blank lines, with a small gap between them
+               rather than a full empty line. */}
+            {body.split("\n\n").map((para, i) => (
+              <span key={i} className={i ? "mt-2 block" : "block"}>
+                {para}
+              </span>
+            ))}
           </p>
           {cta && (
             <div className="mt-5 flex justify-center md:mt-8 md:justify-start">

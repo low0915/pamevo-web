@@ -124,12 +124,18 @@ function Block({
       </p>
       <p
         aria-hidden={headlineHidden || undefined}
-        className="text-[clamp(1.875rem,3.5vw,5rem)] leading-[1] font-medium tracking-tighter text-balance text-ink md:whitespace-nowrap"
+        className="text-[clamp(1.875rem,3.5vw,5rem)] leading-[1] font-medium tracking-tighter text-balance text-ink"
       >
         {headline}
       </p>
-      <p className="mx-auto mt-6 max-w-[60ch] text-base leading-relaxed text-ink md:mx-0 md:min-h-[4.875em] md:text-lg">
-        {body}
+      <p className="mx-auto mt-6 max-w-[60ch] md:max-w-[72ch] text-base leading-relaxed text-ink md:mx-0 md:min-h-[4.875em] md:text-lg">
+        {/* Paragraphs split on blank lines, with a small gap between them
+           rather than a full empty line. */}
+        {body.split("\n\n").map((para, i) => (
+          <span key={i} className={i ? "mt-2 block" : "block"}>
+            {para}
+          </span>
+        ))}
       </p>
       <div className="mt-8 flex h-12 justify-center md:justify-start">
         <a

@@ -6,6 +6,7 @@ import { PageHold } from "@/components/site/PageHold";
 import { Grain } from "@/components/ui/Grain";
 import { SmoothScroll } from "@/components/ui/SmoothScroll";
 import { CookieConsent } from "@/components/site/CookieConsent";
+import { FloatingActions } from "@/components/site/FloatingActions";
 import { FONT_VARIABLES } from "@/lib/fonts";
 import { LocaleProvider } from "@/lib/locale";
 import { HTML_LANG, type Locale } from "@/lib/paths";
@@ -75,6 +76,9 @@ export function Shell({
             <EnquiryBand />
             <Footer />
           </ClosingSheet>
+          {/* Products, Contact and WhatsApp, pinned to the right edge of
+              every page. See FloatingActions. */}
+          <FloatingActions />
         </LocaleProvider>
         <Grain />
         {/* Last, and in the root layout rather than a page: the plugin sweeps

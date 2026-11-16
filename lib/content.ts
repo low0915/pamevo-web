@@ -1582,7 +1582,7 @@ export const SALES_TEAM = {
       lead: { name: "Andy Lai", role: "Sales & Marketing Manager, B2C", photo: "/team/andy-lai.jpg" },
       reports: [
         { name: "Nurul Nadiah", role: "Sales & Marketing Supervisor" },
-        { name: "Aiman Isyraq", role: "Marketing Executive" },
+        { name: "Aiman Isyraq", role: "Marketing Executive", photo: "/team/aiman-isyraq.jpg" },
         { name: "Syed Syamsul Muiz", role: "Digital Marketing Executive", photo: "/team/syed-syamsul-muiz.jpg" },
       ],
     },
@@ -1817,8 +1817,8 @@ export const ENQUIRY_BM: Partial<typeof ENQUIRY> = {
  */
 export const CONTACT = {
   banner: {
-    heading: "Let's talk about your project",
-    lede: "Windows and doors for a home, a development or a commercial facade. Tell us what you are building and we will come back with the systems that suit it.",
+    heading: "Upgrade Your Space with P.A Projects",
+    lede: "Looking for premium windows and doors for your home renovation, construction project or property development?\n\nSpeak with our team today and discover the right window and door solutions for your project.\n\nServing homeowners, contractors and developers across Malaysia.",
   },
   details: {
     heading: CTA,
@@ -1897,8 +1897,8 @@ export const CONTACT = {
  */
 export const CONTACT_ZH: Partial<typeof CONTACT> = {
   banner: {
-    heading: "谈谈您的项目",
-    lede: "无论是住宅、发展项目还是商业幕墙的门窗需求，请告诉我们您正在建造什么，我们会为您配置合适的系统。",
+    heading: "与 P.A Projects 一起焕新您的空间",
+    lede: "正在为您的住宅翻新、建筑工程或房地产发展项目寻找高端门窗？\n\n立即与我们的团队联系，为您的项目找到合适的门窗方案。\n\n服务全马来西亚的屋主、承包商与发展商。",
   },
   details: {
     heading: CTA_ZH,
@@ -1971,8 +1971,8 @@ export const CONTACT_ZH: Partial<typeof CONTACT> = {
  */
 export const CONTACT_BM: Partial<typeof CONTACT> = {
   banner: {
-    heading: "Mari bincangkan projek anda",
-    lede: "Tingkap dan pintu untuk sebuah rumah, projek pembangunan atau fasad komersial. Beritahu kami apa yang sedang anda bina dan kami akan kembali dengan sistem yang sesuai.",
+    heading: "Naik Taraf Ruang Anda bersama P.A Projects",
+    lede: "Mencari tingkap dan pintu premium untuk pengubahsuaian rumah, projek pembinaan atau pembangunan hartanah anda?\n\nHubungi pasukan kami hari ini dan temui penyelesaian tingkap dan pintu yang sesuai untuk projek anda.\n\nMelayani pemilik rumah, kontraktor dan pemaju di seluruh Malaysia.",
   },
   details: {
     heading: CTA_BM,
@@ -2962,7 +2962,7 @@ export const PRODUCTS_PAGE = {
   heading: "Our Products",
   /** The hero's headline (PageHero), under `heading` as its eyebrow: the
       home hero's Our Products slide, one phrase to a line. */
-  headline: ["Twenty systems.", "One standard."],
+  headline: ["Quality You Can See.", "Performance You Can Trust."],
   heroImage: "/products/15.jpg",
   heroAlt: "A run of full-height aluminium sliding doors opening a living room onto a rocky shore and the sea",
   /** The banner's one paragraph, under the heading.
@@ -2974,7 +2974,7 @@ export const PRODUCTS_PAGE = {
       this is the only place on the page that says, in plain words, what MEVO
       actually supplies. */
   subheading:
-    "Casement and sliding windows, panoramic and entry doors, and sunrooms — supplied and installed for residential developments, commercial buildings and high-rise facades across Malaysia. Backed by two decades of aluminium extrusion and a certified installation team.",
+    "Explore our completed window and door projects across Malaysia.\n\nFrom residential renovations to commercial spaces and property developments, every project reflects our commitment to quality workmanship, innovative solutions, and customer satisfaction.\n\nDiscover how P.A Projects transforms spaces through premium windows and doors.",
   /** Names the catalogue section for screen readers. The h1 above it already
       names the page, so this heading is not repeated visually. */
   catalogLabel: "Product catalog",
@@ -3018,9 +3018,9 @@ export const PRODUCTS_PAGE = {
  */
 export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
   heading: "我们的产品",
-  headline: ["二十套系统，", "同一标准。"],
+  headline: ["品质，看得见。", "性能，信得过。"],
   subheading:
-    "平开窗与推拉窗、全景门与入户门，以及阳光房——为马来西亚各地的住宅项目、商业建筑与高层幕墙供应并安装。背靠二十年铝型材挤压经验与持证安装团队。",
+    "浏览我们在马来西亚各地完成的门窗项目。\n\n从住宅翻新到商业空间与房地产发展项目，每一个项目都体现了我们对优质工艺、创新方案与客户满意的承诺。\n\n了解 P.A Projects 如何以高端门窗焕新每一个空间。",
   catalogLabel: "产品目录",
   viewsLabel: "视图",
   viewLabel: "目录布局",
@@ -3051,9 +3051,9 @@ export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
  */
 export const PRODUCTS_PAGE_BM: Partial<typeof PRODUCTS_PAGE> = {
   heading: "Produk Kami",
-  headline: ["Dua puluh sistem.", "Satu standard."],
+  headline: ["Kualiti Yang Boleh Dilihat.", "Prestasi Yang Boleh Dipercayai."],
   subheading:
-    "Tingkap casement dan gelangsar, pintu panoramik dan pintu utama, serta sunroom — dibekal dan dipasang untuk projek kediaman, bangunan komersial dan fasad bangunan tinggi di seluruh Malaysia. Disokong oleh dua dekad ekstrusi aluminium dan pasukan pemasangan bertauliah.",
+    "Terokai projek tingkap dan pintu yang telah kami siapkan di seluruh Malaysia.\n\nDaripada pengubahsuaian kediaman hingga ruang komersial dan pembangunan hartanah, setiap projek mencerminkan komitmen kami terhadap mutu kerja, penyelesaian inovatif dan kepuasan pelanggan.\n\nKetahui bagaimana P.A Projects mengubah ruang melalui tingkap dan pintu premium.",
   catalogLabel: "Katalog produk",
   viewsLabel: "Paparan",
   viewLabel: "Susun atur katalog",
