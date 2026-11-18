@@ -279,18 +279,21 @@ export function EnquiryBand() {
           />
           <span
             data-draw="across"
-            className="h-px flex-1 origin-right"
+            className="h-px min-w-6 flex-1 origin-right"
             style={{ background: INK.frame }}
           />
+          {/* On a phone the English mark is wider than the band, so below sm
+              it may wrap onto two balanced lines; the dimension line keeps a
+              short stub either side so it still reads as a title in the break. */}
           <span
             data-draw="note"
-            className={`${MONO} ${INK.mono} shrink-0 text-center`}
+            className={`${MONO} ${INK.mono} min-w-0 text-center leading-relaxed text-balance sm:shrink-0`}
           >
             {copy.systemMark}
           </span>
           <span
             data-draw="across"
-            className="h-px flex-1 origin-left"
+            className="h-px min-w-6 flex-1 origin-left"
             style={{ background: INK.frame }}
           />
           <span

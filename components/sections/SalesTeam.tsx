@@ -14,8 +14,8 @@ import { Reveal } from "@/components/ui/Reveal";
 
 /**
  * The sales team, on Our Sales Team (/directors-profile): the introduction and
- * the company's WhatsApp and Call buttons on the left, pinned on desktop, and
- * the team as small org charts on the right, one per manager with their
+ * the company's WhatsApp and Call buttons centred across the top, and the team
+ * as two small org charts beneath, side by side on desktop, one per manager with their
  * direct reports beneath, joined by connector lines. Each card is a portrait with the name and
  * role beneath it; no hover state and no per-person contact yet.
  *
@@ -35,29 +35,28 @@ export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
       aria-labelledby="sales-team-heading"
       className="border-t border-line bg-surface px-6 pt-20 pb-20 md:px-8 md:pt-24 md:pb-24 lg:px-10 lg:pt-28 lg:pb-28"
     >
-      {/* Two columns from `lg`: the introduction on the left, pinned while the
-          chart scrolls past it, and the chart on the right. Stacked below
-          `lg`. Splitting the width is what stops the chart, which is only two
-          portraits wide at its widest, from floating in an empty page. */}
-      <div className="mx-auto max-w-[1440px] lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
-        <div className="lg:sticky lg:top-28 lg:self-start">
+      {/* The introduction centred across the top, then the two charts side by
+          side from `lg`: the first manager's team on the left, the second's on
+          the right. Stacked below `lg`. */}
+      <div className="mx-auto max-w-[1440px]">
+        <div className="text-center">
           <Reveal>
             <p className="text-xs font-medium tracking-[0.2em] text-ink-2 uppercase md:text-sm">
               {copy.eyebrow}
             </p>
             <h2
               id="sales-team-heading"
-              className="mt-4 max-w-[24ch] text-[clamp(1.75rem,3.4vw,3rem)] leading-[1.05] font-medium tracking-tighter text-balance text-ink"
+              className="mx-auto mt-4 max-w-[24ch] text-[clamp(1.75rem,3.4vw,3rem)] leading-[1.05] font-medium tracking-tighter text-balance text-ink"
             >
               {copy.heading}
             </h2>
-            <p className="mt-5 max-w-[60ch] text-[1.0625rem] leading-[1.5] text-ink-2 md:mt-6">
+            <p className="mx-auto mt-5 max-w-[60ch] text-[1.0625rem] leading-[1.5] text-pretty text-ink-2 md:mt-6">
               {copy.lede}
             </p>
             {/* The whole team at once: the company's WhatsApp and phone, the
                 same ones every card falls back to until members have their
                 own numbers. */}
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <a
                 href={WHATSAPP.url}
                 target="_blank"
@@ -82,15 +81,15 @@ export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
 
         {/* One small chart per manager, in the client's order: the manager
             alone and centred, joined by an org-chart connector to the row of
-            people who report to them. */}
-        <div className="mt-14 space-y-16 md:mt-16 md:space-y-20 lg:mt-0">
+            people who report to them. Two columns from `lg`, left then right. */}
+        <div className="mt-14 space-y-16 md:mt-16 md:space-y-20 lg:mt-20 lg:grid lg:grid-cols-2 lg:gap-12 lg:space-y-0">
           {copy.teams.map((team) => (
             <div key={team.lead.name}>
-              <ul className="flex justify-center gap-4 md:gap-6">
+              <ul className="flex justify-center gap-4">
                 <Member member={team.lead} />
               </ul>
               <Connector to={team.reports.length} />
-              <ul className="flex justify-center gap-4 md:gap-6">
+              <ul className="flex justify-center gap-4">
                 {team.reports.map((member) => (
                   <Member key={member.name} member={member} size={team.reports.length === 3 ? "third" : "half"} />
                 ))}
@@ -116,9 +115,12 @@ export function SalesTeam({ locale = "EN" }: { locale?: Locale }) {
  */
 const LINE = "border-[rgb(16_18_21/0.18)]";
 const STEM = "mx-auto h-5 w-px bg-[rgb(16_18_21/0.18)]";
+/* Fluid at every width (the cards are a share of their column, capped at
+   14rem, with a 1rem gap), because from `lg` each chart only has half the
+   page and three fixed-width cards would not fit in it. */
 const BRACKET: Record<number, string> = {
-  2: "w-[min(calc(50%+0.5rem),15rem)] md:w-[15.5rem] lg:w-[16.5rem]",
-  3: "w-[min(calc(66.667%+0.667rem),30rem)] md:w-[27rem] lg:w-[29rem]",
+  2: "w-[min(calc(50%+0.5rem),15rem)]",
+  3: "w-[min(calc(66.667%+0.667rem),30rem)]",
 };
 
 function Connector({ to }: { to: number }) {
@@ -138,8 +140,8 @@ function Connector({ to }: { to: number }) {
 
 /** Card widths: a pair, as before, or three abreast under one manager. */
 const MEMBER_WIDTH = {
-  half: "w-[calc(50%-0.5rem)] max-w-56 md:w-56 lg:w-60",
-  third: "w-[calc((100%-2rem)/3)] max-w-56 md:w-48 lg:w-52",
+  half: "w-[calc(50%-0.5rem)] max-w-56",
+  third: "w-[calc((100%-2rem)/3)] max-w-56",
 };
 
 function Member({ member, size = "half" }: { member: SalesMember; size?: keyof typeof MEMBER_WIDTH }) {
@@ -155,7 +157,7 @@ function Member({ member, size = "half" }: { member: SalesMember; size?: keyof t
             src={member.photo}
             alt=""
             fill
-            sizes="(min-width: 1024px) 240px, (min-width: 768px) 224px, 50vw"
+            sizes="(min-width: 768px) 224px, 50vw"
             className="object-cover object-[50%_20%]"
           />
         ) : (
