@@ -1,3 +1,5 @@
+import { HOME_CURTAIN } from "./curtain";
+
 /**
  * The two languages, and the URL shape of each.
  *
@@ -165,7 +167,7 @@ export function hasEnquiryBand(pathname: string) {
  * up to cover it - a dead screen the reader scrolls against.
  */
 export function hasClosingCurtain(pathname: string) {
-  return isHome(pathname) && hasEnquiryBand(pathname);
+  return HOME_CURTAIN && isHome(pathname) && hasEnquiryBand(pathname);
 }
 
 /**

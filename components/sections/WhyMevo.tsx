@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { WHY_CHOOSE, WHY_CHOOSE_ZH, WHY_CHOOSE_BM } from "@/lib/content";
 import { useCopy } from "@/lib/locale";
+import { HOME_CURTAIN } from "@/lib/curtain";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -457,7 +458,11 @@ export function WhyMevo() {
        * rather than exactly with it - the same margin every other handover on
        * this page is built on.
        */
-      className="sheet relative -mt-[110svh] h-[250svh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
+      className={
+        HOME_CURTAIN
+          ? "sheet relative -mt-[110svh] h-[250svh] bg-bg motion-reduce:mt-0 motion-reduce:h-auto"
+          : "relative bg-bg"
+      }
     >
       {/*
         `lvh` in the frame's own measures where the runway is `svh`, for the
@@ -487,8 +492,8 @@ export function WhyMevo() {
       */}
       <div
         ref={frameRef}
-        className="sticky flex min-h-[100lvh] w-full flex-col overflow-hidden bg-bg motion-reduce:relative motion-reduce:min-h-0"
-        style={{ top: "min(0px, calc(100lvh - var(--frame-h, 100lvh)))" }}
+        className={`${HOME_CURTAIN ? "sticky" : "relative"} flex min-h-[100lvh] w-full flex-col overflow-hidden bg-bg motion-reduce:relative motion-reduce:min-h-0`}
+        style={HOME_CURTAIN ? { top: "min(0px, calc(100lvh - var(--frame-h, 100lvh)))" } : undefined}
       >
         {/* The glow, and it is the designer's own asset rather than a CSS
             gradient standing in for it: a 374px disc of #033492 at 20 per cent,

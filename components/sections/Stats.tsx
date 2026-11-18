@@ -13,6 +13,7 @@ import {
   STATS_INTRO_BM,
   STATS_IMAGE,
 } from "@/lib/content";
+import { HOME_CURTAIN } from "@/lib/curtain";
 import { useCopy, useLocale } from "@/lib/locale";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -284,15 +285,19 @@ export function Stats({ last = false }: { last?: boolean }) {
 
   return (
     <section
-      className={`band-runway sheet relative -mt-[110svh] min-h-[110svh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0 ${
-        last ? "band-last" : "mb-[4em]"
-      }`}
+      className={
+        HOME_CURTAIN
+          ? `band-runway sheet relative -mt-[110svh] min-h-[110svh] bg-surface motion-reduce:mt-0 motion-reduce:min-h-0 ${
+              last ? "band-last" : "mb-[4em]"
+            }`
+          : "relative bg-surface"
+      }
     >
       {/* Pinned, so the curtain that follows has something still to ride over.
           A pinned frame is one screen, and globals.css holds this band to it.
           `min-h` is for everywhere else: a curtain has to be at least as tall
           as its own pull-up. */}
-      <div ref={frameRef} className="band-frame">
+      <div ref={frameRef} className={HOME_CURTAIN ? "band-frame" : undefined}>
         {/* The bleed of the photograph is clipped here rather than on the
             section: `.sheet` cannot take overflow without trapping the sticky
             frame it is riding on. */}

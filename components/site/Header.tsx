@@ -344,7 +344,10 @@ export function Header() {
              the header sat 8px wider than the page at `lg` and 8px narrower at
              base. Matching them makes the island the same measure as
              VisionMission at every width rather than only past 1540. */
-          className="fixed inset-x-0 top-4 flex justify-center px-6 md:px-8 lg:px-10"
+          /* Phone only: a 12px gutter instead of the page's 24px, so the
+             island uses more of a narrow screen. From `md` it is the site
+             gutter again. */
+          className="fixed inset-x-0 top-4 flex justify-center px-3 md:px-8 lg:px-10"
         style={{ zIndex: Z.header }}
       >
         <motion.div
@@ -362,7 +365,10 @@ export function Header() {
              ever happens the nav spills past the glass instead of being cropped
              at it. That is the better failure. A cropped nav looks deliberate
              and loses items silently; a spilling one is obviously wrong. */
-          className="glass glass-rim relative flex h-16 w-full items-center gap-4 px-4 sm:px-5"
+          /* `max-md:rounded-full!`: on a phone the island is a full pill from
+             the start rather than morphing 22 -> 999 on scroll. Important, so
+             it beats the inline radius the morph writes. */
+          className="glass glass-rim relative flex h-16 w-full items-center gap-4 px-4 sm:px-5 max-md:rounded-full!"
         >
           {/* Home is where the hero plays, so the mark is also the way back to
               the top of it — including from the home page itself, where the

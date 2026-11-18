@@ -37,6 +37,8 @@ export function HomeBody({ locale = "EN" }: { locale?: Locale }) {
         className="relative flow-root bg-bg shadow-[0_-16px_40px_-28px_rgb(16_18_21/0.14)]"
         style={{ zIndex: Z.raised }}
       >
+        {/* THE CURTAIN IS SWITCHED OFF for now: HOME_CURTAIN in lib/curtain.ts.
+            Set it back to `true` to restore everything described below. */}
         {/* The band the sheet opens on. WhyMevo holds a runway of its own as well, which it did not
             before: 250svh around a 100lvh sticky frame, so ProductGrid can be
             pulled up 110svh and drawn over it the way Background is drawn over

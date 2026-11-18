@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { DOOR_COLLECTION, DOOR_COLLECTION_ZH, DOOR_COLLECTION_BM } from "@/lib/content";
 import { localePath, useCopy, useLocale } from "@/lib/locale";
+import { HOME_CURTAIN } from "@/lib/curtain";
 
 /** How much wider the open panel is than a closed one. */
 const OPEN_GROW = 4;
@@ -43,13 +44,20 @@ export function DoorCollection() {
   return (
     <section
       aria-labelledby="door-collection-heading"
-      className="relative h-[250svh] bg-bg motion-reduce:h-auto"
+      className={
+        HOME_CURTAIN
+          ? "relative h-[250svh] bg-bg motion-reduce:h-auto"
+          : "relative bg-bg"
+      }
     >
       {/* The home page's band padding, matched to WhyMevo above: full bleed on
           the `px-6 md:px-8 lg:px-10` gutter rather than capped at 1440, and the
           title held at the top on the same `max(7.5rem, 10svh)` that clears
           the header island. The panels take whatever height is left. */}
-      <div className="sticky top-0 flex h-[100lvh] w-full flex-col overflow-hidden bg-bg px-6 pt-[max(7.5rem,10svh)] pb-[max(1rem,4svh)] md:px-8 lg:px-10 motion-reduce:static motion-reduce:h-auto">
+      {/* Without the curtain nothing pins, so below `md` the frame no longer
+          has to fit one screen: it grows to its content instead of clipping
+          the last panels and the button off a short phone. */}
+      <div className={`${HOME_CURTAIN ? "sticky top-0 h-[100lvh]" : "relative md:h-[100lvh]"} flex w-full flex-col overflow-hidden bg-bg px-6 pt-[max(7.5rem,10svh)] pb-[max(1rem,4svh)] md:px-8 lg:px-10 motion-reduce:static motion-reduce:h-auto`}>
         <h2 id="door-collection-heading">
           <span className="block text-xs font-medium tracking-[0.2em] text-ink-2 uppercase md:text-sm">
             {copy.title}
@@ -62,7 +70,14 @@ export function DoorCollection() {
           {copy.description}
         </p>
 
-        <ul className="mt-6 flex min-h-[22rem] flex-1 flex-col gap-2 md:mt-10 md:flex-row md:gap-3 motion-reduce:h-[70svh]">
+        {/* Phone, curtain off: a fixed 34rem column, so flex-grow has a height
+            to share out - 64px closed rows (a comfortable tap) and a 256px
+            open panel with room for the photograph above its caption. */}
+        <ul
+          className={`mt-6 flex min-h-[22rem] flex-1 flex-col gap-2 md:mt-10 md:flex-row md:gap-3 ${
+            HOME_CURTAIN ? "motion-reduce:h-[70svh]" : "max-md:h-[34rem] max-md:flex-none md:motion-reduce:h-[70svh]"
+          }`}
+        >
           {copy.categories.map((category, i) => {
             const isOpen = i === open;
             return (
