@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     /* Spelled out rather than reused: SEO_ZH.home.title deliberately carries no
        brand, because the template appends one to it. A fallback title has no
        template applied to it, so it needs the brand written in. */
-    default: `${SEO_ZH.home.title} | MEVO 马来西亚`,
+    default: `${SEO_ZH.home.title} | PA Projects`,
     template: SEO_ZH.titleTemplate,
   },
   description: SEO_ZH.home.description,

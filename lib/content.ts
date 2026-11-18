@@ -206,7 +206,7 @@ export const LOGO_ALT = "P.A. Projects and MEVO";
  */
 export const SITE = {
   url: "https://paprojects.com.my",
-  name: "MEVO Malaysia",
+  name: "PA Projects",
   legalName: "PA Projects Marketing Sdn Bhd",
   /** SSM company number, as printed in the footer. */
   regNo: "847136-X",
@@ -250,54 +250,54 @@ export const ADDRESS = {
  */
 export const SEO = {
   /** Pages supply their own half; this appends the brand. See app/layout.tsx. */
-  titleTemplate: "%s | MEVO Malaysia",
+  titleTemplate: "%s | PA Projects",
   home: {
     path: "/",
-    title: "Aluminium Windows & Doors Malaysia | MEVO Malaysia",
+    title: "Aluminium Windows & Doors Malaysia | PA Projects",
     description:
-      "High-performance aluminium windows, doors and sunrooms for Malaysian homes and developments. MEVO systems supplied, installed and serviced from Shah Alam.",
+      "PA Projects supplies and installs aluminium windows, doors and sunrooms across Malaysia, in partnership with MEVO. Showroom and service team in Shah Alam.",
   },
   products: {
     path: "/our-products",
     title: "Aluminium Window & Door Systems",
     description:
-      "Browse 20 MEVO window and door systems: casement, awning, sliding and panoramic windows, bifold and entry doors, sunrooms and aluminium-clad wood. Full specs.",
+      "Explore 20 aluminium window and door systems from PA Projects and partner MEVO: casement, sliding, panoramic, bifold, entry doors and sunrooms. Full specs.",
   },
   privacy: {
     path: "/privacy",
     title: "Privacy & Cookies",
     description:
-      "How MEVO Malaysia handles personal data, and the cookies this website stores.",
+      "How PA Projects handles personal data, and the cookies this website stores.",
   },
   contact: {
     path: "/contact",
     title: "Contact",
     description:
-      "Speak to MEVO Malaysia about aluminium windows and doors: send an enquiry, call 014 - 879 7371, or visit the Shah Alam showroom.",
+      "Get a quote from PA Projects for aluminium windows and doors: send an enquiry, call 014 - 879 7371, or visit our showroom in Shah Alam, Selangor.",
   },
   story: {
     path: "/our-profile",
     title: "Our Profile",
     description:
-      "Established 2004, listed on Bursa Malaysia 2006: how P.A. Group grew from an aluminium extruder into the group behind MEVO Malaysia, and the vision behind it.",
+      "Established 2004, listed on Bursa Malaysia 2006: how P.A. Group grew from an aluminium extruder into PA Projects, and its partnership with MEVO.",
   },
   directors: {
     path: "/directors-profile",
     title: "Our Sales Team",
     description:
-      "The PA Projects sales team, supplying MEVO aluminium window and door systems across Malaysia.",
+      "Meet the PA Projects sales team: aluminium window and door specialists serving homeowners, architects and developers across Malaysia.",
   },
   services: {
     path: "/services",
     title: "Services & Features",
     description:
-      "Architectural consultation, custom system selection, supply, certified installation and after-sales service for aluminium windows and doors in Malaysia.",
+      "Consultation, system selection, supply, certified installation and after-sales service: PA Projects handles aluminium windows and doors across Malaysia.",
   },
   projects: {
     path: "/our-projects",
     title: "Our Projects",
     description:
-      "Aluminium windows and doors from MEVO Malaysia in completed homes, commercial spaces and facades: casement, panoramic, sliding and entry systems in place.",
+      "Homes, commercial spaces and facades across Malaysia fitted with aluminium windows and doors by PA Projects: casement, panoramic, sliding and entry systems.",
   },
 };
 
@@ -316,7 +316,7 @@ export const SEO = {
  * lib/locale.tsx.
  */
 export const SEO_ZH = {
-  titleTemplate: "%s | MEVO 马来西亚",
+  titleTemplate: "%s | PA Projects",
   home: {
     path: "/zh",
     /**
@@ -333,43 +333,43 @@ export const SEO_ZH = {
      */
     title: "马来西亚铝合金门窗",
     description:
-      "为马来西亚住宅与发展项目打造的高性能铝合金门窗及阳光房。MEVO 系统，由莎阿南展厅提供供应、安装与售后服务。",
+      "PA Projects 携手合作伙伴 MEVO，为马来西亚住宅与发展项目提供高性能铝合金门窗及阳光房，莎阿南团队负责供应、安装与售后服务。",
   },
   products: {
     path: "/zh/our-products",
     title: "铝合金门窗系统",
     description:
-      "浏览 20 款 MEVO 门窗系统：平开窗、上悬窗、推拉窗、极简全景窗、折叠门、入户门、阳光房与铝包木，附完整规格。",
+      "浏览 PA Projects 与合作伙伴 MEVO 的 20 款铝合金门窗系统：平开窗、推拉窗、极简全景窗、折叠门、入户门与阳光房，附完整规格。",
   },
   contact: {
     path: "/zh/contact",
     title: "联系我们",
     description:
-      "就铝合金门窗事宜联系 MEVO 马来西亚：在线咨询、致电 014 - 879 7371，或莅临莎阿南展厅。",
+      "联系 PA Projects 获取铝合金门窗报价：在线咨询、致电 014 - 879 7371，或莅临雪兰莪莎阿南展厅。",
   },
   story: {
     path: "/zh/our-profile",
     title: "公司简介",
     description:
-      "2004 年成立，2006 年于马来西亚交易所主板上市：P.A. Group 如何从铝型材挤压商成长为 MEVO 马来西亚门窗业务背后的集团，以及支撑这一切的愿景与使命。",
+      "2004 年成立，2006 年于马来西亚交易所主板上市：P.A. Group 如何从铝型材挤压商成长为 PA Projects，以及与 MEVO 的合作。",
   },
   directors: {
     path: "/zh/directors-profile",
     title: "销售团队",
     description:
-      "PA Projects 销售团队，为全马来西亚供应 MEVO 铝合金门窗系统。",
+      "认识 PA Projects 销售团队：为全马来西亚业主、建筑师与发展商服务的铝合金门窗专家。",
   },
   services: {
     path: "/zh/services",
     title: "我们的服务",
     description:
-      "建筑咨询、定制设计与系统选型、供应与项目协调、持证安装及售后服务 —— 马来西亚铝合金门窗的全流程服务。",
+      "建筑咨询、系统选型、供应、持证安装及售后服务 —— PA Projects 为全马来西亚提供铝合金门窗全流程服务。",
   },
   projects: {
     path: "/zh/our-projects",
     title: "我们的项目",
     description:
-      "MEVO 马来西亚铝合金门窗在已完成住宅、商业空间与建筑幕墙中的实景：平开、全景、推拉与入户系统。",
+      "PA Projects 铝合金门窗在马来西亚已完成住宅、商业空间与建筑幕墙中的实景：平开、全景、推拉与入户系统。",
   },
 };
 
@@ -391,48 +391,48 @@ export const SEO_ZH = {
  * defines it — see the same note on SEO_ZH.
  */
 export const SEO_BM = {
-  titleTemplate: "%s | MEVO Malaysia",
+  titleTemplate: "%s | PA Projects",
   home: {
     path: "/bm",
     title: "Tingkap & Pintu Aluminium Malaysia",
     description:
-      "Sistem tingkap, pintu dan sunroom aluminium berprestasi tinggi untuk rumah dan projek pembangunan di Malaysia. Sistem MEVO dibekal, dipasang dan diselenggara dari Shah Alam.",
+      "PA Projects, bersama rakan kongsi MEVO, membekal dan memasang tingkap, pintu dan sunroom aluminium di seluruh Malaysia. Bilik pameran dan servis di Shah Alam.",
   },
   products: {
     path: "/bm/our-products",
     title: "Sistem Tingkap & Pintu Aluminium",
     description:
-      "Terokai 20 sistem tingkap dan pintu MEVO: casement, awning, gelangsar, panoramik, bifold, pintu utama, sunroom dan aluminium bersalut kayu. Spesifikasi penuh.",
+      "Terokai 20 sistem tingkap dan pintu aluminium PA Projects bersama rakan kongsi MEVO: casement, gelangsar, panoramik, bifold, pintu utama dan sunroom.",
   },
   contact: {
     path: "/bm/contact",
     title: "Hubungi Kami",
     description:
-      "Hubungi MEVO Malaysia tentang tingkap dan pintu aluminium: hantar pertanyaan, telefon 014 - 879 7371, atau kunjungi bilik pameran kami di Shah Alam.",
+      "Dapatkan sebut harga daripada PA Projects: hantar pertanyaan, telefon 014 - 879 7371, atau kunjungi bilik pameran kami di Shah Alam, Selangor.",
   },
   story: {
     path: "/bm/our-profile",
     title: "Profil Kami",
     description:
-      "Ditubuhkan 2004, tersenarai di Bursa Malaysia 2006: bagaimana P.A. Group berkembang daripada pengekstrud aluminium kepada kumpulan di sebalik MEVO Malaysia, serta visi dan misi di sebaliknya.",
+      "Ditubuhkan 2004, tersenarai di Bursa Malaysia 2006: bagaimana P.A. Group berkembang menjadi PA Projects, dan kerjasamanya dengan MEVO.",
   },
   directors: {
     path: "/bm/directors-profile",
     title: "Pasukan Jualan Kami",
     description:
-      "Pasukan jualan PA Projects, membekalkan sistem tingkap dan pintu aluminium MEVO di seluruh Malaysia.",
+      "Kenali pasukan jualan PA Projects: pakar tingkap dan pintu aluminium untuk pemilik rumah, arkitek dan pemaju di seluruh Malaysia.",
   },
   services: {
     path: "/bm/services",
     title: "Perkhidmatan Kami",
     description:
-      "Perundingan seni bina, pemilihan sistem tersuai, pembekalan, pemasangan bertauliah dan perkhidmatan selepas jualan untuk tingkap dan pintu aluminium di Malaysia.",
+      "Perundingan, pemilihan sistem, pembekalan, pemasangan bertauliah dan servis selepas jualan: PA Projects untuk tingkap dan pintu aluminium di Malaysia.",
   },
   projects: {
     path: "/bm/our-projects",
     title: "Projek Kami",
     description:
-      "Tingkap dan pintu aluminium MEVO Malaysia dalam rumah, ruang komersial dan fasad yang telah siap: sistem casement, panoramik, gelangsar dan pintu utama.",
+      "Rumah, ruang komersial dan fasad di seluruh Malaysia dengan tingkap dan pintu aluminium PA Projects: sistem casement, panoramik, gelangsar dan pintu utama.",
   },
 };
 

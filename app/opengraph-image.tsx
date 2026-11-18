@@ -31,7 +31,7 @@ import { SITE } from "@/lib/content";
  * so a card that renders here cannot take the deploy down later.
  */
 export const alt =
-  "MEVO Malaysia — aluminium windows, doors and sunrooms, Shah Alam";
+  "PA Projects — aluminium windows, doors and sunrooms, Shah Alam";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
