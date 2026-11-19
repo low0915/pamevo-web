@@ -166,8 +166,6 @@ export function Header() {
   const { scrollY } = useScroll();
 
   const range = [0, 120];
-  /* The backing strip behind the island; see the element in the JSX. */
-  const stripOpacity = useTransform(scrollY, [0, 40], [0, 1], { clamp: true });
   /* Widened from 1344/1000. The island holds three times the nav it was built
      for — six items where there were two, one of them with a caret — and at the
      old scrolled width the row simply did not fit: roughly 1150px of content in
@@ -198,7 +196,9 @@ export function Header() {
    * decides, and this only binds on a large display.
    */
   const ISLAND_MAX = 1440;
-  const radius = useTransform(scrollY, range, [22, 999], { clamp: true });
+  /* The radius no longer morphs: the island is a full pill from the start
+     (`rounded-full` on the element), where it used to go 22 -> 999 over the
+     first 120px of scroll. */
   /* The island's tint, unscrolled to scrolled.
      NOW 0.70/0.82, raised on request for a more solid bar. The history and
      contrast figures below were measured at 0.48/0.62; higher tint only
@@ -299,7 +299,6 @@ export function Header() {
   const staticStyle = reduce
     ? {
         maxWidth: ISLAND_MAX,
-        borderRadius: 22,
         /* The material as well as the shape. Without these the reduced-motion
            island falls back to `.glass`, which is the shared light-glass
            material and knows nothing about the grounds this thing floats over -
@@ -312,7 +311,6 @@ export function Header() {
       }
     : {
         maxWidth: ISLAND_MAX,
-        borderRadius: radius,
         background,
         backdropFilter,
         WebkitBackdropFilter: backdropFilter,
@@ -321,21 +319,11 @@ export function Header() {
 
   return (
     <>
-      {/* A solid strip of page ground from the top of the viewport to the foot
-          of the island (top-4 + h-16 = 80px). Without it, content scrolling up
-          stays visible in the 16px above the island and around its rounded
-          ends; with it, content disappears cleanly under the header. Fades in
-          over the first 40px of scroll so a hero at the top of the page is not
-          capped by a band before the reader has moved. Same z as the header
-          and earlier in the document, so the island paints over it.
-
-          Not on a phone: there the island floats free over the page as it
-          scrolls, with nothing painted behind it. */}
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 hidden h-20 bg-bg md:block"
-        style={{ zIndex: Z.header, opacity: stripOpacity }}
-      />
+      {/* There used to be a solid strip of page ground behind the island from
+          `md` up, fading in on scroll, so content vanished under the header
+          rather than showing around it. It read as a white block behind the
+          glass, so it is gone: the island floats free over the page at every
+          width, as it always did on a phone. */}
       <header
         /* The site's gutter, so the island lines up with the bands beneath it.
              It was `px-4 md:px-8 lg:px-12` — 16 at base and 48 at `lg` against
@@ -365,10 +353,8 @@ export function Header() {
              ever happens the nav spills past the glass instead of being cropped
              at it. That is the better failure. A cropped nav looks deliberate
              and loses items silently; a spilling one is obviously wrong. */
-          /* `max-md:rounded-full!`: on a phone the island is a full pill from
-             the start rather than morphing 22 -> 999 on scroll. Important, so
-             it beats the inline radius the morph writes. */
-          className="glass glass-rim relative flex h-16 w-full items-center gap-4 px-4 sm:px-5 max-md:rounded-full!"
+          /* A full pill at every width and scroll position. */
+          className="glass glass-rim relative flex h-16 w-full items-center gap-4 rounded-full px-4 sm:px-5"
         >
           {/* Home is where the hero plays, so the mark is also the way back to
               the top of it — including from the home page itself, where the

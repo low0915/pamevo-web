@@ -1807,8 +1807,7 @@ export const ENQUIRY_BM: Partial<typeof ENQUIRY> = {
  *
  * The form asks for as little as it can get away with: a name, one way to
  * reply, and what the enquiry is about. Every field beyond that is a reason
- * not to send it. `hint` is why the two contact fields are not both required —
- * it says so once, above the pair, rather than as an error after the fact.
+ * not to send it. A phone number is required; email is optional.
  *
  * `errors` are written as instructions rather than diagnoses: "Tell us who to
  * reply to", not "Invalid input". `failed` deliberately offers the phone and
@@ -1833,25 +1832,32 @@ export const CONTACT = {
   },
   form: {
     heading: "Send an enquiry",
-    hint: "A phone number or an email — whichever you would rather we use.",
     labels: {
       name: "Name",
-      email: "Email",
+      email: "Email (optional)",
       phone: "Phone",
       message: "What can we help with?",
+      installIn: "To install in",
+      projectStatus: "Current status",
+      location: "Where are you located?",
+      product: "Product selection",
+      model: "Which product? (optional)",
     },
     placeholders: {
       message: "The project, the rooms or elevations involved, and any timeline you are working to.",
+      select: "Please specify",
+      model: "Any product in this range",
     },
     submit: "Send enquiry",
     submitting: "Sending",
     retry: "Try again",
     errors: {
       name: "Tell us who this is from.",
-      contact: "Add a phone number or an email so we can reply.",
+      contact: "Add a phone number so we can reach you.",
       email: "That email address does not look right.",
       phone: "That phone number does not look right.",
       message: "Tell us a little about the project.",
+      select: "Please choose one.",
       failed:
         "That did not send. Please call 014 - 879 7371 or message us on WhatsApp, and we will pick it up from there.",
       rateLimited:
@@ -1912,25 +1918,32 @@ export const CONTACT_ZH: Partial<typeof CONTACT> = {
   },
   form: {
     heading: "发送咨询",
-    hint: "留下电话或电邮皆可 —— 由您决定我们以哪种方式回复。",
     labels: {
       name: "姓名",
-      email: "电邮",
+      email: "电邮（选填）",
       phone: "电话",
       message: "有什么可以帮到您？",
+      installIn: "安装地点",
+      projectStatus: "目前状况",
+      location: "您位于哪里？",
+      product: "产品选择",
+      model: "具体产品（选填）",
     },
     placeholders: {
       message: "项目概况、涉及的房间或立面，以及您的时间安排。",
+      select: "请选择",
+      model: "该系列任一产品",
     },
     submit: "发送咨询",
     submitting: "发送中",
     retry: "重试",
     errors: {
       name: "请告诉我们这封咨询来自谁。",
-      contact: "请留下电话或电邮，以便我们回复。",
+      contact: "请留下电话号码，以便我们联系您。",
       email: "这个电邮地址似乎不正确。",
       phone: "这个电话号码似乎不正确。",
       message: "请简单说明一下您的项目。",
+      select: "请选择一项。",
       failed:
         "发送失败。请致电 014 - 879 7371 或通过 WhatsApp 联系我们，我们会从那里继续跟进。",
       rateLimited:
@@ -1987,26 +2000,33 @@ export const CONTACT_BM: Partial<typeof CONTACT> = {
   },
   form: {
     heading: "Hantar pertanyaan",
-    hint: "Nombor telefon atau e-mel — mana-mana yang anda lebih suka kami gunakan.",
     labels: {
       name: "Nama",
-      email: "E-mel",
+      email: "E-mel (pilihan)",
       phone: "Telefon",
       message: "Apa yang boleh kami bantu?",
+      installIn: "Untuk dipasang di",
+      projectStatus: "Status semasa",
+      location: "Di manakah lokasi anda?",
+      product: "Pilihan produk",
+      model: "Produk mana? (pilihan)",
     },
     placeholders: {
       message:
         "Projek tersebut, bilik atau fasad yang terlibat, dan sebarang jangka masa yang anda rancangkan.",
+      select: "Sila nyatakan",
+      model: "Mana-mana produk dalam rangkaian ini",
     },
     submit: "Hantar pertanyaan",
     submitting: "Menghantar",
     retry: "Cuba lagi",
     errors: {
       name: "Beritahu kami pertanyaan ini daripada siapa.",
-      contact: "Tambah nombor telefon atau e-mel supaya kami boleh membalas.",
+      contact: "Tambah nombor telefon supaya kami boleh menghubungi anda.",
       email: "Alamat e-mel itu nampak tidak betul.",
       phone: "Nombor telefon itu nampak tidak betul.",
       message: "Ceritakan sedikit tentang projek anda.",
+      select: "Sila pilih satu.",
       failed:
         "Pertanyaan itu tidak terhantar. Sila telefon 014 - 879 7371 atau hubungi kami di WhatsApp, dan kami akan teruskan dari sana.",
       rateLimited:
@@ -2692,7 +2712,7 @@ export const FOOTER = {
       url: "https://www.xiaohongshu.com/user/profile/Mevo_Malaysia",
     },
   ],
-  copyright: "\u00a9 2026 PA PROJECTS",
+  copyright: "\u00a9 2026 PA PROJECTS MARKETING SDN BHD (847136-X)",
   privacy: "Privacy & Cookies",
   cookiePreferences: "Cookie preferences",
 };
@@ -3005,6 +3025,11 @@ export const PRODUCTS_PAGE = {
     href: "/contact",
     aria: (product: string) => `Contact us about ${product}`,
   },
+  /** The hero's button: opens the full e-catalogue PDF in a new tab. */
+  catalogue: {
+    label: "View Full Catalogue",
+    href: "/MEVO%20MALAYSIA_PA%20PROJECTS_MEVO_COMPANY%20PROFILE_ECATALOGUE.pdf",
+  },
 };
 
 /**
@@ -3038,6 +3063,10 @@ export const PRODUCTS_PAGE_ZH: Partial<typeof PRODUCTS_PAGE> = {
     href: "/zh/contact",
     aria: (product: string) => `就 ${product} 联系我们`,
   },
+  catalogue: {
+    label: "查看完整产品目录",
+    href: PRODUCTS_PAGE.catalogue.href,
+  },
 };
 
 /**
@@ -3070,5 +3099,9 @@ export const PRODUCTS_PAGE_BM: Partial<typeof PRODUCTS_PAGE> = {
     label: "Hubungi kami",
     href: "/bm/contact",
     aria: (product: string) => `Hubungi kami tentang ${product}`,
+  },
+  catalogue: {
+    label: "Lihat Katalog Penuh",
+    href: PRODUCTS_PAGE.catalogue.href,
   },
 };

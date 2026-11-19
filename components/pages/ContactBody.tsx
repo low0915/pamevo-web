@@ -7,6 +7,7 @@ import type { Locale } from "@/lib/locale";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "@/components/sections/ContactForm";
 import { ContactHero } from "@/components/sections/ContactHero";
+import { enquiryModels } from "@/lib/products";
 
 /**
  * The contact page body, shared by /contact and /zh/contact.
@@ -16,8 +17,9 @@ import { ContactHero } from "@/components/sections/ContactHero";
  * the server, which is the whole point of routing the languages. Each route
  * passes the object it wants: CONTACT, or CONTACT merged with CONTACT_ZH.
  *
- * The form inside is a client component and does read that context, so it needs
- * nothing passed to it.
+ * The form inside is a client component and does read that context for its
+ * copy. It is passed only the product names for its optional product dropdown,
+ * built here so the full catalogue never reaches the browser.
  *
  * A hero (ContactHero), then the two ways to reach the company side by side: the
  * details on the left for anyone who would rather call, the form on the right
@@ -134,7 +136,7 @@ export function ContactBody({
             </Reveal>
 
             <Reveal delay={0.08}>
-              <ContactForm />
+              <ContactForm models={enquiryModels()} />
             </Reveal>
           </div>
         </div>

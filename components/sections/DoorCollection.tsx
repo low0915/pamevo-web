@@ -4,7 +4,14 @@ import { useState, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
-import { DOOR_COLLECTION, DOOR_COLLECTION_ZH, DOOR_COLLECTION_BM } from "@/lib/content";
+import {
+  DOOR_COLLECTION,
+  DOOR_COLLECTION_ZH,
+  DOOR_COLLECTION_BM,
+  PRODUCTS_PAGE,
+  PRODUCTS_PAGE_ZH,
+  PRODUCTS_PAGE_BM,
+} from "@/lib/content";
 import { localePath, useCopy, useLocale } from "@/lib/locale";
 import { HOME_CURTAIN } from "@/lib/curtain";
 
@@ -38,6 +45,7 @@ const OPEN_GROW = 4;
  */
 export function DoorCollection() {
   const copy = useCopy(DOOR_COLLECTION, { ZH: DOOR_COLLECTION_ZH, BM: DOOR_COLLECTION_BM });
+  const { catalogue } = useCopy(PRODUCTS_PAGE, { ZH: PRODUCTS_PAGE_ZH, BM: PRODUCTS_PAGE_BM });
   const { locale } = useLocale();
   const [open, setOpen] = useState(0);
 
@@ -203,13 +211,27 @@ export function DoorCollection() {
             <p className="text-lg font-medium tracking-tight text-ink">{copy.ctaHeading}</p>
             <p className="mt-1 text-sm text-ink-2">{copy.ctaBody}</p>
           </div>
-          <Link
-            href={copy.allHref}
-            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0 md:w-auto"
-          >
-            {copy.ctaButton}
-            <ArrowRight size={18} />
-          </Link>
+          {/* The e-catalogue beside the way into the catalogue page: outlined,
+              so "View All Products" stays the main move. Stacked full width on
+              a phone, side by side from `md`. */}
+          <div className="flex w-full shrink-0 flex-col gap-3 md:w-auto md:flex-row">
+            <a
+              href={catalogue.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-ink px-7 py-3.5 text-base font-medium tracking-tight text-ink transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0 md:w-auto"
+            >
+              {catalogue.label}
+              <ArrowUpRight size={18} />
+            </a>
+            <Link
+              href={copy.allHref}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-7 py-3.5 text-base font-medium tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0 md:w-auto"
+            >
+              {copy.ctaButton}
+              <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

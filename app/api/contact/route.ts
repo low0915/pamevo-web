@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { enquiryLabel } from "@/lib/enquiry";
 import { missingMailEnv, sendEnquiry } from "@/lib/mail";
+import { enquiryModels } from "@/lib/products";
 
 /** nodemailer opens a TCP socket, which the Edge runtime cannot do. */
 export const runtime = "nodejs";
@@ -247,17 +249,35 @@ export async function POST(request: Request) {
   const phone = asText(body.phone);
   const message = asText(body.message);
 
+  // The four dropdowns, as their English labels. An id the form does not
+  // offer comes back undefined, which fails the check below.
+  const details = {
+    installIn: enquiryLabel("installIn", asText(body.installIn)),
+    projectStatus: enquiryLabel("projectStatus", asText(body.projectStatus)),
+    location: enquiryLabel("location", asText(body.location)),
+    product: enquiryLabel("product", asText(body.product)),
+  };
+
+  // The optional specific product. If one is sent it must be a real product
+  // in the range chosen above; otherwise it is simply left out.
+  const modelSlug = asText(body.model);
+  const model = modelSlug
+    ? enquiryModels().find(
+        (m) => m.slug === modelSlug && m.range === asText(body.product),
+      )
+    : undefined;
+
   const invalid =
+    Object.values(details).some((label) => !label) ||
+    (!!modelSlug && !model) ||
     name.length < LIMITS.name.min ||
     name.length > LIMITS.name.max ||
     message.length < LIMITS.message.min ||
     message.length > LIMITS.message.max ||
-    // One way to reply is the whole requirement; which one is the sender's call.
-    (!email && !phone) ||
-    (!!email && !looksLikeEmail(email)) ||
-    (!!phone &&
-      (phoneDigits(phone).length < LIMITS.phoneDigits.min ||
-        phoneDigits(phone).length > LIMITS.phoneDigits.max));
+    // Phone is required; email is optional but must look right if given.
+    phoneDigits(phone).length < LIMITS.phoneDigits.min ||
+    phoneDigits(phone).length > LIMITS.phoneDigits.max ||
+    (!!email && !looksLikeEmail(email));
 
   if (invalid) {
     return NextResponse.json({ ok: false }, { status: 400 });
@@ -298,6 +318,12 @@ export async function POST(request: Request) {
       email,
       phone,
       message,
+      // Checked as present just above; the assertion only tells TypeScript.
+      installIn: details.installIn!,
+      projectStatus: details.projectStatus!,
+      location: details.location!,
+      product: details.product!,
+      model: model?.en ?? "",
       receivedAt: new Date().toISOString(),
       ip,
     });

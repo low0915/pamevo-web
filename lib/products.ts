@@ -1,4 +1,5 @@
 import type { Locale } from "./paths";
+import type { EnquiryModel } from "./enquiry";
 
 /**
  * The MEVO product catalogue, transcribed from paprojects.com.my/our-products/
@@ -936,6 +937,21 @@ export function productFromHash(hash: string): Product | undefined {
   return PRODUCTS.find((p) => p.slug === slug);
 }
 
+/**
+ * Every product for the enquiry form's optional product dropdown: slug, range
+ * id and name in each language, in catalogue order. Server-side, so the form
+ * receives these few strings rather than the whole catalogue.
+ */
+export function enquiryModels(): EnquiryModel[] {
+  return PRODUCTS.map((product) => ({
+    slug: product.slug,
+    range: CATEGORIES.find((c) => c.name === product.category)!.id,
+    en: productTitle(product, "EN"),
+    zh: productTitle(product, "ZH"),
+    bm: productTitle(product, "BM"),
+  }));
+}
+
 export function inSystem(product: Product, system: System) {
   if (system === "all") return true;
   return CATEGORIES.find((c) => c.id === system)?.name === product.category;
@@ -978,6 +994,35 @@ export function describe(product: Product, limit = 155): string {
      ellipsis does not follow punctuation. */
   const cut = source.slice(0, limit - 1);
   return cut.slice(0, cut.lastIndexOf(" ")).replace(/[,.;:]$/, "") + "…";
+}
+
+/**
+ * The product page's meta description: who sells it, where, and as many of
+ * its selling points as fit - never cut mid-phrase, never an ellipsis.
+ *
+ * Separate from `describe()`, which stitches every bullet together and cuts at
+ * a length: fine for structured data, but as a search snippet it read as a
+ * run-on spec sheet with no brand and no place in it. This leads with PA
+ * Projects (MEVO named only as the partner), ends on Malaysia, and fills the
+ * middle with the Advantages bullets, whole ones only. Parameter rows
+ * ("Max. Profile Thickness: 2.0mm") are left out - figures, not reasons.
+ */
+export function metaDescription(product: Product, limit = 155): string {
+  const lead = product.title;
+  const tail = "Supplied and installed by PA Projects, MEVO's partner in Malaysia.";
+  const points = product.groups
+    .filter((group) => group.title !== PARAMETERS)
+    .flatMap((group) => group.items.map((item) => item.en.trim()))
+    .filter((point) => !/^(max\.|glass|glazing)/i.test(point));
+
+  let picked: string[] = [];
+  for (const point of points) {
+    const next = [...picked, point];
+    // Too long to fit whole: skip it and try a shorter one after it.
+    if (`${lead}: ${next.join("; ")}. ${tail}`.length > limit) continue;
+    picked = next;
+  }
+  return picked.length ? `${lead}: ${picked.join("; ")}. ${tail}` : `${lead}. ${tail}`;
 }
 
 /** The other products in a product's category, for the related strip. */

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/pages/ProductDetail";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SEO } from "@/lib/content";
-import { describe, PRODUCTS } from "@/lib/products";
+import { metaDescription, PRODUCTS } from "@/lib/products";
 import { productGraph } from "@/lib/schema";
 import { pageMetadata } from "@/lib/seo";
 
@@ -50,7 +50,7 @@ export async function generateMetadata({
        repeats the h1, and the category is the word someone searching without a
        model number would use. */
     title: `${product.title} — ${product.category}`,
-    description: describe(product),
+    description: metaDescription(product),
     image: { url: product.images[0].src, alt: product.images[0].alt },
   });
 }

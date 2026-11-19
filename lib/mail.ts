@@ -14,7 +14,11 @@ import nodemailer, { type Transporter } from "nodemailer";
  * volume a contact form sees that costs nothing, and it avoids holding idle
  * sockets open in a serverless function that may be frozen between requests.
  */
-const KEYS = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "CONTACT_TO"] as const;
+const KEYS = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS"] as const;
+
+/** The company inbox: enquiries are sent from it and delivered to it. Either
+ *  side can still be overridden with CONTACT_FROM / CONTACT_TO. */
+const INBOX = "info@paprojects.com.my";
 
 let cached: Transporter | null = null;
 
@@ -59,6 +63,13 @@ export type Enquiry = {
   email: string;
   phone: string;
   message: string;
+  /** The four dropdowns, as their English labels. */
+  installIn: string;
+  projectStatus: string;
+  location: string;
+  product: string;
+  /** The specific product, in English; empty when none was chosen. */
+  model: string;
   receivedAt: string;
   ip: string;
 };
@@ -77,6 +88,12 @@ export async function sendEnquiry(enquiry: Enquiry) {
     `Email:   ${enquiry.email || "-"}`,
     `Phone:   ${enquiry.phone || "-"}`,
     "",
+    `To install in:  ${enquiry.installIn}`,
+    `Current status: ${enquiry.projectStatus}`,
+    `Location:       ${enquiry.location}`,
+    `Product:        ${enquiry.product}`,
+    `Specific model: ${enquiry.model || "-"}`,
+    "",
     enquiry.message,
     "",
     "---",
@@ -86,10 +103,8 @@ export async function sendEnquiry(enquiry: Enquiry) {
   ];
 
   await getTransport().sendMail({
-    from:
-      process.env.CONTACT_FROM ??
-      `MEVO Malaysia site <${process.env.SMTP_USER}>`,
-    to: process.env.CONTACT_TO,
+    from: process.env.CONTACT_FROM ?? `PA Projects website <${INBOX}>`,
+    to: process.env.CONTACT_TO ?? INBOX,
     replyTo: enquiry.email || undefined,
     subject: `Enquiry from ${enquiry.name}`,
     text: lines.join("\n"),

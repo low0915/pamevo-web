@@ -11,6 +11,7 @@ import { FOOTER, LOGO_ALT } from "@/lib/content";
 import { Z } from "@/lib/z";
 import { MetalRule } from "@/components/ui/MetalRule";
 import { FooterBlurb } from "./FooterBlurb";
+import { FooterCatalogue } from "./FooterCatalogue";
 
 /** Brand marks come from Simple Icons rather than being drawn by hand. */
 const MARKS = {
@@ -65,6 +66,9 @@ export function Footer() {
                 <a href={FOOTER.emailHref} className="inline-block py-2 hover:text-ink lg:py-0">
                   {FOOTER.email}
                 </a>
+              </li>
+              <li>
+                <FooterCatalogue className="inline-block py-2 hover:text-ink lg:py-0" />
               </li>
             </ul>
             {/* The registered name and the showroom address, under the

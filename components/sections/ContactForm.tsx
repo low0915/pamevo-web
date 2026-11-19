@@ -2,8 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { CaretDown } from "@phosphor-icons/react/dist/ssr";
 import { CONTACT, CONTACT_ZH, CONTACT_BM } from "@/lib/content";
-import { useCopy } from "@/lib/locale";
+import {
+  ENQUIRY_OPTIONS,
+  ENQUIRY_SELECTS,
+  type EnquiryModel,
+  type EnquirySelect,
+} from "@/lib/enquiry";
+import { useCopy, useLocale } from "@/lib/locale";
 
 const FIELD =
   "mt-2 w-full rounded-[10px] border border-line bg-bg px-4 py-3 text-base text-ink transition-colors duration-[160ms] ease-[var(--ease-out)] placeholder:text-ink-3 focus-visible:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60 aria-[invalid=true]:border-[rgb(163_52_52/0.55)]";
@@ -12,6 +19,27 @@ const LABEL = "block text-sm font-medium text-ink";
 
 const ERROR = "mt-2 text-sm text-[rgb(150_44_44)]";
 
+/** The required mark after a label. Hidden from screen readers, which hear
+ *  `aria-required` on the field instead. */
+const REQUIRED = (
+  <span aria-hidden className="ml-1 text-[rgb(190_70_70)]">
+    *
+  </span>
+);
+
+const EMPTY = {
+  name: "",
+  email: "",
+  phone: "",
+  installIn: "",
+  projectStatus: "",
+  location: "",
+  product: "",
+  model: "",
+  message: "",
+  website_url_2: "",
+};
+
 /** The same bounds the route enforces. Duplicated deliberately: the client
  *  copy is for telling someone what to fix, the server copy is the one that
  *  decides, and neither can stand in for the other. */
@@ -19,14 +47,21 @@ const LIMITS = { name: 2, message: 10, phoneDigits: 8 };
 
 type Status = "idle" | "submitting" | "sent" | "error";
 
-type Field = "name" | "contact" | "message";
+type Field = "name" | "phone" | "email" | EnquirySelect | "message";
+
+/** Every checked field, in the order they appear, so focus goes to the first
+ *  one that needs fixing. */
+const ORDER: Field[] = ["name", "phone", "email", ...ENQUIRY_SELECTS, "message"];
+
+const isSelect = (field: string): field is EnquirySelect =>
+  (ENQUIRY_SELECTS as string[]).includes(field);
 
 /**
  * The enquiry form.
  *
- * Three things are asked for: who this is, one way to reply, and what it is
- * about. Either contact field satisfies the second, which is why the error
- * lives on the pair rather than on each of them.
+ * Asked for: who this is, a phone number (required) and optionally an email,
+ * four dropdowns (where it is to be installed, the project's stage, the
+ * customer's state, the product range) and what it is about.
  *
  * Validation runs on blur and on submit, never on keystrokes — nobody wants to
  * be told their email is wrong while they are halfway through typing it. Once a
@@ -42,21 +77,17 @@ type Field = "name" | "contact" | "message";
  * only a script would fill, and the time since the form mounted. The server
  * checks both again and answers the same way it answers a validation failure.
  */
-export function ContactForm() {
+export function ContactForm({ models }: { models: EnquiryModel[] }) {
   /* Reads the locale from context rather than the module, so the same form
      renders Chinese under /zh without a second component. CONTACT_ZH supplies
      every nested object in full — `useCopy` merges one level deep, so a partial
      `form` would replace the English one and lose its siblings. */
   const contact = useCopy(CONTACT, { ZH: CONTACT_ZH, BM: CONTACT_BM });
+  const { locale } = useLocale();
+  const lang = locale === "ZH" ? "zh" : locale === "BM" ? "bm" : "en";
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
-  const [values, setValues] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-    website_url_2: "",
-  });
+  const [values, setValues] = useState(EMPTY);
 
   /** When the form became fillable. The gap to submit is one of the traps.
    *  Stamped in an effect rather than during render: the clock is not a pure
@@ -68,15 +99,29 @@ export function ContactForm() {
     mountedAt.current = Date.now();
   }, []);
 
+  /** The products in the chosen range, for the optional dropdown under it.
+   *  Empty until a range is chosen, and for "Not sure yet". */
+  const rangeModels = models.filter((model) => model.range === values.product);
+
   const set = (key: keyof typeof values) => (value: string) => {
-    setValues((previous) => ({ ...previous, [key]: value }));
+    setValues((previous) => ({
+      ...previous,
+      [key]: value,
+      // A product from the old range does not belong to the new one.
+      ...(key === "product" ? { model: "" } : {}),
+    }));
     // Only revalidate what is already marked wrong, so nobody is corrected
     // mid-word on a field they have not finished.
     if (key === "name" && errors.name) validate("name", { ...values, [key]: value });
-    if ((key === "email" || key === "phone") && errors.contact)
-      validate("contact", { ...values, [key]: value });
+    if (key === "phone" && errors.phone)
+      validate("phone", { ...values, [key]: value });
+    if (key === "email" && errors.email)
+      validate("email", { ...values, [key]: value });
     if (key === "message" && errors.message)
       validate("message", { ...values, [key]: value });
+    // A dropdown's change is a finished choice, not a half-typed word, so it
+    // can clear its error straight away.
+    if (isSelect(key) && errors[key]) validate(key, { ...values, [key]: value });
   };
 
   const check = (field: Field, source: typeof values) => {
@@ -92,13 +137,23 @@ export function ContactForm() {
         : undefined;
     }
 
+    if (isSelect(field)) {
+      return source[field] ? undefined : copy.select;
+    }
+
+    if (field === "phone") {
+      const phone = source.phone.trim();
+      if (!phone) return copy.contact;
+      return phone.replace(/\D/g, "").length < LIMITS.phoneDigits
+        ? copy.phone
+        : undefined;
+    }
+
+    // Email is optional: only a filled-in one that does not look right fails.
     const email = source.email.trim();
-    const phone = source.phone.trim();
-    if (!email && !phone) return copy.contact;
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return copy.email;
-    if (phone && phone.replace(/\D/g, "").length < LIMITS.phoneDigits)
-      return copy.phone;
-    return undefined;
+    return email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ? copy.email
+      : undefined;
   };
 
   const validate = (field: Field, source = values) => {
@@ -111,22 +166,18 @@ export function ContactForm() {
     event.preventDefault();
     if (status === "submitting") return;
 
-    const found: Partial<Record<Field, string>> = {
-      name: check("name", values),
-      contact: check("contact", values),
-      message: check("message", values),
-    };
+    const found: Partial<Record<Field, string>> = Object.fromEntries(
+      ORDER.map((field) => [field, check(field, values)]),
+    );
     setErrors(found);
 
-    const firstBad = (["name", "contact", "message"] as const).find(
-      (field) => found[field],
-    );
+    const firstBad = ORDER.find((field) => found[field]);
     if (firstBad) {
       // Send focus to the field that needs attention rather than leaving the
       // reader to hunt for the red text.
-      const selector =
-        firstBad === "contact" ? "#contact-email" : `#contact-${firstBad}`;
-      formRef.current?.querySelector<HTMLElement>(selector)?.focus();
+      formRef.current
+        ?.querySelector<HTMLElement>(`#contact-${firstBad}`)
+        ?.focus();
       return;
     }
 
@@ -161,7 +212,7 @@ export function ContactForm() {
   };
 
   const reset = () => {
-    setValues({ name: "", email: "", phone: "", message: "", website_url_2: "" });
+    setValues(EMPTY);
     setErrors({});
     setStatus("idle");
     mountedAt.current = Date.now();
@@ -209,6 +260,7 @@ export function ContactForm() {
       <div className="mt-6">
         <label htmlFor="contact-name" className={LABEL}>
           {contact.form.labels.name}
+          {REQUIRED}
         </label>
         <input
           id="contact-name"
@@ -217,6 +269,7 @@ export function ContactForm() {
           autoComplete="name"
           value={values.name}
           disabled={busy}
+          aria-required
           onChange={(event) => set("name")(event.target.value)}
           onBlur={() => validate("name")}
           aria-invalid={!!errors.name}
@@ -230,65 +283,149 @@ export function ContactForm() {
         )}
       </div>
 
-      <fieldset className="mt-6 border-0 p-0">
-        <legend className="text-sm text-ink-3">{contact.form.hint}</legend>
-
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="contact-email" className={LABEL}>
-              {contact.form.labels.email}
-            </label>
-            <input
-              id="contact-email"
-              name="email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              value={values.email}
-              disabled={busy}
-              onChange={(event) => set("email")(event.target.value)}
-              onBlur={() => validate("contact")}
-              aria-invalid={!!errors.contact}
-              aria-describedby={
-                errors.contact ? "contact-reach-error" : undefined
-              }
-              className={FIELD}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="contact-phone" className={LABEL}>
-              {contact.form.labels.phone}
-            </label>
-            <input
-              id="contact-phone"
-              name="phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={values.phone}
-              disabled={busy}
-              onChange={(event) => set("phone")(event.target.value)}
-              onBlur={() => validate("contact")}
-              aria-invalid={!!errors.contact}
-              aria-describedby={
-                errors.contact ? "contact-reach-error" : undefined
-              }
-              className={FIELD}
-            />
-          </div>
+      {/* Phone is required, email optional: phone first, and the only one of
+          the pair with the required mark. */}
+      <div className="mt-6 grid gap-x-4 gap-y-6 sm:grid-cols-2">
+        <div>
+          <label htmlFor="contact-phone" className={LABEL}>
+            {contact.form.labels.phone}
+            {REQUIRED}
+          </label>
+          <input
+            id="contact-phone"
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            value={values.phone}
+            disabled={busy}
+            aria-required
+            onChange={(event) => set("phone")(event.target.value)}
+            onBlur={() => validate("phone")}
+            aria-invalid={!!errors.phone}
+            aria-describedby={errors.phone ? "contact-phone-error" : undefined}
+            className={FIELD}
+          />
+          {errors.phone && (
+            <p id="contact-phone-error" className={ERROR}>
+              {errors.phone}
+            </p>
+          )}
         </div>
 
-        {errors.contact && (
-          <p id="contact-reach-error" className={ERROR}>
-            {errors.contact}
-          </p>
+        <div>
+          <label htmlFor="contact-email" className={LABEL}>
+            {contact.form.labels.email}
+          </label>
+          <input
+            id="contact-email"
+            name="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={values.email}
+            disabled={busy}
+            onChange={(event) => set("email")(event.target.value)}
+            onBlur={() => validate("email")}
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "contact-email-error" : undefined}
+            className={FIELD}
+          />
+          {errors.email && (
+            <p id="contact-email-error" className={ERROR}>
+              {errors.email}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* The four required dropdowns, two to a row. The options live in
+          lib/enquiry.ts, shared with the route that checks them. */}
+      <div className="mt-6 grid gap-x-4 gap-y-6 sm:grid-cols-2">
+        {ENQUIRY_SELECTS.map((field) => {
+          const id = `contact-${field}`;
+          const errorId = `${id}-error`;
+          return (
+            <div key={field}>
+              <label htmlFor={id} className={LABEL}>
+                {contact.form.labels[field]}
+                {REQUIRED}
+              </label>
+              <div className="relative">
+                <select
+                  id={id}
+                  name={field}
+                  value={values[field]}
+                  disabled={busy}
+                  aria-required
+                  onChange={(event) => set(field)(event.target.value)}
+                  onBlur={() => validate(field)}
+                  aria-invalid={!!errors[field]}
+                  aria-describedby={errors[field] ? errorId : undefined}
+                  className={`${FIELD} appearance-none pr-10 ${values[field] ? "" : "text-ink-3"}`}
+                >
+                  {/* The prompt: shown until a choice is made, never
+                      choosable back. */}
+                  <option value="" disabled>
+                    {contact.form.placeholders.select}
+                  </option>
+                  {ENQUIRY_OPTIONS[field].map((option) => (
+                    <option key={option.id} value={option.id} className="text-ink">
+                      {option[lang]}
+                    </option>
+                  ))}
+                </select>
+                <CaretDown
+                  aria-hidden
+                  className="pointer-events-none absolute top-1/2 right-4 mt-1 size-4 -translate-y-1/2 text-ink-3"
+                />
+              </div>
+              {errors[field] && (
+                <p id={errorId} className={ERROR}>
+                  {errors[field]}
+                </p>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Optional, full width, and only once a range is chosen: the
+            products in it, so the enquiry can name one. "Any product in this
+            range" is a real choice, not a prompt, so it stays selectable. */}
+        {rangeModels.length > 0 && (
+          <div className="sm:col-span-2">
+            <label htmlFor="contact-model" className={LABEL}>
+              {contact.form.labels.model}
+            </label>
+            <div className="relative">
+              <select
+                id="contact-model"
+                name="model"
+                value={values.model}
+                disabled={busy}
+                onChange={(event) => set("model")(event.target.value)}
+                className={`${FIELD} appearance-none pr-10 ${values.model ? "" : "text-ink-3"}`}
+              >
+                <option value="">{contact.form.placeholders.model}</option>
+                {rangeModels.map((model) => (
+                  <option key={model.slug} value={model.slug} className="text-ink">
+                    {model[lang]}
+                  </option>
+                ))}
+              </select>
+              <CaretDown
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 right-4 mt-1 size-4 -translate-y-1/2 text-ink-3"
+              />
+            </div>
+          </div>
         )}
-      </fieldset>
+      </div>
 
       <div className="mt-6">
         <label htmlFor="contact-message" className={LABEL}>
           {contact.form.labels.message}
+          {REQUIRED}
         </label>
         <textarea
           id="contact-message"
@@ -296,6 +433,7 @@ export function ContactForm() {
           rows={5}
           value={values.message}
           disabled={busy}
+          aria-required
           placeholder={contact.form.placeholders.message}
           onChange={(event) => set("message")(event.target.value)}
           onBlur={() => validate("message")}

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDown, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { Scrim } from "@/components/sections/Hero";
 
 /**
@@ -34,8 +34,10 @@ export function PageHero({
   eyebrow: string;
   headline: string[];
   body: string;
-  /** An in-page fragment, so the button reads as "further down", not away. */
-  cta?: { label: string; href: string };
+  /** Usually an in-page fragment, so the button reads as "further down", not
+      away. `external` opens it in a new tab with an up-right arrow instead,
+      for a file such as the e-catalogue PDF on /our-products. */
+  cta?: { label: string; href: string; external?: boolean };
   image: { src: string; alt: string; position?: string };
 }) {
   return (
@@ -84,12 +86,15 @@ export function PageHero({
             <div className="mt-5 flex justify-center md:mt-8 md:justify-start">
               <a
                 href={cta.href}
+                {...(cta.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 className="group inline-flex h-10 items-center gap-2 rounded-full bg-ink px-5 text-sm font-medium md:h-12 md:px-7 md:text-base tracking-tight text-bg transition-transform duration-[160ms] ease-out hover:-translate-y-0.5 active:translate-y-0"
               >
                 {cta.label}
-                <ArrowDown
-                  className="size-4 md:size-[18px] transition-transform duration-200 ease-out group-hover:translate-y-0.5"
-                />
+                {cta.external ? (
+                  <ArrowUpRight className="size-4 md:size-[18px] transition-transform duration-200 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                ) : (
+                  <ArrowDown className="size-4 md:size-[18px] transition-transform duration-200 ease-out group-hover:translate-y-0.5" />
+                )}
               </a>
             </div>
           )}

@@ -1,11 +1,4 @@
-import {
-  PRODUCTS_PAGE,
-  PRODUCTS_PAGE_ZH,
-  PRODUCTS_PAGE_BM,
-  MATERIALS,
-  MATERIALS_ZH,
-  MATERIALS_BM,
-} from "@/lib/content";
+import { PRODUCTS_PAGE, PRODUCTS_PAGE_ZH, PRODUCTS_PAGE_BM } from "@/lib/content";
 import type { Locale } from "@/lib/paths";
 import { PageHero } from "@/components/sections/PageHero";
 
@@ -15,9 +8,8 @@ import { PageHero } from "@/components/sections/PageHero";
  * share with /contact.
  *
  * "Our Products" is the eyebrow and the headline is the home hero's Our
- * Products slide; the range in a sentence is the body. The button glides down
- * to the material library under the catalogue, which twenty rows would
- * otherwise leave most readers never reaching.
+ * Products slide; the range in a sentence is the body. The button opens the
+ * full e-catalogue PDF in a new tab.
  */
 export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
   /* A server component, so the locale arrives as a prop rather than through
@@ -34,17 +26,13 @@ export function ProductsIntro({ locale = "EN" }: { locale?: Locale }) {
     ZH: PRODUCTS_PAGE_ZH,
   };
   const copy = { ...PRODUCTS_PAGE, ...TRANSLATIONS[locale] };
-  const materials = {
-    ...MATERIALS,
-    ...{ EN: {}, BM: MATERIALS_BM, ZH: MATERIALS_ZH }[locale],
-  };
 
   return (
     <PageHero
       eyebrow={copy.heading}
       headline={copy.headline}
       body={copy.subheading}
-      cta={{ label: materials.bannerLink, href: `#${MATERIALS.id}` }}
+      cta={{ label: copy.catalogue.label, href: copy.catalogue.href, external: true }}
       image={{ src: copy.heroImage, alt: copy.heroAlt }}
     />
   );
