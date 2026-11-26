@@ -142,6 +142,7 @@ function showroom() {
        section opens on, rather than a second copy of the path. */
     image: `${SITE.url}${encodeURI(BACKGROUND.images[0].src)}`,
     currenciesAccepted: "MYR",
+    areaServed: { "@type": "Country", name: "Malaysia" },
     sameAs: profiles(),
   };
 }
@@ -169,8 +170,12 @@ const graph = (...nodes: object[]) => ({
   "@graph": nodes,
 });
 
+/** The showroom node rides along on the home page too: the footer prints the
+    address and phone on every page, so the NAP is visible here, and the home
+    page is the one that ranks for "windows and doors Malaysia". Same `@id` as
+    on /contact, so it is one business described twice, not two. */
 export function homeGraph(locale: Locale = "EN") {
-  return graph(organization(), website(locale));
+  return graph(organization(), website(locale), showroom());
 }
 
 /**

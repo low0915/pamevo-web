@@ -49,10 +49,16 @@ const AI_ALLOWED = [
   "Claude-SearchBot",
   "Claude-Web",
   "anthropic-ai",
+  // Perplexity and DuckDuckGo's AI answers: both cite and link their sources,
+  // so they send referrals back rather than only taking the copy.
+  "PerplexityBot",
+  "Perplexity-User",
+  "DuckAssistBot",
 ];
 
 /**
- * Everything else that crawls to feed a model. Refused the whole site.
+ * Everything else that crawls to feed a model, plus the heavier SEO-tool
+ * crawlers. Refused the whole site.
  *
  * These take the copy and send nothing back — no citation, no referral. Note
  * `Applebot-Extended` is Apple Intelligence's training fetcher and is separate
@@ -68,9 +74,6 @@ const AI_BLOCKED = [
   "Meta-ExternalAgent",
   "meta-externalagent",
   "FacebookBot",
-  "PerplexityBot",
-  "Perplexity-User",
-  "DuckAssistBot",
   "MistralAI-User",
   "YouBot",
   "cohere-ai",
@@ -85,6 +88,17 @@ const AI_BLOCKED = [
   "Kangaroo Bot",
   "Webzio-Extended",
   "PetalBot",
+  // SEO-tool crawlers: heavy, send no visitors, and mostly serve competitors'
+  // backlink research. AhrefsBot and SemrushBot are left out on purpose, so
+  // anyone auditing this site with Ahrefs or Semrush still gets their data.
+  "MJ12bot",
+  "DotBot",
+  "BLEXBot",
+  "DataForSeoBot",
+  "Barkrowler",
+  "serpstatbot",
+  "MegaIndex.ru",
+  "SeekportBot",
   "Scrapy",
 ];
 

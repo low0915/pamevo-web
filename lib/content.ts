@@ -253,15 +253,27 @@ export const SEO = {
   titleTemplate: "%s | PA Projects",
   home: {
     path: "/",
-    title: "Aluminium Windows & Doors Malaysia | PA Projects",
+    title: "Aluminium Windows and Doors Malaysia | PA Projects",
     description:
-      "PA Projects supplies and installs aluminium windows, doors and sunrooms across Malaysia, in partnership with MEVO. Showroom and service team in Shah Alam.",
+      "PA Projects offers premium MEVO aluminium windows and doors in Malaysia. Discover innovative window and door systems at our Shah Alam showroom.",
+    /** The client's keyword brief. Google ignores the keywords meta tag; it is
+        here because the brief asked for it and Bing still glances at it. The
+        same phrases are also worked into titles and descriptions, which is
+        what actually counts. */
+    keywords: [
+      "Aluminium Windows and Doors Malaysia",
+      "Window and Door Malaysia",
+      "Window and Door Systems Malaysia",
+      "Aluminium Window Malaysia",
+      "Aluminium Door Malaysia",
+      "MEVO Malaysia",
+    ],
   },
   products: {
     path: "/our-products",
-    title: "Aluminium Window & Door Systems",
+    title: "Window and Door Systems Malaysia",
     description:
-      "Explore 20 aluminium window and door systems from PA Projects and partner MEVO: casement, sliding, panoramic, bifold, entry doors and sunrooms. Full specs.",
+      "20 aluminium window and door systems in Malaysia from PA Projects and partner MEVO: casement, sliding, panoramic, bifold, entry doors and sunrooms.",
   },
   privacy: {
     path: "/privacy",
@@ -439,8 +451,7 @@ export const SEO_BM = {
 export const HERO = {
   /** Set on one line on the hero's first slide. */
   tagline: "Innovation. Performance. Affordable.",
-  subheading:
-    "Redefining Modern Living Through High-Performance Window & Door Systems",
+  subheading: "Modern Aluminium Windows & Doors in Malaysia",
   /** The first slide's picture: the product in use, a full-height sliding
       door opened onto a terrace pool. Replaced the abstract chrome footage
       (/hero-video.mp4, still in public/), which showed no window or door. */
@@ -454,7 +465,7 @@ export const HERO = {
    * they are the same claim written for two different readers.
    */
   heading:
-    "P.A. Projects x MEVO Malaysia — specialists in aluminium windows and doors",
+    "PA Projects — aluminium windows and doors in Malaysia, with partner MEVO",
   /**
    * The slides after the first, in order. Each leads somewhere: `href` is the
    * English path, and the hero prefixes it for /zh and /bm.
@@ -545,7 +556,7 @@ export const HERO_ZH: Partial<typeof HERO> = {
    * that is otherwise Chinese is the one thing most likely to cost the page its
    * own language.
    */
-  heading: "P.A. Projects x MEVO 马来西亚 —— 铝合金门窗系统专家",
+  heading: "PA Projects —— 马来西亚铝合金门窗专家，合作伙伴 MEVO",
 };
 
 /**
@@ -564,7 +575,7 @@ export const HERO_BM: Partial<typeof HERO> = {
   subheading:
     "Mentakrif Semula Kehidupan Moden Melalui Sistem Tingkap & Pintu Berprestasi Tinggi",
   heading:
-    "P.A. Projects x MEVO Malaysia — pakar tingkap dan pintu aluminium",
+    "PA Projects — pakar tingkap dan pintu aluminium di Malaysia, bersama rakan kongsi MEVO",
 };
 
 export const BACKGROUND = {
@@ -3024,6 +3035,14 @@ export const PRODUCTS_PAGE = {
     label: "Contact us",
     href: "/contact",
     aria: (product: string) => `Contact us about ${product}`,
+  },
+  /** The quiet link beside `cta`, to the product's own page. English only:
+      /zh and /bm have no detail routes. It is also what makes those twenty
+      pages reachable by a crawler at all — without it they are orphans. */
+  details: {
+    label: "Full details",
+    href: (slug: string) => `/our-products/${slug}`,
+    aria: (product: string) => `Full details of ${product}`,
   },
   /** The hero's button: opens the full e-catalogue PDF in a new tab. */
   catalogue: {

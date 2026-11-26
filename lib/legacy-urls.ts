@@ -25,15 +25,14 @@ import { PRODUCTS } from "./products";
  * and are byte-identical to them, so this map is derived rather than retyped:
  * renaming a slug moves both sides at once and can never half-move.
  *
- * They all land on the catalogue rather than on a page of their own, because
- * the catalogue is currently one page. See the note in the plan: this is a
- * many-to-one redirect and it forfeits most of what those twenty-one URLs have
- * accumulated. Adding `/our-products/[slug]` later turns every line here into a
- * 1:1 map with no other change.
+ * Each lands on its own page at /our-products/[slug] — 1:1, so whatever the
+ * WordPress URL had earned passes to a page about the same product. They used
+ * to all land on the catalogue, a many-to-one redirect Google reads as a soft
+ * 404, which dropped the old URLs without transferring anything.
  */
 const products = PRODUCTS.map((product) => ({
   source: `/blog/${product.slug}`,
-  destination: "/our-products",
+  destination: `/our-products/${product.slug}`,
   permanent: true,
 }));
 
@@ -41,7 +40,7 @@ const products = PRODUCTS.map((product) => ({
 const aliases = [
   {
     source: "/blog/aluminium-clad-wood-doors-windows-2",
-    destination: "/our-products",
+    destination: "/our-products/aluminium-clad-wood-doors-windows",
     permanent: true,
   },
   // DM80 was published as "dm80-biofold-door", the WordPress site's typo. The
@@ -49,7 +48,7 @@ const aliases = [
   // own old product page both need pointing at their new homes.
   {
     source: "/blog/dm80-biofold-door",
-    destination: "/our-products",
+    destination: "/our-products/dm80-bifold-door",
     permanent: true,
   },
   {

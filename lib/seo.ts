@@ -33,6 +33,7 @@ type PageMeta = {
   /** The page's half of the title; the layout template appends the brand. */
   title: string;
   description: string;
+  keywords?: readonly string[];
   /** Site-relative. Falls through to app/opengraph-image.tsx when absent. */
   image?: { url: string; alt: string };
 };
@@ -66,7 +67,7 @@ function languages(path: string) {
 }
 
 export function pageMetadata(
-  { path, title, description, image }: PageMeta,
+  { path, title, description, keywords, image }: PageMeta,
   locale: Locale = "EN",
 ): Metadata {
   const url = path === "/" ? SITE.url : `${SITE.url}${path}`;
@@ -75,6 +76,7 @@ export function pageMetadata(
   return {
     title,
     description,
+    ...(keywords ? { keywords: [...keywords] } : {}),
     alternates: {
       /* Relative, and resolved against metadataBase in the root layout. Each
          language self-canonicalises: /zh/contact points at itself, not at the

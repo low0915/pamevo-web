@@ -16,7 +16,7 @@ import { PRODUCTS } from "@/lib/products";
  * of the same commit would differ.
  */
 const UPDATED = {
-  home: "2026-08-27",
+  home: "2026-11-26",
   products: "2026-08-27",
   contact: "2026-08-27",
   privacy: "2026-08-27",
@@ -25,6 +25,7 @@ const UPDATED = {
   directors: "2026-09-03",
   services: "2026-09-01",
   projects: "2026-09-01",
+  productPages: "2026-11-26",
 } as const;
 
 /**
@@ -68,9 +69,11 @@ const set = (enPath: string, bmPath: string, zhPath: string) => {
  * /privacy appears once, in English, with NO alternates. It has no translation
  * and claiming one would be a lie in the one file crawlers read most literally.
  *
- * There is no per-product URL to list: all twenty live in the catalogue. The
- * product photography is attached to that entry instead, in every language,
- * since the images are the same images whichever one is being read.
+ * The twenty product pages at /our-products/[slug] are listed in English only
+ * and with no alternates, for the same reason as /privacy: /zh and /bm have no
+ * detail routes. Each carries its own photographs; the catalogue entry carries
+ * all of them, in every language, since the images are the same whichever
+ * language is being read.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const productImages = PRODUCTS.flatMap((product) =>
@@ -107,6 +110,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
         ...(images ? { images } : {}),
       }));
     }),
+
+    /* English only, and no `alternates`. See the note above. */
+    ...PRODUCTS.map((product) => ({
+      url: `${SITE.url}${SEO.products.path}/${product.slug}`,
+      lastModified: UPDATED.productPages,
+      images: product.images.map((image) => asset(image.src)),
+    })),
 
     /* English only, and no `alternates`. See the note above. */
     {

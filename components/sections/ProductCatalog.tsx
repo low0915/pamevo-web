@@ -640,10 +640,19 @@ export function ProductCatalog() {
                         <div
                           className={
                             floats
-                              ? "absolute right-5 bottom-6"
-                              : "mt-6 flex justify-end"
+                              ? "absolute right-5 bottom-6 flex items-center gap-5"
+                              : "mt-6 flex items-center justify-end gap-5"
                           }
                         >
+                          {locale === "EN" && (
+                            <Link
+                              href={PRODUCTS_PAGE.details.href(p.slug)}
+                              aria-label={PRODUCTS_PAGE.details.aria(productTitle(p, locale))}
+                              className="text-base font-medium tracking-tight text-ink underline decoration-[rgb(126_133_140/0.5)] decoration-1 underline-offset-[6px] hover:decoration-ink"
+                            >
+                              {PRODUCTS_PAGE.details.label}
+                            </Link>
+                          )}
                           <Link
                             href={copy.cta.href}
                             aria-label={copy.cta.aria(productTitle(p, locale))}
